@@ -385,7 +385,7 @@ device_udid_combo.pack(fill=tk.X, padx=padx_side, pady=5)
 
 tk.Label(root, text="Launch the app you want HUD enabled for, then press Show Running Apps. Have no other Apps open in the background", fg="red").pack(anchor="w", padx=padx_side)
 ttk.Button(root, text="Show Running Apps", command=show_apps).pack(anchor="w", padx=padx_side)
-apps_text = scrolledtext.ScrolledText(root, height=1)
+apps_text = scrolledtext.ScrolledText(root, height=7)
 apps_text.pack(fill=tk.BOTH, padx=padx_side, pady=15, expand=True)
 apps_text.bind("<Button-1>", on_apps_text_click)
 
