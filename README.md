@@ -146,4 +146,6 @@ Steps:
 
 5. It should now appear as “Connected”
 
-6. Open Metal HUD Mobile Config and Click "List Devices" and it should appear. 
+6. Open "Metal HUD Mobile Config" and Click "List Devices" and it should appear.
+
+- After updating to a new version of tvOS, re-pairing your Apple TV device might be required 
