@@ -26,7 +26,7 @@ A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tink
 
 5. Click "List Devices" to view connected devices. 
 
-- For errors see # TROUBLESHOOTING DEVICE NOT SHOWING UP
+- For errors see # TROUBLESHOOTING
 - Once device is paired successfully you can do all this wirelessly! 
 
 6. Click your device in the list and it will automatically fill in "Device Identifier" 
@@ -45,7 +45,7 @@ A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tink
 - You can also use "HUD Alignment" to change HUD position on screen. Apply a custom number. It's very finicky! 
 - "Previous Commands" will show last 10 commands entered
 
-# Troubleshooting Device Not Showing Up
+# Troubleshooting 
 
 1. If you're seeing "No Devices", or "The Device must be paired before it can be connected"... close the App
 
