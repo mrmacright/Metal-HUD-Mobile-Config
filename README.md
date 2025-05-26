@@ -1,7 +1,5 @@
 ![MyIcon](https://github.com/user-attachments/assets/0fbc1c8f-7eb9-4602-8104-0c767aacae81)
 
-https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExZHBqZGVlMTNnZWRvcGF5enhod3N4ZGFtNWpkdmo4NnZybGlyNGYxdSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/j8s1ZgF6UAwwpGqVb1/giphy.gif
-
 # Metal Hud Mobile Config
 
 ### Enable Metal Performance HUD on iPhone and iPad without using Terminal or relying on jailbreaks or exploits
