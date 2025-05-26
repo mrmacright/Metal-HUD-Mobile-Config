@@ -73,7 +73,7 @@ Try the following:
 
 4. Re-open the App and hopefully your device will appear! 
 
-Still not working? Run these commands in Terminal. The app normally installs everything automatically, but you can manually execute the following commands in order to fix common issues.
+Still not working? Execute the following commands in order to fix common issues.
 
 Install Command Line Tools 
 ```
