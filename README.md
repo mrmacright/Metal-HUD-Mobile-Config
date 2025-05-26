@@ -26,38 +26,42 @@
 
 <img width="605" alt="UI Screenshot" src="https://github.com/user-attachments/assets/1b70bd55-e84f-47a3-801f-42473f3ecb9f" />
 
-1. Connect iPhone or iPad to Mac via USB. You may be promoted to "Trust This Computer" on your device and "Allow accessory to connect" on Mac. "Trust"!
+1. Connect iPhone or iPad to Mac via USB
 
-2. On 1st run, macOS will block the app. Go to: System Settings > Privacy & Security > Security and click “Open Anyway” next to "Metal HUD Mobile Config was blocked…"
+2. You may be promoted to "Trust This Computer" on your iPhone / iPad and "Allow accessory to connect" on Mac
 
-3. Open App (Metal HUD Mobile Config). You’ll be promoted to download Xcode. Install Xcode! 
+3. On 1st run, macOS will block the app. Go to: System Settings > Privacy & Security > Security and click “Open Anyway” next to "Metal HUD Mobile Config was blocked…"
+
+4. Open App (Metal HUD Mobile Config). You’ll be promoted to download Xcode 
 
 - If you have Xcode installed, this prompt won’t appear
 
-4. Re-open App. You’ll be promoted to install Apple files. This can take quite a while, be patient.
+5. Re-open App. You’ll be promoted to install Apple files. This can take quite a while, be patient
 
 - If you have Xcode installed, this may not appear
 
-5. Click "List Devices" to view connected devices. 
+6. Click "List Devices" to view connected devices 
 
 - For errors see # TROUBLESHOOTING
 - Once device is paired successfully you can do all this wirelessly! 
 
-6. Click your device in the list and it will automatically fill in "Device Identifier" 
+7. Click your device in the list and it will automatically fill in "Device Identifier"
 
-7. Click "Show Running Apps" to view running Apps. Open desired game before pressing "Show Running Apps"! 
+8. Open the game you want the HUD enabled for before pressing "Show Running Apps". 
+
+9. Click "Show Running Apps" to view running Apps. 
 
 - If developer mode is not enabled on your device you will receive "Operation failed because Developer Mode is disabled on your iPhone or iPad". Follow instructions to enable dev mode! 
 - You can also click an App in the list and it will automatically fill in App Path
 - You can click "Save App Path" and save path for future use
 
-8. Close App on iPhone / iPad
+10. Close App on iPhone / iPad
 
-9. Click "Launch App with Metal Performance HUD" to enable Metal HUD for App 
+11. Click "Launch App with Metal Performance HUD" to enable Metal HUD for App 
 
-- Sometimes you need to close app and re-try for HUD to appear
-- You can also use "HUD Alignment" to change HUD position on screen. Apply a custom number. It's very finicky! 
-- "Previous Commands" will show last 10 commands entered
+- Sometimes you may need to close the app and try again for the HUD to appear.
+- Use "HUD Alignment" to change the HUD’s position on the screen by applying a custom number — note it can be a bit finicky!
+- "Previous Commands" displays the last 10 commands you entered.
 
 ## Troubleshooting 
 
