@@ -19,7 +19,7 @@
 
 ✅ iOS 16 or later / iPadOS 16 or later. Yes it works with iOS 18+ / iPadOS 18+
 
-❌ Windows is not supported, and NEVER will be! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
+❌ Windows is not supported, do not make requests for it! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
 
 ## Launching & Using The App
 
