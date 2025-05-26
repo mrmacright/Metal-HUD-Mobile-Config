@@ -1,6 +1,4 @@
-![MyIcon](https://github.com/user-attachments/assets/cc7d4584-b327-4852-9295-2b756a3dbc95)
-
-![MyIcon](https://github.com/user-attachments/assets/cc7d4584-b327-4852-9295-2b756a3dbc95)
+![MyIcon](https://github.com/user-attachments/assets/0fbc1c8f-7eb9-4602-8104-0c767aacae81)
 
 # Metal Hud Mobile Config
 
