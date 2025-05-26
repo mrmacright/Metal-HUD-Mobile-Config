@@ -54,8 +54,8 @@
 9. Click "Show Running Apps" to view running Apps. 
 
 - If developer mode is not enabled on your device you will receive "Operation failed because Developer Mode is disabled on your iPhone or iPad". Follow instructions to enable dev mode! 
-- You can also click an App in the list and it will automatically fill in App Path
-- You can click "Save App Path" and save path for future use
+- Click an App in the list to automatically fill in the “App Path”
+- You can click "Save App Path" to save the path for future use.
 
 10. Close App on iPhone / iPad
 
