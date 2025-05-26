@@ -67,7 +67,7 @@
 
 ## Troubleshooting 
 
-### If you're seeing "No Devices", or "The Device must be paired before it can be connected"... 
+### If your iPhone / iPad is not appearing under List Devices, try the following:
 
 Try the following:
 
