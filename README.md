@@ -73,14 +73,9 @@
 
 Backup Termimal commands to fix problems with app: 
 
-- Install Command Line Tools 
+Install Command Line Tools 
 ```
-  sudo xcode-select -s /Applications/Xcode.app" .
-```
-
-Run this in terminal to see if devices show. If they do, then the App should work! 
-```
-xcrun devicectl list devices
+sudo xcode-select -s /Applications/Xcode.app" .
 ```
 
 Set Xcode Path (if multiple versions are installed)
@@ -91,6 +86,11 @@ sudo xcode-select -s /Applications/Xcode.app
 Agree to Xcode License
 ```
 sudo xcodebuild -license
+```
+
+Run this in terminal to see if devices show. If they do, then the App should work! 
+```
+xcrun devicectl list devices
 ```
 
 ## Known Issues
