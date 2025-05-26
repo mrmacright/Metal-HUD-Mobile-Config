@@ -20,6 +20,7 @@
 ✅ iOS 16 or later / iPadOS 16 or later. Yes it works with iOS 18+ / iPadOS 18+
 
 ❌ Windows is not supported, do not make requests for it! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
+✅ Apple TV HD (2015) and later are partially supported, see #Apple TV below
 
 ## Launching & Using The App
 
@@ -121,3 +122,22 @@ If you're using an iOS / iPadOS beta, you'll likely need to install the correspo
 Join my Discord server for support: https://discord.gg/RaXugyqp63
 
 I'm not a developer... I used ChatGPT to help with development, so issues are likely to occur! 
+
+## Apple TV
+
+Enabling Metal HUD on Apple TV is a little more tricky compared to iPhone / iPad. You need to connect it within Xcode app. 
+
+Steps: 
+
+1. Open Xcode and go to “Window” and find “Devices and Simulators”
+
+2. Go to “Discovered”, find your Apple TV.
+- If you don’t see it make sure your Apple TV is on the same Wi-Fi Network.
+
+3. Click “Pair”
+
+4. Enter verification code displayed on Apple TV to finish pairing. Click “Connect”
+
+5. It should now appear as “Connected”
+
+6. Open Metal HUD Mobile Config and Click "List Devices" and it should appear. 
