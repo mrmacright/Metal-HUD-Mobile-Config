@@ -2,7 +2,7 @@
 
 # Metal Hud Mobile Config
 
-### A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tinkering with Terminal
+### Operate the Metal Performance HUD on iPhone & iPad, without Terminal and jailbreaking / exploits!
 
 - Quickly list connected devices and display only relevant running apps (hides system/background apps)
 
