@@ -47,7 +47,7 @@
 - For errors see # TROUBLESHOOTING
 - Once device is paired successfully you can do all this wirelessly! 
 
-7. Click your device in the list and it will automatically fill in "Device Identifier"
+7. Click a device in the list to automatically fill in the “Device Identifier.”
 
 8. Open the game you want the HUD enabled for before pressing "Show Running Apps". 
 
