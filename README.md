@@ -86,11 +86,6 @@
 
 ### Still not working? Open Terminal and run the following commands in order to fix common issues.
 
-Install Command Line Tools 
-```
-sudo xcode-select -s /Applications/Xcode.app" .
-```
-
 Set Xcode Path 
 ```
 sudo xcode-select -s /Applications/Xcode.app
