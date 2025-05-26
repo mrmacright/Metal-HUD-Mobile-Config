@@ -17,7 +17,7 @@
 ### You need a Mac 
 ✅ macOS 15.2 or later (Only tested on Apple silicon Macs)
 
-✅ Xcode 
+✅ Xcode app
 
 ❌ Windows is not supported, do not make requests for it! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
 
