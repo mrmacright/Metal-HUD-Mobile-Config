@@ -1,7 +1,7 @@
-
-![MyIcon](https://github.com/user-attachments/assets/049be756-f67e-4e98-8507-bac2e000565b)
+![MyIcon](https://github.com/user-attachments/assets/cc7d4584-b327-4852-9295-2b756a3dbc95)
 
 # METAL HUD MOBILE CONFIG (Beta) 
+
 
 A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tinkering with Terminal
 
