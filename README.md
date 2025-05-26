@@ -78,7 +78,7 @@ Install Command Line Tools
 sudo xcode-select -s /Applications/Xcode.app" .
 ```
 
-Set Xcode Path (if multiple versions are installed)
+Set Xcode Path 
 ```
 sudo xcode-select -s /Applications/Xcode.app
 ```
