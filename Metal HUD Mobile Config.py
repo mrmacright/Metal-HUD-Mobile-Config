@@ -115,11 +115,11 @@ def list_devices():
             identifier = match.group(2).strip()
             state = match.group(3).strip()
             model = match.group(4).strip()
-            device_lines.append(f"{name:<20}  {identifier:<40}  {state:<20}  {model}")
+            device_lines.append(f"{name:<40}  {identifier:<40}  {state:<20}  {model}")
             device_ids.append(identifier)
 
     if device_lines:
-        header = f"{'Name':<20}  {'Identifier':<40}  {'State':<20}  Model"
+        header = f"{'Name':<40}  {'Identifier':<40}  {'State':<20}  Model"
         separator = "-" * 110
         formatted = header + "\n" + separator + "\n\n" + "\n\n".join(device_lines)
     else:
