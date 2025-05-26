@@ -71,7 +71,7 @@
 
 - If you're using an iOS / iPadOS beta, you'll likely need to install the corresponding Xcode Beta and Command Line Tools: https://developer.apple.com/xcode/resources/ 
 
-Backup Termimal commands to fix problems with app: 
+Backup Termimal commands to fix problems with app. The App should automatically install these if not run them in order below.  
 
 Install Command Line Tools 
 ```
