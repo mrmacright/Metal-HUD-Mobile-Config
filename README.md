@@ -4,13 +4,13 @@
 
 ### A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tinkering with Terminal
 
-🚀 Quickly list connected devices and display only relevant running apps (hides system/background apps)
+- Quickly list connected devices and display only relevant running apps (hides system/background apps)
 
-🕹️ Instantly launch the Metal HUD for selected apps, with customizable HUD alignment
+- Instantly launch the Metal HUD for selected apps, with customizable HUD alignment
 
-💾 Save frequently used app paths and view command history for easy re-use
+- Save frequently used app paths and view command history for easy re-use
 
-📜 View logs directly from the interface for better debugging and tracking
+- View logs directly from the interface for better debugging and tracking
 
 ## Requirements 
 ✅ macOS 15.2 or later (Only tested on Apple silicon Macs)
