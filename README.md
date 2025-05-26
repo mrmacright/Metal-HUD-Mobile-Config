@@ -37,7 +37,7 @@
 
 1. Connect iPhone or iPad to Mac via USB
 
-2. You may be promoted to "Trust This Computer" on your iPhone / iPad and "Allow accessory to connect" on Mac
+2. You may be promoted to "Trust This Computer" on your iPhone or iPad and "Allow accessory to connect" on Mac
 
 3. On the first run, macOS may block the app. To allow it:
 
@@ -66,7 +66,7 @@
 - Click an App in the list to automatically fill in the “App Path”
 - You can click "Save App Path" to save the path for future use
 
-10. Close App on iPhone / iPad
+10. Close App on iPhone or iPad
 
 11. Click "Launch App with Metal Performance HUD" to enable Metal HUD for App 
 
@@ -78,11 +78,11 @@
 
 #### If your device is not appearing under List Devices, try the following:
 
-1. Close the Metal HUD Mobile Config
+1. Close the Metal HUD Mobile Config App
 
 2. Agree to "Xcode and Apple SDKs Agreement" by opening file "setup_xcode.sh" and press "Agree". Close XCODE after pressing "Agree", don't continue with other installs
 
-3. Unplug iPhone / iPad from Mac > Restart Mac > Reconnect iPhone / iPad to Mac
+3. Unplug iPhone or iPad from Mac > Restart iPhone or iPad & Mac > Reconnect iPhone or iPad to Mac
 
 4. Re-open the App and hopefully your device will appear! 
 
