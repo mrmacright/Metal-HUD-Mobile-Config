@@ -6,6 +6,33 @@ import os
 import threading
 import json
 
+def is_xcode_ready():
+    try:
+        result = subprocess.check_output(["xcrun", "--find", "xcodebuild"], text=True)
+        return "/Applications/Xcode.app" in result
+    except subprocess.CalledProcessError:
+        return False
+
+def has_agreed_to_license():
+    try:
+        subprocess.check_output(["xcrun", "devicectl", "list", "devices"], stderr=subprocess.STDOUT, text=True)
+        return True
+    except subprocess.CalledProcessError as e:
+        if "You have not agreed to the Xcode and Apple SDKs license" in e.output:
+            return False
+        return True  # Some other unrelated error
+
+def prompt_user_to_run_script():
+    messagebox.showerror(
+        "Xcode Not Ready",
+        "Before using this app, you need to configure Xcode:\n\n"
+        "1. Open Terminal\n"
+        "2. Run this command:\n\n"
+        "   sudo ./setup_xcode.sh\n\n"
+        "Then reopen this app."
+    )
+    root.destroy()
+    os._exit(1)
 
 
 # Save file in home directory for better permission reliability
@@ -71,8 +98,13 @@ def open_xcode_download():
 
 def list_devices():
     raw_output = run_command("xcrun devicectl list devices")
+
+    # Show blue status message temporarily
+    show_temporary_status_message("Please connect device to Mac. You can disconnect after successful pairing and do this wirelessly.", duration=6000)
+
     lines = raw_output.splitlines()
     content_lines = lines[2:]  # skip header
+    ...
 
     device_lines = []
     device_ids = []
@@ -103,6 +135,8 @@ def list_devices():
         device_udid_combo.set('')
 
 def show_apps():
+
+
     udid = device_udid_combo.get().strip()
     if not udid:
         messagebox.showwarning("Missing UDID", "Please select device Identifier.")
@@ -169,6 +203,7 @@ def show_apps():
 	"Twitch.app", 
 	"Instagram.app", 
 	"Snapchat.app", 
+	"Authenticator.app",
 
     ]
 
@@ -341,6 +376,7 @@ def on_apps_text_click(event):
         app_path_combo.set(line_text)
 
 # === GUI SETUP ===
+# === GUI SETUP ===
 root = tk.Tk()
 root.title("Metal HUD Mobile Config")
 
@@ -353,69 +389,83 @@ padx_side = 30
 
 load_data()
 
+# Scrollable Canvas
+canvas = tk.Canvas(root)
+scrollbar = ttk.Scrollbar(root, orient="vertical", command=canvas.yview)
+scrollable_frame = ttk.Frame(canvas)
 
+scrollable_frame.bind(
+    "<Configure>",
+    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+)
 
+canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+def resize_scrollable_frame(event):
+    canvas.itemconfig(canvas_window, width=event.width)
+
+canvas.bind("<Configure>", resize_scrollable_frame)
+
+canvas.configure(yscrollcommand=scrollbar.set)
+
+canvas.pack(side="left", fill="both", expand=True)
+scrollbar.pack(side="right", fill="y")
+
+# GUI widgets go in scrollable_frame, not root
 def prompt_install_xcode():
     result = messagebox.showwarning(
         "Xcode Missing", 
         "Xcode is not installed.\nPlease download it from the App Store before continuing."
     )
     open_xcode_download()
-    root.destroy()  # Close the GUI
-    os._exit(0)     # Exit the process forcefully
-
-if not is_xcode_installed():
-    prompt_install_xcode()
-
-if not is_xcode_installed():
-    prompt_install_xcode()
     root.destroy()
-    exit()
+    os._exit(0)
 
+if not is_xcode_installed():
+    prompt_install_xcode()
 
-ttk.Label(root, text="Devices").pack(anchor="w", padx=padx_side)
-ttk.Button(root, text="List Devices", command=list_devices).pack(anchor="w", padx=padx_side)
-device_text = scrolledtext.ScrolledText(root, height=10)
+ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
+ttk.Button(scrollable_frame, text="List Devices", command=list_devices).pack(anchor="w", padx=padx_side)
+device_text = scrolledtext.ScrolledText(scrollable_frame, height=10)
 device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
 device_text.bind("<Button-1>", on_device_text_click)
 
-ttk.Label(root, text="Device Identifier").pack(anchor="w", padx=padx_side)
-device_udid_combo = ttk.Combobox(root, values=[])
+ttk.Label(scrollable_frame, text="Device Identifier").pack(anchor="w", padx=padx_side)
+device_udid_combo = ttk.Combobox(scrollable_frame, values=[])
 device_udid_combo.pack(fill=tk.X, padx=padx_side, pady=5)
 
-tk.Label(root, text="Launch the app you want HUD enabled for, then press Show Running Apps. Have no other Apps open in the background", fg="red").pack(anchor="w", padx=padx_side)
-ttk.Button(root, text="Show Running Apps", command=show_apps).pack(anchor="w", padx=padx_side)
-apps_text = scrolledtext.ScrolledText(root, height=7)
+tk.Label(scrollable_frame, text="Launch the app you want HUD enabled for, then press Show Running Apps. Have no other Apps open in the background", fg="red").pack(anchor="w", padx=padx_side)
+ttk.Button(scrollable_frame, text="Show Running Apps", command=show_apps).pack(anchor="w", padx=padx_side)
+apps_text = scrolledtext.ScrolledText(scrollable_frame, height=7)
 apps_text.pack(fill=tk.BOTH, padx=padx_side, pady=15, expand=True)
 apps_text.bind("<Button-1>", on_apps_text_click)
 
-ttk.Label(root, text="App Path").pack(anchor="w", padx=padx_side)
-app_path_combo = ttk.Combobox(root, values=[])
+ttk.Label(scrollable_frame, text="App Path").pack(anchor="w", padx=padx_side)
+app_path_combo = ttk.Combobox(scrollable_frame, values=[])
 app_path_combo.pack(fill=tk.X, padx=padx_side, pady=5)
 
-ttk.Button(root, text="Save App Path", command=save_app_path).pack(anchor="w", padx=padx_side, pady=(0, 5))
+ttk.Button(scrollable_frame, text="Save App Path", command=save_app_path).pack(anchor="w", padx=padx_side, pady=(0, 5))
 
-ttk.Label(root, text="Saved Paths").pack(anchor="w", padx=padx_side)
-saved_paths_combo = ttk.Combobox(root, values=sorted(saved_paths.keys()))
+ttk.Label(scrollable_frame, text="Saved Paths").pack(anchor="w", padx=padx_side)
+saved_paths_combo = ttk.Combobox(scrollable_frame, values=sorted(saved_paths.keys()))
 saved_paths_combo.pack(fill=tk.X, padx=padx_side, pady=5)
 saved_paths_combo.bind("<<ComboboxSelected>>", on_saved_path_select)
 
-ttk.Button(root, text="Delete Saved Path", command=delete_saved_path).pack(anchor="w", padx=padx_side, pady=(0, 10))
+ttk.Button(scrollable_frame, text="Delete Saved Path", command=delete_saved_path).pack(anchor="w", padx=padx_side, pady=(0, 10))
 
-ttk.Label(root, text="Previous Commands").pack(anchor="w", padx=padx_side)
-command_history_combo = ttk.Combobox(root, values=command_history, state="readonly")
+ttk.Label(scrollable_frame, text="Previous Commands").pack(anchor="w", padx=padx_side)
+command_history_combo = ttk.Combobox(scrollable_frame, values=command_history, state="readonly")
 command_history_combo.pack(fill=tk.X, padx=padx_side, pady=(0, 10))
 command_history_combo.bind("<<ComboboxSelected>>", on_command_history_select)
 
-ttk.Button(root, text="Launch App with Metal Performance HUD", command=launch_app).pack(anchor="w", padx=padx_side, pady=(0, 10))
+ttk.Button(scrollable_frame, text="Launch App with Metal Performance HUD", command=launch_app).pack(anchor="w", padx=padx_side, pady=(0, 10))
 
-ttk.Label(root, text="HUD Alignment (enter number)").pack(anchor="w", padx=padx_side)
-hud_alignment_entry = ttk.Entry(root)
+ttk.Label(scrollable_frame, text="HUD Alignment (enter number)").pack(anchor="w", padx=padx_side)
+hud_alignment_entry = ttk.Entry(scrollable_frame)
 hud_alignment_entry.pack(fill=tk.X, padx=padx_side, pady=5)
 
-
-
-ttk.Button(root, text="Launch App with HUD and Alignment", command=launch_app_with_alignment).pack(anchor="w", padx=padx_side, pady=(0, 10))
+ttk.Button(scrollable_frame, text="Launch App with HUD and Alignment", command=launch_app_with_alignment).pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 # Toggleable log output
 def toggle_logs():
@@ -426,20 +476,22 @@ def toggle_logs():
         launch_output_text.pack(fill=tk.BOTH, padx=padx_side, pady=10, expand=True)
         toggle_log_button.config(text="Hide Logs")
 
-toggle_log_button = ttk.Button(root, text="Show Logs", command=toggle_logs)
+toggle_log_button = ttk.Button(scrollable_frame, text="Show Logs", command=toggle_logs)
 toggle_log_button.pack(anchor="w", padx=padx_side, pady=(0, 5))
 
-launch_output_text = scrolledtext.ScrolledText(root, height=12)
-# Initially hidden (optional — comment out this line to show logs by default)
+launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12)
 launch_output_text.pack_forget()
 
-status_label = ttk.Label(root, text="", foreground="blue")
-status_label.pack(anchor="w", padx=padx_side, pady=(0, 10))
-
-
-status_label = ttk.Label(root, text="", foreground="blue")
+status_label = ttk.Label(scrollable_frame, text="", foreground="blue")
 status_label.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 
+
+# Check if Xcode is configured
+if not is_xcode_ready() or not has_agreed_to_license():
+    prompt_user_to_run_script()
+
 root.mainloop()
+
+
