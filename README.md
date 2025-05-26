@@ -51,7 +51,7 @@
 
 8. Open the game you want the HUD enabled for before pressing "Show Running Apps"
 
-9. Click "Show Running Apps" to view running Apps
+9. Click "Show Running Apps" to see which apps are running. It might take some time if you have a lot of apps on your device! 
 
 - If developer mode is not enabled on your device you will receive "Operation failed because Developer Mode is disabled on your iPhone or iPad". Follow instructions to enable dev mode! 
 - Click an App in the list to automatically fill in the “App Path”
