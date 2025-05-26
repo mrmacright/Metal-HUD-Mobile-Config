@@ -122,6 +122,7 @@ def list_devices():
         header = f"{'Name':<40}  {'Identifier':<40}  {'State':<20}  Model"
         separator = "-" * 110
         formatted = header + "\n" + separator + "\n\n" + "\n\n".join(device_lines)
+	formatted = formatted.replace("?", "'")
     else:
         formatted = "No devices found."
 
