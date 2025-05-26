@@ -4,7 +4,7 @@
 
 # Metal Hud Mobile Config
 
-### Enable Metal Performance HUD on iPhone and iPad without using Terminal or relying on jailbreaks or exploits
+#### Enable Metal Performance HUD on iPhone and iPad without using Terminal or relying on jailbreaks or exploits
 
 - Quickly list connected devices and display only relevant running apps (hides system/background apps)
 
@@ -138,7 +138,7 @@ Steps:
 
 6. Open "Metal HUD Mobile Config" and Click "List Devices" and it should appear.
 
-- After updating to a new version of tvOS, re-pairing your Apple TV device might be required 
+After updating to a new version of tvOS, re-pairing your Apple TV device might be required 
 
 
 ## Other
