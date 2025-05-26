@@ -32,7 +32,7 @@
 
 3. On the first run, macOS may block the app. To allow it:
 
-Go to System Settings > Privacy & Security > Security, then click “Open Anyway” next to "Metal HUD Mobile Config was blocked…"
+- Go to System Settings > Privacy & Security > Security, then click “Open Anyway” next to "Metal HUD Mobile Config was blocked…"
 
 4. Open App (Metal HUD Mobile Config). You’ll be promoted to download Xcode 
 
