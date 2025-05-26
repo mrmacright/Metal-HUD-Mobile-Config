@@ -19,8 +19,9 @@
 
 ✅ iOS 16 or later / iPadOS 16 or later. Yes it works with iOS 18+ / iPadOS 18+
 
-❌ Windows is not supported, do not make requests for it! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
 ✅ Apple TV HD (2015) and later are partially supported, see #Apple TV below
+
+❌ Windows is not supported, do not make requests for it! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
 
 ## Launching & Using The App
 
@@ -125,7 +126,7 @@ I'm not a developer... I used ChatGPT to help with development, so issues are li
 
 ## Apple TV
 
-Enabling Metal HUD on Apple TV is a little more tricky compared to iPhone / iPad. You need to connect it within Xcode app. 
+Enabling Metal HUD on Apple TV is a little more involved compared to iPhone or iPad—you’ll need to connect the device using the Xcode app.
 
 Steps: 
 
