@@ -1,5 +1,5 @@
 
-![MyIcon](https://github.com/user-attachments/assets/0fbc1c8f-7eb9-4602-8104-0c767aacae81)    ![hippo]([https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExYWVmcWFwZW1tdTg4bWhkeDhqNDA5bGpoMnM5dXNhMzBxM3BpYXVxdSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/WKomCvvuqXh5I6iLhN/giphy.gif](https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcnFlY2tubzd2NnNtenhsemN2MmNkd2xtb2g5eXFncXF5Y2c3M21mNSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1yftmTxUNqkLNZs38a/giphy.gif))
+![MyIcon](https://github.com/user-attachments/assets/0fbc1c8f-7eb9-4602-8104-0c767aacae81)    ![RE4 Metal HUD](https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcnFlY2tubzd2NnNtenhsemN2MmNkd2xtb2g5eXFncXF5Y2c3M21mNSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/1yftmTxUNqkLNZs38a/giphy.gif))
 
 
 # Metal Hud Mobile Config
