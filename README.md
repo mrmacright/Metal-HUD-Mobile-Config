@@ -12,6 +12,9 @@ A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tink
 
 ## Launching & Using The App
 
+<img width="1205" alt="UI Screenshot" src="https://github.com/user-attachments/assets/979f4d5b-7277-49cd-a1bf-1965c3a6e71e" />
+
+
 1. Connect iPhone or iPad to Mac via USB. You may be promoted to "Trust This Computer" on your device and "Allow accessory to connect" on Mac. "Trust"!
 
 2. On 1st run, macOS will block the app. Go to: System Settings > Privacy & Security > Security and click “Open Anyway” next to "Metal HUD Mobile Config was blocked…"
