@@ -69,8 +69,6 @@
 
 4. Re-open the App and hopefully your device will appear! 
 
-- If you're using an iOS / iPadOS beta, you'll likely need to install the corresponding Xcode Beta and Command Line Tools: https://developer.apple.com/xcode/resources/ 
-
 If the app isn't working as expected, you can run these backup Terminal commands. The app normally installs everything automatically, but you can manually execute the following commands in order to fix common issues.
 
 Install Command Line Tools 
@@ -92,6 +90,9 @@ Run this in terminal to see if devices show. If they do, then the App should wor
 ```
 xcrun devicectl list devices
 ```
+
+
+If you're using an iOS / iPadOS beta, you'll likely need to install the corresponding Xcode Beta and Command Line Tools: https://developer.apple.com/xcode/resources/ 
 
 ## Known Issues
 
