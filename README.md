@@ -4,13 +4,13 @@
 
 A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tinkering with Terminal
 
-# Requirements 
+## Requirements 
 - macOS 15.2 or later (Only tested on Apple silicon Macs)
 - Xcode 
 - iOS 16 or later / iPadOS 16 or later. Yes it works with iOS 18+ / iPadOS 18+
 - Windows is not supported, and NEVER will be! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
 
-# Launching & Using The App
+## Launching & Using The App
 
 1. Connect iPhone or iPad to Mac via USB. You may be promoted to "Trust This Computer" on your device and "Allow accessory to connect" on Mac. "Trust"!
 
@@ -45,7 +45,7 @@ A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tink
 - You can also use "HUD Alignment" to change HUD position on screen. Apply a custom number. It's very finicky! 
 - "Previous Commands" will show last 10 commands entered
 
-# Troubleshooting 
+## Troubleshooting 
 
 1. If you're seeing "No Devices", or "The Device must be paired before it can be connected"... close the App
 
@@ -59,7 +59,7 @@ A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tink
 
 - If you're using an iOS / iPadOS beta, you'll likely need to install the corresponding Xcode Beta and Command Line Tools: https://developer.apple.com/xcode/resources/ 
 
-# Known Issues
+## Known Issues
 
 - You can't enable the HUD system-wide on iOS/iPadOS. Unlike macOS, which supports a global HUD via MTL_HUD_ENABLED=1, Apple limits the mobile HUD to individual apps launched through tools like xcrun devicectl
 
@@ -71,7 +71,7 @@ A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tink
 
 - Some games with anti-cheat (e.g., Warzone Mobile) may not launch with HUD. I’ve used Metal HUD since 2023 without bans in games like PUBG or Fortnite, but use at your own risk
 
-# Other
+## Other
 
 Join my Discord server for support: https://discord.gg/RaXugyqp63
 
