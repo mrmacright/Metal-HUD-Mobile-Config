@@ -7,7 +7,7 @@ A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tink
 # Requirements 
 - macOS 15.2 or later (Only tested on Apple silicon Macs)
 - Xcode 
-- iOS 16 or later / iPadOS 16 or later. Yes it works with iOS / iPadOS 18+
+- iOS 16 or later / iPadOS 16 or later. Yes it works with iOS 18+ / iPadOS 18+
 - Windows is not supported, and NEVER will be! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
 
 # Launching & Using The App
