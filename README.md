@@ -49,21 +49,21 @@
 
 7. Click a device in the list to automatically fill in the “Device Identifier.”
 
-8. Open the game you want the HUD enabled for before pressing "Show Running Apps". 
+8. Open the game you want the HUD enabled for before pressing "Show Running Apps"
 
-9. Click "Show Running Apps" to view running Apps. 
+9. Click "Show Running Apps" to view running Apps
 
 - If developer mode is not enabled on your device you will receive "Operation failed because Developer Mode is disabled on your iPhone or iPad". Follow instructions to enable dev mode! 
 - Click an App in the list to automatically fill in the “App Path”
-- You can click "Save App Path" to save the path for future use.
+- You can click "Save App Path" to save the path for future use
 
 10. Close App on iPhone / iPad
 
 11. Click "Launch App with Metal Performance HUD" to enable Metal HUD for App 
 
-- Sometimes you may need to close the app and try again for the HUD to appear.
+- Sometimes you may need to close the app and try again for the HUD to appear
 - Use "HUD Alignment" to change the HUD’s position on the screen by applying a custom number — note it can be a bit finicky!
-- "Previous Commands" displays the last 10 commands you entered.
+- "Previous Commands" displays the last 10 commands you entered
 
 ## Troubleshooting 
 
