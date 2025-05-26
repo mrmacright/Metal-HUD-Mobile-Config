@@ -74,7 +74,7 @@
 
 ## Troubleshooting 
 
-### If your iPhone / iPad is not appearing under List Devices, try the following:
+### If your device is not appearing under List Devices, try the following:
 
 1. Close the Metal HUD Mobile Config
 
@@ -84,7 +84,7 @@
 
 4. Re-open the App and hopefully your device will appear! 
 
-### Still not working? Open Terminal and run the following commands in order to fix common issues.
+### Still not working? Open Terminal and run the following commands to fix common issues.
 
 Set Xcode Path 
 ```
