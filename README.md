@@ -2,7 +2,7 @@
 
 # Metal Hud Mobile Config
 
-### Enable the Metal Performance HUD on iPhone and iPad without using Terminal or relying on jailbreaks or exploits.
+### Enable Metal Performance HUD on iPhone and iPad without using Terminal or relying on jailbreaks or exploits
 
 - Quickly list connected devices and display only relevant running apps (hides system/background apps)
 
