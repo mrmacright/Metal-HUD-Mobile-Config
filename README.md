@@ -61,15 +61,17 @@
 
 ## Troubleshooting 
 
-1. If you're seeing "No Devices", or "The Device must be paired before it can be connected"... close the App
+### If you're seeing "No Devices", or "The Device must be paired before it can be connected"... Try the following:
 
-2. You might need to Agree to "Xcode and Apple SDKs Agreement" for the App to work. Open "setup_xcode.sh" and press Agree. Close XCODE after pressing "Agree"
+1. Close the App
+
+2. Agree to "Xcode and Apple SDKs Agreement" by opening file "setup_xcode.sh" and press Agree. Close XCODE after pressing "Agree"
 
 3. Unplug iPhone / iPad from Mac > Restart Mac > Reconnect iPhone / iPad to Mac
 
 4. Re-open the App and hopefully your device will appear! 
 
-If the app isn't working as expected, you can run these backup Terminal commands. The app normally installs everything automatically, but you can manually execute the following commands in order to fix common issues.
+Still not working? Run these commands in Terminal. The app normally installs everything automatically, but you can manually execute the following commands in order to fix common issues.
 
 Install Command Line Tools 
 ```
