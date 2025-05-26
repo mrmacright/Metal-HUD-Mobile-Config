@@ -84,7 +84,7 @@
 
 4. Re-open the App and hopefully your device will appear! 
 
-### Still not working? Execute the following commands in order to fix common issues.
+### Still not working? Open Terminal and run the following commands in order to fix common issues.
 
 Install Command Line Tools 
 ```
