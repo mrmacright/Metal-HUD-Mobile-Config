@@ -61,7 +61,7 @@ A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tink
 
 ## Known Issues
 
-- You can't enable the HUD system-wide on iOS/iPadOS. Unlike macOS, which supports a global HUD via MTL_HUD_ENABLED=1, Apple limits the mobile HUD to individual apps launched through tools like xcrun devicectl
+- You can't enable the HUD system-wide on iOS / iPadOS. Unlike macOS, which supports a global HUD via MTL_HUD_ENABLED=1, Apple limits the mobile HUD to individual apps launched through tools like xcrun devicectl
 
 - Game paths often use internal bundle names that differ from the App Store title
 
