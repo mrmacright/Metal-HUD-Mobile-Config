@@ -76,8 +76,6 @@
 
 ### If your iPhone / iPad is not appearing under List Devices, try the following:
 
-Try the following:
-
 1. Close the Metal HUD Mobile Config
 
 2. Agree to "Xcode and Apple SDKs Agreement" by opening file "setup_xcode.sh" and press "Agree". Close XCODE after pressing "Agree", don't continue with other installs
@@ -86,7 +84,7 @@ Try the following:
 
 4. Re-open the App and hopefully your device will appear! 
 
-Still not working? Execute the following commands in order to fix common issues.
+### Still not working? Execute the following commands in order to fix common issues.
 
 Install Command Line Tools 
 ```
@@ -107,7 +105,6 @@ Run this in terminal to see if devices show. If they do, then the App should wor
 ```
 xcrun devicectl list devices
 ```
-
 
 If you're using an iOS / iPadOS beta, you'll likely need to install the corresponding Xcode Beta and Command Line Tools: https://developer.apple.com/xcode/resources/ 
 
