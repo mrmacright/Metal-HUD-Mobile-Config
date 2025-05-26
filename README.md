@@ -69,12 +69,15 @@
 
 4. Re-open the App and hopefully your device will appear! 
 
-- You can also try running in terminal
+- You can also try running this in terminal. This might fix Xcode installation issues. 
 ```
   sudo xcode-select -s /Applications/Xcode.app" .
 ```
 
-This might fix Xcode installation issues. Then try running "xcrun devicectl list devices" in terminal to see if devices show. If they do, then the App should work! 
+Then try running this command in terminal to see if devices show. If they do, then the App should work! 
+```
+xcrun devicectl list devices
+```
 
 - If you're using an iOS / iPadOS beta, you'll likely need to install the corresponding Xcode Beta and Command Line Tools: https://developer.apple.com/xcode/resources/ 
 
