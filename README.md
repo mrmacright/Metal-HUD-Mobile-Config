@@ -61,11 +61,13 @@
 
 ## Troubleshooting 
 
-### If you're seeing "No Devices", or "The Device must be paired before it can be connected"... Try the following:
+### If you're seeing "No Devices", or "The Device must be paired before it can be connected"... 
 
-1. Close the App
+Try the following:
 
-2. Agree to "Xcode and Apple SDKs Agreement" by opening file "setup_xcode.sh" and press Agree. Close XCODE after pressing "Agree"
+1. Close the Metal HUD Mobile Config
+
+2. Agree to "Xcode and Apple SDKs Agreement" by opening file "setup_xcode.sh" and press "Agree". Close XCODE after pressing "Agree", don't continue with other installs
 
 3. Unplug iPhone / iPad from Mac > Restart Mac > Reconnect iPhone / iPad to Mac
 
