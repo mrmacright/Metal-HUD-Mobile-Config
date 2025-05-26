@@ -24,7 +24,7 @@
 ### Supported devices for Metal HUD
 ✅ iOS 16 or later / iPadOS 16 or later. Yes it works with iOS 18+ / iPadOS 18+
 
-✅ Apple TV HD (2015) and newer. The setup process is more involved; please refer to the “Apple TV” section below.
+✅ Apple TV HD (2015) and newer. The setup process is more involved; please refer to the # Apple TV section below.
 
 
 
@@ -51,7 +51,7 @@
 
 6. Click "List Devices" to view connected devices 
 
-- For errors see # TROUBLESHOOTING
+- For errors see # Troubleshooting
 - Once device is paired successfully you can do all this wirelessly! 
 
 7. Click a device in the list to automatically fill in the “Device Identifier.”
@@ -109,17 +109,13 @@ If you're using an iOS / iPadOS beta, you'll likely need to install the correspo
 
 - Game paths often use internal bundle names that differ from the App Store title
 
+- If you already have Xcode installed in a different location (e.g., Downloads or Desktop), the app might not detect it. Please move Xcode to the Applications folder. This will be fixed in a future version!
+
 - Metal HUD does not work with OpenGL-based games. You may see a warning in the logs
 
 - Compatibility issues may occur with games using MoltenVK, such as Wreckfest. You may see a warning in the logs
 
 - Some games with anti-cheat (e.g., Warzone Mobile) may not launch with HUD. I’ve used Metal HUD since 2023 without bans in games like PUBG or Fortnite, but use at your own risk
-
-## Other
-
-Join my Discord server for support: https://discord.gg/RaXugyqp63
-
-I'm not a developer... I used ChatGPT to help with development, so issues are likely to occur! 
 
 ## Apple TV
 
@@ -141,3 +137,11 @@ Steps:
 6. Open "Metal HUD Mobile Config" and Click "List Devices" and it should appear.
 
 - After updating to a new version of tvOS, re-pairing your Apple TV device might be required 
+
+
+## Other
+
+Join my Discord server for support: https://discord.gg/RaXugyqp63
+
+I'm not a developer... I used ChatGPT to help with development, so issues are likely to occur! 
+
