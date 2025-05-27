@@ -140,13 +140,6 @@ Steps:
 
 After updating to a new version of tvOS, re-pairing your Apple TV device might be required 
 
-
-## Other
-
-Join my Discord server for support: https://discord.gg/RaXugyqp63
-
-I'm not a developer... I used ChatGPT to help with development, so issues are likely to occur! 
-
 ## Manual commands in terminal
 
 List Available Devices
@@ -176,3 +169,9 @@ xcrun devicectl device process launch \
   --device <DEVICE_UDID> \
   "/private/var/containers/Bundle/Application/UUID/AppName.app/"
 ```
+
+## Other
+
+Join my Discord server for support: https://discord.gg/RaXugyqp63
+
+I'm not a developer... I used ChatGPT to help with development, so issues are likely to occur! 
