@@ -117,7 +117,7 @@ If you're using an iOS / iPadOS beta, you'll likely need to install the correspo
 
 - Compatibility issues may occur with games using MoltenVK, such as Wreckfest. You may see a warning in the logs
 
-- Some games with anti-cheat (e.g., Warzone Mobile) may not launch with HUD. I’ve used Metal HUD since 2023 without bans in games like PUBG or Fortnite, but use at your own risk
+- Some games with anti-cheat (e.g., Warzone Mobile) may not launch with HUD or result in bans. I’ve used Metal HUD since 2023 without bans in games like PUBG or Fortnite, but use at your own risk
 
 ## Apple TV
 
