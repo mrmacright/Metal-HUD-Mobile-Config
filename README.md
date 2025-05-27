@@ -138,7 +138,7 @@ Steps:
 
 6. Open "Metal HUD Mobile Config" and Click "List Devices" and it should appear.
 
-After updating to a new version of tvOS, re-pairing your Apple TV device might be required 
+After updating to a new version of tvOS and macOS, re-pairing your Apple TV device might be required 
 
 ## Manual commands in terminal
 
