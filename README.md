@@ -149,7 +149,7 @@ I'm not a developer... I used ChatGPT to help with development, so issues are li
 
 ## Manual commands in terminal
 
-List all available iOS, iPadOS, tvOS, and watchOS devices
+List Available Devices
 ```
 xcrun devicectl list devices
 ```
