@@ -147,3 +147,32 @@ Join my Discord server for support: https://discord.gg/RaXugyqp63
 
 I'm not a developer... I used ChatGPT to help with development, so issues are likely to occur! 
 
+## Manual commands in terminal
+
+List all available iOS, iPadOS, tvOS, and watchOS devices
+```
+xcrun devicectl list devices
+```
+
+Find Running App Paths on a Device
+```
+xcrun devicectl device info processes --device <DEVICE_UDID> | grep 'Bundle/Application'
+```
+
+Launch an app with the Metal HUD enabled
+```
+xcrun devicectl device process launch \
+  -e '{"MTL_HUD_ENABLED": "1"}' \
+  --console \
+  --device <DEVICE_UDID> \
+  "/private/var/containers/Bundle/Application/UUID/AppName.app/"
+```
+
+Launches an app with the Metal HUD enabled, and specifies where the HUD should appear on the screen using MTL_HUD_ALIGNMENT.
+```
+xcrun devicectl device process launch \
+  -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_ALIGNMENT": "5"}' \
+  --console \
+  --device <DEVICE_UDID> \
+  "/private/var/containers/Bundle/Application/UUID/AppName.app/"
+```
