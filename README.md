@@ -17,14 +17,14 @@
 ## Requirements 
 
 ### You need a Mac 
-✅ Requires macOS 15.2 or later (Only tested on Apple silicon Macs)
+✅ Requires macOS 15.3 or later (Only tested on Apple silicon Macs)
 
 ✅ Requires Xcode app
 
 ❌ Windows is not supported, do not make requests for it! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
 
 ### Supported devices for Metal HUD
-✅ iOS 16 or later / iPadOS 16 or later. Yes it works with iOS 18+ / iPadOS 18+
+✅ iOS 16 or later / iPadOS 16 or later
 
 ✅ Apple TV HD (2015) and newer. The setup process is more involved; please refer to the # Apple TV section below.
 
