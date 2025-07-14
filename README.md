@@ -21,7 +21,7 @@
 
 ✅ Requires Xcode app
 
-❌ Windows is not supported, do not make requests for it! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
+❌ Windows is not supported! macOS exclusive tools like xcrun devicectl are required that are not available on Windows
 
 ### Supported devices for Metal HUD
 ✅ iOS 16 or later / iPadOS 16 or later
@@ -80,11 +80,9 @@
 
 1. Close the Metal HUD Mobile Config App
 
-2. Agree to "Xcode and Apple SDKs Agreement" by opening file "setup_xcode.sh" and press "Agree". Close XCODE after pressing "Agree", don't continue with other installs
+2. Unplug iPhone or iPad from Mac > Restart iPhone or iPad & Mac > Reconnect iPhone or iPad to Mac
 
-3. Unplug iPhone or iPad from Mac > Restart iPhone or iPad & Mac > Reconnect iPhone or iPad to Mac
-
-4. Re-open the App and hopefully your device will appear! 
+3. Re-open the App and hopefully your device will appear! 
 
 #### Still not working? Open Terminal and run the following commands to fix common issues.
 
