@@ -4,36 +4,51 @@
 
 ### A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tinkering with Terminal
 
-- Quickly list connected devices and display only relevant running apps (hides system/background apps)
+- Lists connected devices and shows only running games (hides system apps)
 
-- Instantly launch the Metal HUD for selected games, with HUD presets, location and scale!
+- Instantly launch Metal HUD for selected games, with HUD presets, location and scale options!
 
-- Save frequently used games and view previously launched game for easy re-use
+- Save frequently used games and view previously launched games for easy re-use
 
 - View logs directly from the interface for better debugging and tracking
 
 ## Requirements 
 
 ✅ Mac (macOS 15.3 or later) 
-❌ Windows not supported (needs macOS tools like xcrun devicectl)
-❌ Metal HUD works per app on iPhone & iPad; system-wide support is not available!
+
+❌ Windows is not supported (needs macOS tools like xcrun devicectl)
+
+❌ System-wide HUD support is not available, Metal HUD works per app on iPhone & iPad!
 
 ### Supported devices for Metal HUD
 
-✅ iOS/iPadOS 26 (best)
+✅ iOS/iPadOS 26 (best experience)
+
 ✅ iOS/iPadOS 16+
+
 ✅ Apple TV HD (2015+) – see Apple TV section
 
 ## Launching The App
 <img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/0c7ebf6c-58b4-46d5-a336-03c86da38386" />
 
+### iPhone/iPad
+
 1. Connect iPhone/iPad to Mac via USB
 
-- You may be promoted to "Trust This Computer" on your iPhone / iPad and "Allow accessory to connect" on Mac 
+- You may need to tap "Trust This Computer" on iPhone/iPad and "Allow accessory" on Mac
 
 2. Download Xcode if prompted
 
 3. Re-open app; may need to install Apple files (takes time)
+
+### Apple TV
+
+1. Xcode → Window → Devices and Simulators → Discovered
+
+2. Pair Apple TV → enter verification code → Connect
+
+3. Open Metal HUD Mobile Config → List Devices
+- You might need to re-pair after tvOS/macOS updates
 
 ## Using The App
 
@@ -46,7 +61,7 @@
 - If Developer Mode is disabled, you’ll see an error. Enable dev mode following the instructions
 
 4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
-- Try presets, locations, scales (iOS/iPadOS 26 required)
+- Try HUD Presets, HUD Locations, and HUD Scale (iOS/iPadOS 26 required)
 - Close and retry app if HUD doesn’t appear
 
 ## Troubleshooting 
@@ -56,8 +71,9 @@
 1. Close the app
 
 2. Unplug, restart Mac & device, reconnect
+- Turning Wi-Fi off and back on may help
 
-3. Re-open the app
+4. Re-open the app
 
 ### Still not working? Run the following in Terminal:
 
@@ -87,19 +103,6 @@ sudo xcode-select -r
 - Game names may differ from App Store names
 
 - Metal HUD does not work with OpenGL-based games
-
-## Apple TV
-
-Enabling Metal HUD on Apple TV is a little more involved compared to iPhone or iPad—you’ll need to connect the device using the Xcode app.
-
-Steps: 
-
-1. Xcode → Window → Devices and Simulators → Discovered
-
-2. Pair Apple TV → enter verification code → Connect
-
-3. Open Metal HUD Mobile Config → List Devices
-- You might need to re-pair after tvOS/macOS updates
 
 ## Manual commands in terminal
 
@@ -143,4 +146,5 @@ xcrun devicectl device process launch \
 ## Other
 
 Join my Discord server for support: https://discord.gg/RaXugyqp63
-Support for work on Buy Me a Coffee: 
+
+Support my work: https://buymeacoffee.com/mrmacright
