@@ -1,6 +1,6 @@
 # Metal Hud Mobile Config
 
-<img width="250" height="250" alt="Icon" src="https://github.com/user-attachments/assets/9504691b-983a-40b5-94fd-2569c4967da0" />
+<img width="125" height="125" alt="Icon" src="https://github.com/user-attachments/assets/9504691b-983a-40b5-94fd-2569c4967da0" />
 
 ### A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tinkering with Terminal
 
@@ -25,7 +25,7 @@
 ✅ Apple TV HD (2015+) – see Apple TV section
 
 ## Launching The App
-<img width="1122" height="942" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/0c7ebf6c-58b4-46d5-a336-03c86da38386" />
+<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/0c7ebf6c-58b4-46d5-a336-03c86da38386" />
 
 1. Connect iPhone/iPad to Mac via USB
 
