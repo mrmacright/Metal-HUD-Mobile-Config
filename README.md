@@ -1,5 +1,8 @@
 # Metal Hud Mobile Config
 
+[MyIcon-1 (dragged).tiff](https://github.com/user-attachments/files/21907012/MyIcon-1.dragged.tiff)
+
+
 ### A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tinkering with Terminal
 
 - Quickly list connected devices and display only relevant running apps (hides system/background apps)
@@ -23,6 +26,7 @@
 ✅ Apple TV HD (2015+) – see Apple TV section
 
 ## Launching The App
+<img width="1122" height="942" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/0c7ebf6c-58b4-46d5-a336-03c86da38386" />
 
 1. Connect iPhone/iPad to Mac via USB
 
