@@ -1,7 +1,6 @@
 # Metal Hud Mobile Config
 
-[MyIcon-1 (dragged).tiff](https://github.com/user-attachments/files/21907012/MyIcon-1.dragged.tiff)
-
+<img width="250" height="250" alt="Icon" src="https://github.com/user-attachments/assets/9504691b-983a-40b5-94fd-2569c4967da0" />
 
 ### A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tinkering with Terminal
 
