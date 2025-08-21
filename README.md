@@ -2,17 +2,16 @@
 ### Manage Metal Performance HUD on iPhone, iPad & Apple TV—no Terminal needed
 
 <p float="left">
-  <img src="https://github.com/user-attachments/assets/9504691b-983a-40b5-94fd-2569c4967da0" width="125" height="125" />
-  <img src="https://github.com/user-attachments/assets/75d1ed77-c9cc-4134-9268-21aea8c16fe6" width="600" height="600" />
-</p>
+  <img src="https://github.com/user-attachments/assets/75d1ed77-c9cc-4134-9268-21aea8c16fe6" width="700" height="700" />
 
 - Lists connected devices and shows only running games (hides system apps)
 - Instantly launch Metal HUD for selected games
 - Choose HUD presets, locations, and scale (Requires iOS 26 / iPadOS 26 / tvOS 26)
-- Save and quickly relaunch your favorite games
+- Save and quickly relaunch your favorite games with Metal HUD
 - View logs directly from the interface for better debugging and tracking
 
-## Requires
+## Requires 
+<img src="https://github.com/user-attachments/assets/9504691b-983a-40b5-94fd-2569c4967da0" width="120" height="120" align="middle" />
 
 ✅ Mac (macOS 15.3 or later) 
 
@@ -59,7 +58,7 @@
 
 ### Device not appearing?
 
-1. Close the app
+1. Close Metal HUD Mobile Config
 2. Unplug, restart Mac & device, reconnect
 - Turning Wi-Fi off and back on may help
 4. Re-open the app
@@ -134,6 +133,6 @@ xcrun devicectl device process launch \
 
 ## Other
 
-Join my Discord server for support: https://discord.gg/RaXugyqp63
+[Join my Discord server for support]([url](https://discord.gg/RaXugyqp63))
 
-Support my work: https://buymeacoffee.com/mrmacright
+[Support my work on Buy Me a Coffee]([url](https://buymeacoffee.com/mrmacright))
