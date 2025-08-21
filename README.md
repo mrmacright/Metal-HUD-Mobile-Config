@@ -133,6 +133,6 @@ xcrun devicectl device process launch \
 
 ## Other
 
-[Join my Discord server for support]([url](https://discord.gg/RaXugyqp63))
+Join my Discord server for support: https://discord.gg/RaXugyqp63
 
-[Support my work on Buy Me a Coffee]([url](https://buymeacoffee.com/mrmacright))
+Support my work on Buy Me a Coffee: https://buymeacoffee.com/mrmacright
