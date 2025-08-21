@@ -1,8 +1,8 @@
-# Metal Hud Mobile Config
+# Metal HUD Mobile Config
 
 <img width="125" height="125" alt="Icon" src="https://github.com/user-attachments/assets/9504691b-983a-40b5-94fd-2569c4967da0" />
 
-### A handy tool to operate the Metal Performance HUD on iPhone & iPad, without tinkering with Terminal
+### Manage Metal Performance HUD on iPhone, iPad, and Apple TV—no Terminal needed.
 
 - Lists connected devices and shows only running games (hides system apps)
 
@@ -26,9 +26,9 @@
 
 ✅ iOS/iPadOS 16+
 
-✅ Apple TV HD (2015+) – see Apple TV section
+✅ Apple TV HD (2015+) 
 
-## Launching The App
+## Launching The App 
 <img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/0c7ebf6c-58b4-46d5-a336-03c86da38386" />
 
 ### iPhone/iPad
@@ -43,18 +43,17 @@
 
 ### Apple TV
 
-1. Xcode → Window → Devices and Simulators → Discovered
-
-2. Pair Apple TV → enter verification code → Connect
-
-3. Open Metal HUD Mobile Config → List Devices
+1. Download XCODE
+2. Open Xcode → Window → Devices and Simulators → Discovered
+3. Pair Apple TV → enter verification code → Connect
+4. Open Metal HUD Mobile Config → List Devices
 - You might need to re-pair after tvOS/macOS updates
 
 ## Using The App
 
 1. Click List Devices (wireless operation after pairing)
 
-2. Open the game on your iPhone or iPad before pressing "Show Running Games" 
+2. Open the game on your device before pressing "Show Running Games" 
 
 3. Click "Show Running Games" to see games running on your device. 
 
