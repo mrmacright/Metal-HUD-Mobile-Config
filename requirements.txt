@@ -1,0 +1,3 @@
+py2app
+tk
+setuptools

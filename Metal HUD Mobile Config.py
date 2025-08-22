@@ -160,9 +160,6 @@ def list_devices():
 
 def show_apps():
     udid = device_udid_combo.get().strip()
-    if not udid:
-        messagebox.showwarning("Missing UDID", "Please select device.")
-        return
 
     command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
     output = run_command(command)
@@ -262,10 +259,10 @@ def save_app_path():
     app_path = getattr(app_path_combo, "full_path", None)
 
     if not udid or not app_path:
-        messagebox.showwarning("Missing Info", "Please select both Device and Saves Paths before saving.")
+        messagebox.showwarning("Missing Info", "Please select a Device and game before saving.")
         return
 
-    name = simpledialog.askstring("Save Path", "Enter a name for this app/device combo:")
+    name = simpledialog.askstring("Save Game", "Enter a name for this game/device:")
     if not name:
         return
 
@@ -355,17 +352,13 @@ def launch_app():
     udid = device_udid_combo.get().strip()
     app_path = getattr(app_path_combo, "full_path", None)
     if not app_path:
-        messagebox.showwarning("Missing Info", "Please select Device and Game.")
+        messagebox.showwarning("Missing Info", "Please select Device and Game")
         return
 
     alignment = hud_alignment_var.get().strip()
 
     if not udid or not app_path:
         messagebox.showwarning("Missing Info", "Please select Device and Game")
-        return
-
-    if alignment not in hud_alignment_display_map.values():
-        messagebox.showwarning("Invalid Input", "Please select a valid HUD alignment option.")
         return
 
     show_temporary_status_message(
