@@ -13,7 +13,6 @@ os.environ["LANG"] = "en_US.UTF-8"
 
 locale.setlocale( locale.LC_ALL, 'en_US.UTF-8' )
 
-
 def run_setup_xcode():
     if getattr(sys, 'frozen', False):
         base_path = os.path.abspath(os.path.join(os.path.dirname(sys.executable), '..', 'Resources'))
@@ -26,14 +25,12 @@ def run_setup_xcode():
     else:
         print(f"setup_xcode.sh not found at: {script_path}")
 
-
 def is_xcode_ready():
     try:
         result = subprocess.check_output(["xcrun", "--find", "xcodebuild"], text=True)
         return "/Applications/Xcode.app" in result
     except subprocess.CalledProcessError:
         return False
-
 
 def has_agreed_to_license():
     try:
@@ -44,9 +41,7 @@ def has_agreed_to_license():
             return False
         return True  
 
-
 run_setup_xcode()
-
 
 DATA_FILE = os.path.expanduser("~/ios_device_controller_data.json")
 
@@ -114,7 +109,6 @@ def is_xcode_installed():
 def open_xcode_download():
     subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
 
-
 def list_devices():
     raw_output = run_command("xcrun devicectl list devices")
 
@@ -157,9 +151,10 @@ def list_devices():
     else:
         device_udid_combo.set('')
 
-
 def show_apps():
     udid = device_udid_combo.get().strip()
+    if not udid:
+        return
 
     command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
     output = run_command(command)
@@ -227,7 +222,6 @@ def show_apps():
     if not sorted_apps:
         update_launch_button_text(None)
 
-
 def update_command_history(cmd):
     if cmd not in command_history:
         command_history.insert(0, cmd)
@@ -245,7 +239,6 @@ def update_launch_output(output):
         messagebox.showwarning("OpenGL Detected",
             "Warning: OpenGL detected in the logs. Metal HUD may not work!")
 
-
 def run_command_in_thread(command):
     output = run_command(command)
     launch_output_text.after(0, lambda: update_launch_output(output))
@@ -259,10 +252,10 @@ def save_app_path():
     app_path = getattr(app_path_combo, "full_path", None)
 
     if not udid or not app_path:
-        messagebox.showwarning("Missing Info", "Please select a Device and game before saving.")
+        messagebox.showwarning("Missing Info", "Please select both Device and Game before saving.")
         return
 
-    name = simpledialog.askstring("Save Game", "Enter a name for this game/device:")
+    name = simpledialog.askstring("Save Path", "Enter a name for this Game/Device combo:")
     if not name:
         return
 
@@ -270,7 +263,6 @@ def save_app_path():
     refresh_saved_paths_combo()
     saved_paths_combo.set(name)
     save_data() 
-
 
 def refresh_saved_paths_combo():
     names = sorted(saved_paths.keys())
@@ -314,7 +306,6 @@ def on_command_history_select(event):
     else:
         hud_alignment_var.set("")
 
-
 def get_hud_env_vars(preset):
     if preset == "Default":
         return {"MTL_HUD_ENABLED": "1"}
@@ -352,7 +343,7 @@ def launch_app():
     udid = device_udid_combo.get().strip()
     app_path = getattr(app_path_combo, "full_path", None)
     if not app_path:
-        messagebox.showwarning("Missing Info", "Please select Device and Game")
+        messagebox.showwarning("Missing Info", "Please select Device and Game.")
         return
 
     alignment = hud_alignment_var.get().strip()
@@ -381,13 +372,11 @@ def launch_app():
     update_command_history(command)
     threading.Thread(target=run_command_in_thread, args=(command,), daemon=True).start()
 
-
 def on_preset_change(*args):
     if hud_preset_var.get() == "Custom":
         custom_elements_frame.pack(fill=tk.X, padx=padx_side, pady=(0,10))
     else:
         custom_elements_frame.pack_forget()
-
 
 def on_device_text_click(event):
     index = device_text.index(f"@{event.x},{event.y}")
@@ -434,7 +423,6 @@ def on_apps_text_click(event):
         app_path_combo.full_path = None
         update_launch_button_text(None)
         apps_text.selected_app_name = None
-
 
 # === GUI SETUP ===
 root = tk.Tk()
@@ -512,7 +500,6 @@ def on_app_path_select(event):
 
 app_path_combo.bind("<<ComboboxSelected>>", on_app_path_select)
 
-
 ttk.Button(scrollable_frame, text="Save Game", command=save_app_path).pack(anchor="w", padx=padx_side, pady=(0, 5))
 
 ttk.Label(scrollable_frame, text="Saved Games").pack(anchor="w", padx=padx_side)
@@ -536,7 +523,6 @@ def extract_app_name_from_command(cmd):
 command_history_app_names = [extract_app_name_from_command(cmd) for cmd in command_history]
 
 appname_to_command = {extract_app_name_from_command(cmd): cmd for cmd in command_history}
-
 
 ttk.Label(scrollable_frame, text="Previous Games").pack(anchor="w", padx=padx_side)
 command_history_combo = ttk.Combobox(scrollable_frame, values=command_history_app_names, state="readonly")
@@ -568,7 +554,6 @@ def on_command_history_select(event):
 
         update_launch_button_text(app_name)
 command_history_combo.bind("<<ComboboxSelected>>", on_command_history_select)
-
 
 # === HUD PRESETS ===
 
@@ -628,7 +613,6 @@ for display_name, internal_name in hud_elements_display_map.items():
         col = 0
         row += 1
 
-
 custom_elements_frame.pack_forget()
 
 def on_preset_change(*args):
@@ -639,7 +623,6 @@ def on_preset_change(*args):
 
 hud_preset_var.trace_add("write", on_preset_change)
 on_preset_change()  
-
 
 # === HUD ALIGNMENT OPTIONS ===
 
@@ -677,8 +660,6 @@ hud_alignment_optionmenu = tk.OptionMenu(
 )
 hud_alignment_optionmenu.pack(fill=tk.X, padx=padx_side, pady=5)
 
-
-
 # === HUD SCALE OPTIONS ===
 
 hud_scale_map = {
@@ -709,6 +690,7 @@ def update_launch_button_text(app_name):
     or reset to default if None or empty string is given.
     """
     if app_name:
+        display_name = os.path.basename(app_name)
         launch_button.config(text=f"Launch {app_name} with Metal Performance HUD")
     else:
         launch_button.config(text="Launch App with Metal Performance HUD")
@@ -731,8 +713,5 @@ status_label = ttk.Label(scrollable_frame, text="", foreground="blue")
 status_label.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 root.protocol("WM_DELETE_WINDOW", on_close)
-
-if not is_xcode_ready() or not has_agreed_to_license():
-    prompt_user_to_run_script()
 
 root.mainloop()
