@@ -138,7 +138,12 @@ Join my Discord server for support: https://discord.gg/RaXugyqp63
 Support my work on Buy Me a Coffee: https://buymeacoffee.com/mrmacright
 
 ## Special thanks
-<img width="400" height="208" alt="Elverils logo" src="https://github.com/user-attachments/assets/32536d52-511f-488c-bdfe-ff4c5e50f1cc" />
+
+<a href="https://www.elverils.com">
+  <img src="https://github.com/user-attachments/assets/32536d52-511f-488c-bdfe-ff4c5e50f1cc" alt="Elverils logo" width="450" />
+</a>
+
+
 
 [LordOfTheUnicorn](https://github.com/LordOfTheUnicorn)
 
