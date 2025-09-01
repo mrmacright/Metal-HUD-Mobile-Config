@@ -59,7 +59,7 @@
 ### Device not appearing?
 
 1. Close Metal HUD Mobile Config
-2. Unplug, restart Mac & device, reconnect
+2. Unplug iPhone or iPad from Mac and reconnect
 - Turning Wi-Fi off and back on may help
 4. Re-open the app
 
