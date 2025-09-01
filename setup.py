@@ -6,10 +6,11 @@ OPTIONS = {
     "iconfile": "MyIcon.icns",
     "packages": ["tkinter"],
     "resources": ["MyIcon.icns", "setup_xcode.sh"],
+    "semi_standalone": False, 
     "plist": {
         "CFBundleName": "Metal HUD Mobile Config",
-        "CFBundleShortVersionString": "2.0.0",  # Human-readable version
-        "CFBundleVersion": "2.0.0",             # Internal build number
+        "CFBundleShortVersionString": "2.0.0",
+        "CFBundleVersion": "2.0.0",
         "CFBundleIdentifier": "com.stewie.metalhud",
     },
 }
