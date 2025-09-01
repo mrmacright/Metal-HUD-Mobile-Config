@@ -125,7 +125,7 @@ xcrun devicectl device process launch \
 Full HUD customization:
 ```
 xcrun devicectl device process launch \
-  -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_ELEMENTS": "device,layersize,layerscale,gamemode,memory,refreshrate,fps,frameinterval,gputime,thermal,frameintervalgraph,presentdelay,metalcpu,shaders", "MTL_HUD_ALIGNMENT": "<alignment>", "MTL_HUD_SCALE": "<scale>"}' \
+  -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_ELEMENTS": "device,layersize,layerscale,memory,refreshrate,thermal,gamemode,fps,fpsgraph,framenumber,gputime,frameinterval,frameintervalgraph,frameintervalhistogram,presentdelay,metalcpu,gputimeline,shaders,metalfx", "MTL_HUD_ALIGNMENT": "<alignment>", "MTL_HUD_SCALE": "<scale>"}' \
   --console \
   --device <device-udid> \
   "/private/var/containers/Bundle/Application/<app-uuid>/<app-name>.app"
@@ -136,3 +136,15 @@ xcrun devicectl device process launch \
 Join my Discord server for support: https://discord.gg/RaXugyqp63
 
 Support my work on Buy Me a Coffee: https://buymeacoffee.com/mrmacright
+
+## Special thanks
+<img width="400" height="208" alt="Elverils logo" src="https://github.com/user-attachments/assets/32536d52-511f-488c-bdfe-ff4c5e50f1cc" />
+
+[LordOfTheUnicorn](https://github.com/LordOfTheUnicorn)
+
+and to many others who have helped! Thanks
+
+
+
+
+
