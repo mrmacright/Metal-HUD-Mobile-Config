@@ -322,7 +322,8 @@ def get_hud_env_vars(preset):
     elif preset == "Rich":
         return {
             "MTL_HUD_ENABLED": "1",
-            "MTL_HUD_ELEMENTS": "device,layersize,layerscale,gamemode,memory,refreshrate,fps,frameinterval,gputime,thermal,frameintervalgraph,presentdelay,metalcpu,shaders"
+            "MTL_HUD_ELEMENTS": 
+"device,layersize,layerscale,gamemode,memory,refreshrate,fps,frameinterval,gputime,thermal,frameintervalgraph,presentdelay,metalcpu,shaders,metalfx"
         }
     elif preset == "Full":
         return {
