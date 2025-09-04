@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, scrolledtext, messagebox, simpledialog
+from tkinter import Tk, ttk, scrolledtext, messagebox, simpledialog
 import subprocess
 import re
 import os
@@ -7,6 +7,7 @@ import sys
 import threading
 import json
 import locale   
+
 
 os.environ["LC_ALL"] = "en_US.UTF-8"
 os.environ["LANG"] = "en_US.UTF-8"
@@ -41,35 +42,76 @@ def get_device_display(udid: str) -> str:
 
 locale.setlocale( locale.LC_ALL, 'en_US.UTF-8' )
 
-def run_setup_xcode():
-    if getattr(sys, 'frozen', False):
-        base_path = os.path.abspath(os.path.join(os.path.dirname(sys.executable), '..', 'Resources'))
-        script_path = os.path.join(base_path, 'setup_xcode.sh')
-    else:
-        script_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'setup_xcode.sh'))
-
-    if os.path.exists(script_path):
-        subprocess.run(['bash', script_path])
-    else:
-        print(f"setup_xcode.sh not found at: {script_path}")
-
-def is_xcode_ready():
+def is_xcode_installed():
+    """Check if Xcode Command Line Tools are installed."""
     try:
-        result = subprocess.check_output(["xcrun", "--find", "xcodebuild"], text=True)
-        return "/Applications/Xcode.app" in result
+        subprocess.run(
+            ["xcode-select", "-p"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        return True
     except subprocess.CalledProcessError:
         return False
 
 def has_agreed_to_license():
+    """Check if the Xcode license has been agreed to."""
     try:
-        subprocess.check_output(["xcrun", "devicectl", "list", "devices"], stderr=subprocess.STDOUT, text=True)
+        subprocess.run(
+            ["xcrun", "devicectl", "list", "devices"],
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+def accept_xcode_license_gui():
+    """Attempt to accept the Xcode license using AppleScript (GUI prompt for password)."""
+    applescript = '''
+    do shell script "xcodebuild -license accept" with administrator privileges
+    '''
+    try:
+        subprocess.run(["osascript", "-e", applescript], check=True)
         return True
     except subprocess.CalledProcessError as e:
-        if "You have not agreed to the Xcode and Apple SDKs license" in e.output:
-            return False
-        return True  
+        messagebox.showwarning(
+            "Xcode License",
+            "Failed to automatically accept the Xcode license.\n"
+            "Please run 'sudo xcodebuild -license accept' manually."
+        )
+        return False
 
-run_setup_xcode()
+def run_setup_xcode():
+    """Ensure Xcode is installed and the license is accepted."""
+    if not os.path.exists("/Applications/Xcode.app"):
+        # Xcode is missing: warn user and open App Store
+        messagebox.showwarning(
+            "Xcode Missing",
+            "Xcode is not in the Applications folder.\nPlease download it from the App Store before continuing."
+        )
+        subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
+        root.destroy()
+        os._exit(0)
+
+    # Check if license is agreed
+    if not has_agreed_to_license():
+        # Attempt to auto-accept license with GUI prompt
+        success = accept_xcode_license_gui()
+        if not success:
+            # If it still fails, exit — user needs to fix Xcode installation
+            root.destroy()
+            os._exit(0)
+
+# === GUI root ===
+root = tk.Tk()
+root.withdraw()  
+
+run_setup_xcode()  
+
+root.deiconify()  
 
 DATA_FILE = os.path.expanduser("~/ios_device_controller_data.json")
 
@@ -447,7 +489,6 @@ def on_apps_text_click(event):
         apps_text.selected_app_name = None
 
 # === GUI SETUP ===
-root = tk.Tk()
 root.title("Metal HUD Mobile Config")
 
 root.update_idletasks()
@@ -481,11 +522,13 @@ canvas.pack(side="left", fill="both", expand=True)
 scrollbar.pack(side="right", fill="y")
 
 def prompt_install_xcode():
-    result = messagebox.showwarning(
-        "Xcode Missing", 
-        "Xcode is not in Applications folder.\nPlease download it before continuing."
+    messagebox.showwarning(
+        "Xcode Missing",
+        "Xcode is not in the Applications folder.\nPlease download it from the App Store before continuing."
     )
-    open_xcode_download()
+
+    subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
+    
     root.destroy()
     os._exit(0)
 
@@ -745,4 +788,5 @@ status_label.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 
+root.protocol("WM_DELETE_WINDOW", on_close)
 root.mainloop()
