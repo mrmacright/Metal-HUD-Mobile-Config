@@ -95,22 +95,19 @@ sudo xcode-select -r
   
 - If you’ve manually adjusted Metal HUD Metrics on your iPhone/iPad under Developer → Graphics HUD (iOS 26 / iPadOS 26 / tvOS 26), the Default Metal HUD preset will launch using your custom metrics. Press **Reset** on your device to revert to the default metrics
 
-- Running macOS Tahoe 26.0 beta? You may encounter an issue installing command line tools on initial launch. To fix this, make sure Xcode is installed, then restart your Mac. You might see the message:
-> "Can't install the software because it is not currently available from the Software Update server."
-
 ## Manual commands in terminal
 
-List devices:
+**List devices**:
 ```
 xcrun devicectl list devices
 ```
 
-Find running apps:
+**Find running apps**:
 ```
 xcrun devicectl device info processes --device <DEVICE_UDID> | grep 'Bundle/Application'
 ```
 
-Launch with Default HUD:
+**Launch with Default HUD**:
 ```
 xcrun devicectl device process launch \
   -e '{"MTL_HUD_ENABLED": "1"}' \
@@ -119,22 +116,38 @@ xcrun devicectl device process launch \
   "/private/var/containers/Bundle/Application/UUID/AppName.app/"
 ```
 
-Custom HUD location:
+**Custom HUD Location**: 
+
+Sets the overlay scale (0.0–1.0). Default: 0.2
+
+Available options are:
+`topleft`, `topcenter`, `topright`, `centerleft`, `centered`, `centerright`, `bottomright`, `bottomcenter`, `bottomleft`
 ```
 xcrun devicectl device process launch \
     --device <device-udid> \
     -e 'MTL_HUD_ENABLED=1' \
-    -e 'MTL_HUD_ALIGNMENT=top-right' \
-    "/private/var/containers/Bundle/Application/UUID/AppName.app/AppExecutable"
+    -e 'MTL_HUD_ALIGNMENT=<position>' \
+    "/private/var/containers/Bundle/Application/UUID/AppName.app/
 ```
 
-Full HUD customization:
+**Custom HUD Scale**:
+
+Some available options are:
+`0.15`, `0.2`, `0.3`, `0.4`, `1.0`
 ```
 xcrun devicectl device process launch \
-  -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_ELEMENTS": "device,layersize,layerscale,memory,refreshrate,thermal,gamemode,fps,fpsgraph,framenumber,gputime,frameinterval,frameintervalgraph,frameintervalhistogram,presentdelay,metalcpu,gputimeline,shaders,metalfx", "MTL_HUD_ALIGNMENT": "<alignment>", "MTL_HUD_SCALE": "<scale>"}' \
+  -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_SCALE": "<scale>"}' \
   --console \
   --device <device-udid> \
-  "/private/var/containers/Bundle/Application/<app-uuid>/<app-name>.app"
+  "/private/var/containers/Bundle/Application/UUID/AppName.app/"
+```
+**Full HUD customization**:
+```
+xcrun devicectl device process launch \
+  -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_ELEMENTS": "device,layersize,layerscale,memory,refreshrate,thermal,gamemode,fps,fpsgraph,framenumber,gputime,frameinterval,frameintervalgraph,frameintervalhistogram,presentdelay,metalcpu,gputimeline,shaders,metalfx", "MTL_HUD_ALIGNMENT": "<position>", "MTL_HUD_SCALE": "<scale>"}' \
+  --console \
+  --device <device-udid> \
+  "/private/var/containers/Bundle/Application/UUID/AppName.app/"
 ```
 
 ## Other
