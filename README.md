@@ -118,10 +118,8 @@ xcrun devicectl device process launch \
 
 **Custom HUD Location**: 
 
-Sets the overlay scale (0.0–1.0). Default: 0.2
-
 Available options are:
-`0.15`, `0.2`, `0.3`, `0.4`, `1.0`
+`topleft`, `topcenter`, `topright`, `centerleft`, `centered`, `centerright`, `bottomright`, `bottomcenter`, `bottomleft`
 ```
 xcrun devicectl device process launch \
     --device <device-udid> \
@@ -132,8 +130,7 @@ xcrun devicectl device process launch \
 
 **Custom HUD Scale**:
 
-Some available options are:
-`topleft`, `topcenter`, `topright`, `centerleft`, `centered`, `centerright`, `bottomright`, `bottomcenter`, `bottomleft`
+0.0–1.0. Default: 0.2
 ```
 xcrun devicectl device process launch \
   -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_SCALE": "<scale>"}' \
