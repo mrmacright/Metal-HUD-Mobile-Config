@@ -93,7 +93,7 @@ sudo xcode-select -r
 
 - Metal HUD does not work with OpenGL-based games
   
-- If you’ve manually adjusted Metal HUD Metrics on your iPhone/iPad under Developer > Graphics HUD (iOS 26 / iPadOS 26 / tvOS 26), the Default Metal HUD preset will launch using your custom metrics. Press **Reset** on your device to revert to the default metrics
+- If you’ve manually adjusted Metal HUD Metrics on your iPhone/iPad under Developer → Graphics HUD (iOS 26 / iPadOS 26 / tvOS 26), the Default Metal HUD preset will launch using your custom metrics. Press **Reset** on your device to revert to the default metrics
 
 - Running macOS Tahoe 26.0 beta? You may encounter an issue installing command line tools on initial launch. To fix this, make sure Xcode is installed, then restart your Mac. You might see the message:
 > "Can't install the software because it is not currently available from the Software Update server."
