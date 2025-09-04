@@ -11,6 +11,34 @@ import locale
 os.environ["LC_ALL"] = "en_US.UTF-8"
 os.environ["LANG"] = "en_US.UTF-8"
 
+DEVICE_INFO_CACHE = {}  
+
+def _fetch_device_info_map():
+    """Query devicectl once and build a udid -> 'Model' map."""
+    output = run_command("xcrun devicectl list devices")
+    lines = output.splitlines()[2:]  
+    cache = {}
+    for line in lines:
+        m = re.match(r"^(.*?)\s{2,}.*?\s{2,}(.*?)\s{2,}(.*?)\s{2,}(.*)$", line)
+        if m:
+            udid = m.group(2).strip()
+            model = m.group(4).strip()  
+            cache[udid] = model        
+    return cache
+
+def get_device_display(udid: str) -> str:
+    """Return 'Model' for a UDID, refreshing cache if needed."""
+    global DEVICE_INFO_CACHE
+    if not udid:
+        return "Unknown Device"
+    if udid not in DEVICE_INFO_CACHE:
+        try:
+            DEVICE_INFO_CACHE = _fetch_device_info_map()
+        except Exception:
+            pass
+    return DEVICE_INFO_CACHE.get(udid, udid)
+# ----------------------------------------------------------------------------- 
+
 locale.setlocale( locale.LC_ALL, 'en_US.UTF-8' )
 
 def run_setup_xcode():
@@ -122,6 +150,8 @@ def list_devices():
 
     device_lines = []
     device_ids = {}
+    device_info = {}
+
     for line in content_lines:
         match = re.match(r"^(.*?)\s{2,}.*?\s{2,}(.*?)\s{2,}(.*?)\s{2,}(.*)$", line)
         if match:
@@ -131,8 +161,12 @@ def list_devices():
             model = match.group(4).strip()
 
             device_ids[name] = identifier  
+            device_info[identifier] = model  
 
             device_lines.append(f"{name:<40}  {state:<40}  {model}")
+
+    global DEVICE_INFO_CACHE
+    DEVICE_INFO_CACHE = device_info.copy()
 
     if device_lines:
         formatted = "\n".join(device_lines)
@@ -144,12 +178,25 @@ def list_devices():
     device_text.insert(tk.END, formatted)
 
     device_text.name_to_udid = device_ids
+    device_text.device_info = device_info 
 
     if device_ids:
         device_udid_combo['values'] = list(device_ids.values())
         device_udid_combo.set(list(device_ids.values())[0])
     else:
         device_udid_combo.set('')
+
+    refresh_command_history_combo()
+
+def refresh_command_history_combo():
+    global appname_to_command
+    history_display_entries = []
+    appname_to_command.clear()
+    for cmd in command_history:
+        display_str, full_cmd = extract_device_and_app_from_command(cmd)
+        history_display_entries.append(display_str)
+        appname_to_command[display_str] = full_cmd
+    command_history_combo['values'] = history_display_entries
 
 def show_apps():
     udid = device_udid_combo.get().strip()
@@ -227,9 +274,10 @@ def update_command_history(cmd):
         command_history.insert(0, cmd)
         if len(command_history) > 10:
             command_history.pop()
-        command_history_combo['values'] = command_history
-        command_history_combo.set(cmd)
-        save_data()  
+        refresh_command_history_combo()
+        display_str, _ = extract_device_and_app_from_command(cmd)
+        command_history_combo.set(display_str)
+        save_data()
 
 def update_launch_output(output):
     launch_output_text.delete(1.0, tk.END)
@@ -289,23 +337,6 @@ def on_saved_path_select(event):
         device_udid_combo.set(saved_paths[name]['udid'])
         app_path_combo.set(saved_paths[name]['app_path'])
 
-def on_command_history_select(event):
-    selected_cmd = command_history_combo.get()
-
-    udid_match = re.search(r"--device\s+([^\s]+)", selected_cmd)
-    if udid_match:
-        device_udid_combo.set(udid_match.group(1))
-
-    app_path_match = re.search(r'"([^"]+)"$', selected_cmd)
-    if app_path_match:
-        app_path_combo.set(app_path_match.group(1))
-
-    alignment_match = re.search(r'"MTL_HUD_ALIGNMENT"\s*:\s*"(\w+)"', selected_cmd)
-    if alignment_match:
-        hud_alignment_var.set(alignment_match.group(1))
-    else:
-        hud_alignment_var.set("")
-
 def get_hud_env_vars(preset):
     if preset == "Default":
         return {"MTL_HUD_ENABLED": "1"}
@@ -322,8 +353,7 @@ def get_hud_env_vars(preset):
     elif preset == "Rich":
         return {
             "MTL_HUD_ENABLED": "1",
-            "MTL_HUD_ELEMENTS": 
-"device,layersize,layerscale,gamemode,memory,refreshrate,fps,frameinterval,gputime,thermal,frameintervalgraph,presentdelay,metalcpu,shaders,metalfx"
+            "MTL_HUD_ELEMENTS": "device,layersize,layerscale,gamemode,memory,refreshrate,fps,frameinterval,gputime,thermal,frameintervalgraph,presentdelay,metalcpu,shaders,metalfx"
         }
     elif preset == "Full":
         return {
@@ -343,9 +373,6 @@ def get_hud_env_vars(preset):
 def launch_app():
     udid = device_udid_combo.get().strip()
     app_path = getattr(app_path_combo, "full_path", None)
-    if not app_path:
-        messagebox.showwarning("Missing Info", "Please select Device and Game.")
-        return
 
     alignment = hud_alignment_var.get().strip()
 
@@ -372,12 +399,6 @@ def launch_app():
 
     update_command_history(command)
     threading.Thread(target=run_command_in_thread, args=(command,), daemon=True).start()
-
-def on_preset_change(*args):
-    if hud_preset_var.get() == "Custom":
-        custom_elements_frame.pack(fill=tk.X, padx=padx_side, pady=(0,10))
-    else:
-        custom_elements_frame.pack_forget()
 
 def on_device_text_click(event):
     index = device_text.index(f"@{event.x},{event.y}")
@@ -510,24 +531,35 @@ saved_paths_combo.bind("<<ComboboxSelected>>", on_saved_path_select)
 
 ttk.Button(scrollable_frame, text="Delete Saved Game", command=delete_saved_path).pack(anchor="w", padx=padx_side, pady=(0, 10))
 
-import os  
-import re  
+def extract_device_and_app_from_command(cmd):
+    udid_match = re.search(r"--device\s+([^\s]+)", cmd)
+    udid = udid_match.group(1) if udid_match else None
 
-def extract_app_name_from_command(cmd):
-    match = re.search(r'"([^"]+)"$', cmd)
-    if match:
-        full_path = match.group(1)
-        return os.path.basename(full_path)
+    device_display = get_device_display(udid)
+
+    app_match = re.search(r'"([^"]+)"$', cmd)
+    if app_match:
+        full_path = app_match.group(1)
+        app_basename = os.path.basename(full_path)
+        app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
     else:
-        return cmd
+        app_name = "Unknown App"
 
-command_history_app_names = [extract_app_name_from_command(cmd) for cmd in command_history]
+    return f"{device_display} - {app_name}", cmd
 
-appname_to_command = {extract_app_name_from_command(cmd): cmd for cmd in command_history}
+history_display_entries = []
+appname_to_command = {}
+
+for cmd in command_history:
+    display_str, full_cmd = extract_device_and_app_from_command(cmd)
+    history_display_entries.append(display_str)
+    appname_to_command[display_str] = full_cmd
 
 ttk.Label(scrollable_frame, text="Previous Games").pack(anchor="w", padx=padx_side)
-command_history_combo = ttk.Combobox(scrollable_frame, values=command_history_app_names, state="readonly")
+command_history_combo = ttk.Combobox(scrollable_frame, values=[], state="readonly")
 command_history_combo.pack(fill=tk.X, padx=padx_side, pady=(0, 10))
+
+refresh_command_history_combo()
 
 def on_command_history_select(event):
     selected_appname = command_history_combo.get()
@@ -644,7 +676,6 @@ hud_alignment_display_map = {
 }
 
 display_var = tk.StringVar()
-# Initialize display_var to match hud_alignment_var
 for k, v in hud_alignment_display_map.items():
     if v == hud_alignment_var.get():
         display_var.set(k)
@@ -691,7 +722,6 @@ def update_launch_button_text(app_name):
     or reset to default if None or empty string is given.
     """
     if app_name:
-        display_name = os.path.basename(app_name)
         launch_button.config(text=f"Launch {app_name} with Metal Performance HUD")
     else:
         launch_button.config(text="Launch App with Metal Performance HUD")
