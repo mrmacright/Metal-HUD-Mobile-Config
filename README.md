@@ -6,7 +6,7 @@
 
 - Lists connected devices and shows only running games (hides system apps)
 - Instantly launch Metal HUD for selected games
-- Choose HUD presets, locations, and scale (Requires iOS 26 / iPadOS 26 / tvOS 26)
+- Choose HUD presets, locations, and scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 - Save and quickly relaunch your favorite games with Metal HUD
 - View logs directly from the interface for better debugging and tracking
 
@@ -52,7 +52,7 @@
 3. Click "Show Running Games" to see games running on your device. 
 - If Developer Mode is disabled, you’ll see an error. Enable dev mode following the instructions
 4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
-- Try HUD Presets, HUD Locations, and HUD Scale (Requires iOS 26 / iPadOS 26 / tvOS 26)
+- Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 - Close and retry app if HUD doesn’t appear
 
 ## Troubleshooting 
