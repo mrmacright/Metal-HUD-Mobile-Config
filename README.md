@@ -6,7 +6,7 @@
 
 - Lists connected devices and shows only running games (hides system apps)
 - Instantly launch Metal HUD for selected games
-- Choose HUD presets, locations, and scale (Requires iOS 26 / iPadOS 26 / tvOS 26)
+- Choose HUD presets, locations, and scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 - Save and quickly relaunch your favorite games with Metal HUD
 - View logs directly from the interface for better debugging and tracking
 
@@ -26,7 +26,8 @@
 ✅ Apple TV HD (2015) or later
 
 ## Launching The App 
-<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/0c7ebf6c-58b4-46d5-a336-03c86da38386" />
+<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/740649c6-ab30-46bd-b552-4bb9dfab406a" />
+
 
 ### iPhone / iPad
 
@@ -51,7 +52,7 @@
 3. Click "Show Running Games" to see games running on your device. 
 - If Developer Mode is disabled, you’ll see an error. Enable dev mode following the instructions
 4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
-- Try HUD Presets, HUD Locations, and HUD Scale (Requires iOS 26 / iPadOS 26 / tvOS 26)
+- Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 - Close and retry app if HUD doesn’t appear
 
 ## Troubleshooting 
@@ -91,20 +92,22 @@ sudo xcode-select -r
 - Game names may differ from App Store names
 
 - Metal HUD does not work with OpenGL-based games
+  
+- If you’ve manually adjusted Metal HUD Metrics on your iPhone/iPad under Developer → Graphics HUD (iOS 26 / iPadOS 26 / tvOS 26), the Default Metal HUD preset will launch using your custom metrics. Press **Reset** on your device to revert to the default metrics
 
 ## Manual commands in terminal
 
-List devices:
+**List devices**:
 ```
 xcrun devicectl list devices
 ```
 
-Find running apps:
+**Find running apps**:
 ```
 xcrun devicectl device info processes --device <DEVICE_UDID> | grep 'Bundle/Application'
 ```
 
-Launch with Default HUD:
+**Launch with Default HUD**:
 ```
 xcrun devicectl device process launch \
   -e '{"MTL_HUD_ENABLED": "1"}' \
@@ -113,22 +116,35 @@ xcrun devicectl device process launch \
   "/private/var/containers/Bundle/Application/UUID/AppName.app/"
 ```
 
-Custom HUD location:
+**Custom HUD Location**: 
+
+Available options are:
+`topleft`, `topcenter`, `topright`, `centerleft`, `centered`, `centerright`, `bottomright`, `bottomcenter`, `bottomleft`
 ```
 xcrun devicectl device process launch \
     --device <device-udid> \
     -e 'MTL_HUD_ENABLED=1' \
-    -e 'MTL_HUD_ALIGNMENT=top-right' \
-    "/private/var/containers/Bundle/Application/UUID/AppName.app/AppExecutable"
+    -e 'MTL_HUD_ALIGNMENT=<position>' \
+    "/private/var/containers/Bundle/Application/UUID/AppName.app/
 ```
 
-Full HUD customization:
+**Custom HUD Scale**:
+
+0.0–1.0. Default: 0.2
 ```
 xcrun devicectl device process launch \
-  -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_ELEMENTS": "device,layersize,layerscale,memory,refreshrate,thermal,gamemode,fps,fpsgraph,framenumber,gputime,frameinterval,frameintervalgraph,frameintervalhistogram,presentdelay,metalcpu,gputimeline,shaders,metalfx", "MTL_HUD_ALIGNMENT": "<alignment>", "MTL_HUD_SCALE": "<scale>"}' \
+  -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_SCALE": "<scale>"}' \
   --console \
   --device <device-udid> \
-  "/private/var/containers/Bundle/Application/<app-uuid>/<app-name>.app"
+  "/private/var/containers/Bundle/Application/UUID/AppName.app/"
+```
+**Full HUD customization**:
+```
+xcrun devicectl device process launch \
+  -e '{"MTL_HUD_ENABLED": "1", "MTL_HUD_ELEMENTS": "device,layersize,layerscale,memory,refreshrate,thermal,gamemode,fps,fpsgraph,framenumber,gputime,frameinterval,frameintervalgraph,frameintervalhistogram,presentdelay,metalcpu,gputimeline,shaders,metalfx", "MTL_HUD_ALIGNMENT": "<position>", "MTL_HUD_SCALE": "<scale>"}' \
+  --console \
+  --device <device-udid> \
+  "/private/var/containers/Bundle/Application/UUID/AppName.app/"
 ```
 
 ## Other
