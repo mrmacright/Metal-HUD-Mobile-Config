@@ -11,7 +11,7 @@
 - View logs directly from the interface for better debugging and tracking
 
 ## Requires 
-<img src="https://github.com/user-attachments/assets/9504691b-983a-40b5-94fd-2569c4967da0" width="120" height="120" align="middle" />
+<img src="https://github.com/user-attachments/assets/88087292-d6d9-4792-a650-03426d78932d" width="120" height="120" align="middle" />
 
 ✅ Mac (macOS 15.3 or later) 
 
