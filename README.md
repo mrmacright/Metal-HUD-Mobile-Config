@@ -147,14 +147,15 @@ xcrun devicectl device process launch \
   "/private/var/containers/Bundle/Application/UUID/AppName.app/"
 ```
 **Unpair device**:
+```
 xcrun devicectl manage unpair --device <DEVICE-UDID>
 ```
 
 ## Other
 
-Join my Discord server for support: https://discord.gg/RaXugyqp63
+[Join my Discord server for support](https://discord.gg/RaXugyqp63)
 
-Support my work on Buy Me a Coffee: https://buymeacoffee.com/mrmacright
+[Support my work on Buy Me a Coffee](https://buymeacoffee.com/mrmacright)
 
 ## Special thanks
 
@@ -162,7 +163,7 @@ Support my work on Buy Me a Coffee: https://buymeacoffee.com/mrmacright
   <img src="https://github.com/user-attachments/assets/32536d52-511f-488c-bdfe-ff4c5e50f1cc" alt="Elverils logo" width="450" />
 </a>
 
-
+[Nat Brown](https://x.com/natbro?lang=en)
 
 [LordOfTheUnicorn](https://github.com/LordOfTheUnicorn)
 
