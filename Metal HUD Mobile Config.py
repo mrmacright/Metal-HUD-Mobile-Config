@@ -14,6 +14,9 @@ os.environ["LANG"] = "en_US.UTF-8"
 
 DEVICE_INFO_CACHE = {}  
 
+WARNING_SHOWN = False  
+OPEN_GAME_WARNING_SHOWN = False
+
 def _fetch_device_info_map():
     """Query devicectl once and build a udid -> 'Model' map."""
     output = run_command("xcrun devicectl list devices")
@@ -87,7 +90,6 @@ def accept_xcode_license_gui():
 def run_setup_xcode():
     """Ensure Xcode is installed and the license is accepted."""
     if not os.path.exists("/Applications/Xcode.app"):
-        # Xcode is missing: warn user and open App Store
         messagebox.showwarning(
             "Xcode Missing",
             "Xcode is not in the Applications folder.\nPlease download it from the App Store before continuing."
@@ -96,12 +98,9 @@ def run_setup_xcode():
         root.destroy()
         os._exit(0)
 
-    # Check if license is agreed
     if not has_agreed_to_license():
-        # Attempt to auto-accept license with GUI prompt
         success = accept_xcode_license_gui()
         if not success:
-            # If it still fails, exit — user needs to fix Xcode installation
             root.destroy()
             os._exit(0)
 
@@ -180,13 +179,16 @@ def open_xcode_download():
     subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
 
 def list_devices():
+    global WARNING_SHOWN  
+
+    if not WARNING_SHOWN:
+        messagebox.showwarning(
+            "Connect Device",
+            "Please connect your device via USB. Wireless works after pairing."
+        )
+        WARNING_SHOWN = True  
+
     raw_output = run_command("xcrun devicectl list devices")
-
-    show_temporary_status_message(
-        "Please connect device to Mac. You can disconnect after successful pairing and do this wirelessly.",
-        duration=6000
-    )
-
     lines = raw_output.splitlines()
     content_lines = lines[2:]  
 
@@ -230,6 +232,26 @@ def list_devices():
 
     refresh_command_history_combo()
 
+def unpair_device():
+    """Unpair the selected/highlighted device."""
+    udid = device_udid_combo.get().strip()
+    if not udid:
+        messagebox.showwarning("No Device Selected", "Please select a device to unpair.")
+        return
+
+    device_display = get_device_display(udid)  
+    confirm = messagebox.askyesno("Confirm Unpair", f"Are you sure you want to unpair device {device_display}?")
+    if not confirm:
+        return
+
+    command = f"xcrun devicectl manage unpair --device {udid}"
+    output = run_command(command)
+
+    launch_output_text.delete(1.0, tk.END)
+    launch_output_text.insert(tk.END, output)
+
+    list_devices()
+
 def refresh_command_history_combo():
     global appname_to_command
     history_display_entries = []
@@ -241,12 +263,22 @@ def refresh_command_history_combo():
     command_history_combo['values'] = history_display_entries
 
 def show_apps():
+    global OPEN_GAME_WARNING_SHOWN
+
     udid = device_udid_combo.get().strip()
     if not udid:
         return
 
+    if not OPEN_GAME_WARNING_SHOWN:
+        messagebox.showwarning(
+            "Open Game Reminder",
+            "Make sure the game is open on your device before clicking Show Running Games"
+        )
+        OPEN_GAME_WARNING_SHOWN = True
+
     command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
     output = run_command(command)
+    ...
 
     filter_out = [
         "Photos.app", "Weather.app", "VoiceMemos.app", "News.app", "Tips.app",
@@ -537,6 +569,9 @@ if not is_xcode_installed():
 
 ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
 ttk.Button(scrollable_frame, text="List Devices", command=list_devices).pack(anchor="w", padx=padx_side)
+
+status_label = ttk.Label(scrollable_frame, text="", foreground="blue")
+
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10)
 device_text.tag_configure("selected_device", background="lightblue")  
 device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
@@ -544,7 +579,8 @@ device_text.bind("<Button-1>", on_device_text_click)
 
 device_udid_combo = ttk.Combobox(scrollable_frame, values=[])
 
-tk.Label(scrollable_frame, text="Open the game on your iPhone or iPad before pressing Show Running Games", fg="red").pack(anchor="w", padx=padx_side)
+ttk.Button(scrollable_frame, text="Unpair", command=unpair_device).pack(anchor="w", padx=padx_side, pady=(0, 10))
+
 ttk.Button(scrollable_frame, text="Show Running Games", command=show_apps).pack(anchor="w", padx=padx_side)
 apps_text = scrolledtext.ScrolledText(scrollable_frame, height=7)
 apps_text.tag_configure("selected_app", background="lightblue")  
@@ -782,9 +818,6 @@ toggle_log_button.pack(anchor="w", padx=padx_side, pady=(0, 5))
 
 launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12)
 launch_output_text.pack_forget()
-
-status_label = ttk.Label(scrollable_frame, text="", foreground="blue")
-status_label.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 

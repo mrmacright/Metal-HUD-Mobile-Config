@@ -9,8 +9,8 @@ OPTIONS = {
     "semi_standalone": False, 
     "plist": {
         "CFBundleName": "Metal HUD Mobile Config",
-        "CFBundleShortVersionString": "2.0.2",
-        "CFBundleVersion": "2.0.2",
+        "CFBundleShortVersionString": "2.0.3",
+        "CFBundleVersion": "2.0.3",
         "CFBundleIdentifier": "com.stewie.metalhud",
     },
 }
