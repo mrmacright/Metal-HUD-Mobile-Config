@@ -26,8 +26,7 @@
 ✅ Apple TV HD (2015) or later
 
 ## Launching The App 
-<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/740649c6-ab30-46bd-b552-4bb9dfab406a" />
-
+<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/d004be79-9351-4314-a1a1-f15206364d56" />
 
 ### iPhone / iPad
 
