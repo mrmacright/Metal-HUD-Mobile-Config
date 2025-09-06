@@ -570,9 +570,6 @@ if not is_xcode_installed():
 ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
 ttk.Button(scrollable_frame, text="List Devices", command=list_devices).pack(anchor="w", padx=padx_side)
 
-status_label = ttk.Label(scrollable_frame, text="", foreground="blue")
-status_label.pack(anchor="w", padx=padx_side, pady=(0, 5))
-
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10)
 device_text.tag_configure("selected_device", background="lightblue")  
 device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
