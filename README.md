@@ -160,7 +160,7 @@ xcrun devicectl manage unpair --device <DEVICE-UDID>
 ## Special thanks
 
 <a href="https://www.elverils.com">
-  <img src="https://github.com/user-attachments/assets/32536d52-511f-488c-bdfe-ff4c5e50f1cc" alt="Elverils logo" width="450" />
+  <img src="https://github.com/user-attachments/assets/03bb3fe6-1b72-4cfb-99ef-c25b0bf147c9" alt="Elverils logo" width="450" />
 </a>
 
 [Nat Brown](https://x.com/natbro?lang=en)
