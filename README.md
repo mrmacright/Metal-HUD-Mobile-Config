@@ -32,8 +32,7 @@
 1. Connect iPhone or iPad to Mac via USB
 - You may need to tap "Trust This Computer" on iPhone/iPad and "Allow accessory" on Mac
 2. Launch Metal HUD Mobile Config
-3. Download Xcode if prompted
-4. Re-open app; may need to install Apple files (takes time)
+- If prompted, download Xcode and reopen (Apple files may take a while).
 
 ### Apple TV
 
