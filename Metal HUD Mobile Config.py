@@ -571,6 +571,7 @@ ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
 ttk.Button(scrollable_frame, text="List Devices", command=list_devices).pack(anchor="w", padx=padx_side)
 
 status_label = ttk.Label(scrollable_frame, text="", foreground="blue")
+status_label.pack(anchor="w", padx=padx_side, pady=(0, 5))
 
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10)
 device_text.tag_configure("selected_device", background="lightblue")  
@@ -794,6 +795,9 @@ hud_scale_optionmenu.pack(fill=tk.X, padx=padx_side, pady=5)
 
 launch_button = ttk.Button(scrollable_frame, text="Launch App with Metal Performance HUD", command=launch_app)
 launch_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
+
+status_label = ttk.Label(scrollable_frame, text="", foreground="blue")
+status_label.pack(anchor="w", padx=padx_side, pady=(0, 5))
 
 def update_launch_button_text(app_name):
     """
