@@ -146,6 +146,9 @@ xcrun devicectl device process launch \
   --device <device-udid> \
   "/private/var/containers/Bundle/Application/UUID/AppName.app/"
 ```
+**Unpair device**:
+xcrun devicectl manage unpair --device <DEVICE-UDID>
+```
 
 ## Other
 
