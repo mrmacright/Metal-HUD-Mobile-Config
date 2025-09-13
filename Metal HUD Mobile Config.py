@@ -456,7 +456,7 @@ def launch_app():
         return
 
     show_temporary_status_message(
-        "If the Metal HUD doesn't appear, please close and reopen App on your device."
+        "If the Metal HUD doesn't appear, please close and reopen App on your device"
     )
 
     preset = hud_preset_var.get()
@@ -794,7 +794,7 @@ hud_scale_optionmenu.pack(fill=tk.X, padx=padx_side, pady=5)
 launch_button = ttk.Button(scrollable_frame, text="Launch App with Metal Performance HUD", command=launch_app)
 launch_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
-status_label = ttk.Label(scrollable_frame, text="", foreground="blue")
+status_label = ttk.Label(scrollable_frame, text="", foreground="red")
 status_label.pack(anchor="w", padx=padx_side, pady=(0, 5))
 
 def update_launch_button_text(app_name):
