@@ -449,7 +449,7 @@ def launch_app():
     udid = device_udid_combo.get().strip()
     app_path = getattr(app_path_combo, "full_path", None)
 
-    alignment = hud_alignment_var.get().strip()
+    alignment = get_alignment_internal()
 
     if not udid or not app_path:
         messagebox.showwarning("Missing Info", "Please select Device and Game")
@@ -739,7 +739,7 @@ on_preset_change()
 
 ttk.Label(scrollable_frame, text="Set HUD Location").pack(anchor="w", padx=padx_side)
 
-hud_alignment_var = tk.StringVar(value="topright")  
+hud_alignment_var = tk.StringVar(value="Top-Right")
 
 hud_alignment_display_map = {
     "Top-Left": "topleft",
@@ -753,22 +753,18 @@ hud_alignment_display_map = {
     "Bottom-Left": "bottomleft"
 }
 
-display_var = tk.StringVar()
-for k, v in hud_alignment_display_map.items():
-    if v == hud_alignment_var.get():
-        display_var.set(k)
-        break
-
-def update_var_from_display(selected_display):
-    hud_alignment_var.set(hud_alignment_display_map[selected_display])
-
-hud_alignment_optionmenu = tk.OptionMenu(
+hud_alignment_combo = ttk.Combobox(
     scrollable_frame,
-    display_var,
-    *hud_alignment_display_map.keys(),
-    command=update_var_from_display
+    textvariable=hud_alignment_var,
+    values=list(hud_alignment_display_map.keys()),
+    state="readonly"
 )
-hud_alignment_optionmenu.pack(fill=tk.X, padx=padx_side, pady=5)
+hud_alignment_combo.pack(fill=tk.X, padx=padx_side, pady=5)
+
+def get_alignment_internal():
+    """Return the internal string used by HUD (e.g., 'topleft')."""
+    display_value = hud_alignment_var.get()
+    return hud_alignment_display_map.get(display_value, "topright")
 
 # === HUD SCALE OPTIONS ===
 
