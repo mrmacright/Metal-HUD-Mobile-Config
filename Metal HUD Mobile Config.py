@@ -7,6 +7,26 @@ import sys
 import threading
 import json
 import locale   
+import platform
+
+def check_macos_version(min_version="15.3"):
+    if sys.platform != "darwin":
+        return  
+    
+    ver_tuple = tuple(int(x) for x in platform.mac_ver()[0].split("."))
+    min_tuple = tuple(int(x) for x in min_version.split("."))
+
+    if ver_tuple < min_tuple:
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror(
+            "Unsupported macOS Version",
+            f"This app requires macOS Sequoia 15.3 or later.\n"
+            f"You are running {platform.mac_ver()[0]}"
+        )
+        sys.exit(1)
+
+check_macos_version()
 
 
 os.environ["LC_ALL"] = "en_US.UTF-8"
@@ -272,9 +292,10 @@ def show_apps():
     if not OPEN_GAME_WARNING_SHOWN:
         messagebox.showwarning(
             "Open Game Reminder",
-            "Make sure the game is open on your device before clicking Show Running Games"
+            "Make sure your selected game is open and all other apps are closed before clicking Show Running Games"
         )
         OPEN_GAME_WARNING_SHOWN = True
+        return
 
     command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
     output = run_command(command)
@@ -448,14 +469,14 @@ def launch_app():
     udid = device_udid_combo.get().strip()
     app_path = getattr(app_path_combo, "full_path", None)
 
-    alignment = hud_alignment_var.get().strip()
+    alignment = get_alignment_internal()
 
     if not udid or not app_path:
         messagebox.showwarning("Missing Info", "Please select Device and Game")
         return
 
     show_temporary_status_message(
-        "If the Metal HUD doesn't appear, please close and reopen App on your device."
+        "If the Metal HUD doesn't appear, please close and reopen App on your device"
     )
 
     preset = hud_preset_var.get()
@@ -571,7 +592,7 @@ ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
 ttk.Button(scrollable_frame, text="List Devices", command=list_devices).pack(anchor="w", padx=padx_side)
 
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10)
-device_text.tag_configure("selected_device", background="lightblue")  
+device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
 device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
 device_text.bind("<Button-1>", on_device_text_click)
 
@@ -581,7 +602,7 @@ ttk.Button(scrollable_frame, text="Unpair", command=unpair_device).pack(anchor="
 
 ttk.Button(scrollable_frame, text="Show Running Games", command=show_apps).pack(anchor="w", padx=padx_side)
 apps_text = scrolledtext.ScrolledText(scrollable_frame, height=7)
-apps_text.tag_configure("selected_app", background="lightblue")  
+apps_text.tag_configure("selected_app", background="#ffcc66", foreground="black")
 apps_text.pack(fill=tk.BOTH, padx=padx_side, pady=15, expand=True)
 apps_text.bind("<Button-1>", on_apps_text_click)
 
@@ -738,7 +759,7 @@ on_preset_change()
 
 ttk.Label(scrollable_frame, text="Set HUD Location").pack(anchor="w", padx=padx_side)
 
-hud_alignment_var = tk.StringVar(value="topright")  
+hud_alignment_var = tk.StringVar(value="Top-Right")
 
 hud_alignment_display_map = {
     "Top-Left": "topleft",
@@ -752,22 +773,18 @@ hud_alignment_display_map = {
     "Bottom-Left": "bottomleft"
 }
 
-display_var = tk.StringVar()
-for k, v in hud_alignment_display_map.items():
-    if v == hud_alignment_var.get():
-        display_var.set(k)
-        break
-
-def update_var_from_display(selected_display):
-    hud_alignment_var.set(hud_alignment_display_map[selected_display])
-
-hud_alignment_optionmenu = tk.OptionMenu(
+hud_alignment_combo = ttk.Combobox(
     scrollable_frame,
-    display_var,
-    *hud_alignment_display_map.keys(),
-    command=update_var_from_display
+    textvariable=hud_alignment_var,
+    values=list(hud_alignment_display_map.keys()),
+    state="readonly"
 )
-hud_alignment_optionmenu.pack(fill=tk.X, padx=padx_side, pady=5)
+hud_alignment_combo.pack(fill=tk.X, padx=padx_side, pady=5)
+
+def get_alignment_internal():
+    """Return the internal string used by HUD (e.g., 'topleft')."""
+    display_value = hud_alignment_var.get()
+    return hud_alignment_display_map.get(display_value, "topright")
 
 # === HUD SCALE OPTIONS ===
 
@@ -793,7 +810,7 @@ hud_scale_optionmenu.pack(fill=tk.X, padx=padx_side, pady=5)
 launch_button = ttk.Button(scrollable_frame, text="Launch App with Metal Performance HUD", command=launch_app)
 launch_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
-status_label = ttk.Label(scrollable_frame, text="", foreground="blue")
+status_label = ttk.Label(scrollable_frame, text="", foreground="red")
 status_label.pack(anchor="w", padx=padx_side, pady=(0, 5))
 
 def update_launch_button_text(app_name):

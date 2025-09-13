@@ -12,7 +12,7 @@
 
 ## Requires 
 
-✅ Mac (macOS 15.3 or later) 
+✅ Mac [(macOS Sequoia 15.3 or later) ](https://support.apple.com/en-au/120282)
 
 ❌ Windows is not supported (needs macOS tools like xcrun devicectl)
 
@@ -25,7 +25,7 @@
 ✅ Apple TV HD (2015) or later
 
 ## Launching The App 
-<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/d004be79-9351-4314-a1a1-f15206364d56" />
+<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/392a4729-4cc0-4870-a646-c0506b2b9b0e" />
 
 ### iPhone / iPad
 
