@@ -11,7 +11,6 @@
 - View logs directly from the interface for better debugging and tracking
 
 ## Requires 
-<img src="https://github.com/user-attachments/assets/9504691b-983a-40b5-94fd-2569c4967da0" width="120" height="120" align="middle" />
 
 ✅ Mac (macOS 15.3 or later) 
 
@@ -26,16 +25,14 @@
 ✅ Apple TV HD (2015) or later
 
 ## Launching The App 
-<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/740649c6-ab30-46bd-b552-4bb9dfab406a" />
-
+<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/d004be79-9351-4314-a1a1-f15206364d56" />
 
 ### iPhone / iPad
 
 1. Connect iPhone or iPad to Mac via USB
 - You may need to tap "Trust This Computer" on iPhone/iPad and "Allow accessory" on Mac
 2. Launch Metal HUD Mobile Config
-3. Download Xcode if prompted
-4. Re-open app; may need to install Apple files (takes time)
+- If prompted, download Xcode and reopen (Apple files may take a while).
 
 ### Apple TV
 
