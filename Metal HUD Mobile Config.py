@@ -272,9 +272,10 @@ def show_apps():
     if not OPEN_GAME_WARNING_SHOWN:
         messagebox.showwarning(
             "Open Game Reminder",
-            "Make sure the game is open on your device before clicking Show Running Games"
+            "Make sure your selected game is open and all other apps are closed before clicking Show Running Games"
         )
         OPEN_GAME_WARNING_SHOWN = True
+        return
 
     command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
     output = run_command(command)
@@ -571,7 +572,7 @@ ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
 ttk.Button(scrollable_frame, text="List Devices", command=list_devices).pack(anchor="w", padx=padx_side)
 
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10)
-device_text.tag_configure("selected_device", background="lightblue")  
+device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
 device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
 device_text.bind("<Button-1>", on_device_text_click)
 
@@ -581,7 +582,7 @@ ttk.Button(scrollable_frame, text="Unpair", command=unpair_device).pack(anchor="
 
 ttk.Button(scrollable_frame, text="Show Running Games", command=show_apps).pack(anchor="w", padx=padx_side)
 apps_text = scrolledtext.ScrolledText(scrollable_frame, height=7)
-apps_text.tag_configure("selected_app", background="lightblue")  
+apps_text.tag_configure("selected_app", background="#ffcc66", foreground="black")
 apps_text.pack(fill=tk.BOTH, padx=padx_side, pady=15, expand=True)
 apps_text.bind("<Button-1>", on_apps_text_click)
 
