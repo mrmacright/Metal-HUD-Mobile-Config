@@ -9,7 +9,7 @@ import json
 import locale   
 import platform
 
-def check_macos_version(min_version="15.3"):
+def check_macos_version(min_version="15.6"):
     if sys.platform != "darwin":
         return  
     
@@ -21,7 +21,7 @@ def check_macos_version(min_version="15.3"):
         root.withdraw()
         messagebox.showerror(
             "Unsupported macOS Version",
-            f"This app requires macOS Sequoia 15.3 or later.\n"
+            f"This app requires macOS Sequoia 15.6 or later.\n"
             f"You are running {platform.mac_ver()[0]}"
         )
         sys.exit(1)
@@ -317,7 +317,8 @@ def show_apps():
         "MobilePhone.app", "Max-iOS.app", "Facebook.app", "Argo.app", "Compass.app", "Dominguez.app", 
         "Evernote.app", "FaceBook.app", "LinkedIn.app", "Notion.app", "Outlook-iOS.app", "PrimeVideo.app", 
         "Slack.app", "TeamSpaceApp.app", "Telegram.app", "YouTubeKids.app", "Zoom.app", "Signal.app", "Sheets.app", 
-        "Netflix.app", "DisneyPlus.app", "OneNote.app", "Tachyon.app", "Word.app",
+        "Netflix.app", "DisneyPlus.app", "OneNote.app", "Tachyon.app", "Word.app", "RunestoneEditor.app", "Contacts.app", 
+        "FaceTime.app", "Image Playground.app", "MobileStore.app", 
     ]
 
     unique_apps = {}

@@ -12,7 +12,7 @@
 
 ## Requires 
 
-✅ Mac [(macOS Sequoia 15.3 or later) ](https://support.apple.com/en-au/120282)
+✅ Mac [(macOS Sequoia 15.6 or later) ](https://support.apple.com/en-au/120282)
 
 ❌ Windows is not supported (needs macOS tools like xcrun devicectl)
 
