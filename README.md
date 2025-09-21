@@ -1,5 +1,4 @@
-# Metal HUD Mobile Config
-### Easily enable Metal HUD on iPhone, iPad & Apple TV!
+# Easily enable Metal HUD on iPhone, iPad & Apple TV!
 
 <p float="left">
   <img src="https://github.com/user-attachments/assets/75d1ed77-c9cc-4134-9268-21aea8c16fe6" width="700" height="700" />
