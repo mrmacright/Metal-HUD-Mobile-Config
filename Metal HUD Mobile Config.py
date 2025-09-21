@@ -192,6 +192,18 @@ def run_command(command):
             ))
         return f"Error:\n{e.output.strip() if e.output else str(e)}"
 
+def set_text_widget(widget, text):
+    """
+    Safely replace the contents of a Text/ScrolledText widget and keep it read-only.
+    Use this instead of widget.delete(...); widget.insert(...).
+    """
+    widget.config(state='normal')
+    widget.delete("1.0", tk.END)
+    if text:
+        widget.insert(tk.END, text)
+    widget.config(state='disabled')
+# -----------------------------------------------------------
+
 def is_xcode_installed():
     return os.path.exists("/Applications/Xcode.app")
 
@@ -238,8 +250,7 @@ def list_devices():
     else:
         formatted = "No devices found."
 
-    device_text.delete(1.0, tk.END)
-    device_text.insert(tk.END, formatted)
+    set_text_widget(device_text, formatted)
 
     device_text.name_to_udid = device_ids
     device_text.device_info = device_info 
@@ -267,8 +278,7 @@ def unpair_device():
     command = f"xcrun devicectl manage unpair --device {udid}"
     output = run_command(command)
 
-    launch_output_text.delete(1.0, tk.END)
-    launch_output_text.insert(tk.END, output)
+    set_text_widget(launch_output_text, output)
 
     list_devices()
 
@@ -342,8 +352,7 @@ def show_apps():
         for _, app_name in sorted_apps
     ]
 
-    apps_text.delete(1.0, tk.END)
-    apps_text.insert(tk.END, "\n\n".join(display_names))
+    set_text_widget(apps_text, "\n\n".join(display_names))
 
     app_name_to_full_path = {}
     for full_path, app_name in sorted_apps:
@@ -376,8 +385,7 @@ def update_command_history(cmd):
         save_data()
 
 def update_launch_output(output):
-    launch_output_text.delete(1.0, tk.END)
-    launch_output_text.insert(tk.END, output)
+    set_text_widget(launch_output_text, output)
 
     if "OpenGL" in output:
         messagebox.showwarning("OpenGL Detected",
@@ -497,6 +505,8 @@ def launch_app():
     threading.Thread(target=run_command_in_thread, args=(command,), daemon=True).start()
 
 def on_device_text_click(event):
+    device_text.config(state='normal')
+
     index = device_text.index(f"@{event.x},{event.y}")
     line_num = index.split('.')[0]
     line_start = f"{line_num}.0"
@@ -504,6 +514,7 @@ def on_device_text_click(event):
     line_text = device_text.get(line_start, line_end).strip()
 
     if not line_text:
+        device_text.config(state='disabled')
         return
 
     device_text.tag_remove("selected_device", "1.0", tk.END)
@@ -514,7 +525,11 @@ def on_device_text_click(event):
     if hasattr(device_text, "name_to_udid") and name in device_text.name_to_udid:
         device_udid_combo.set(device_text.name_to_udid[name])
 
+    device_text.config(state='disabled')
+
 def on_apps_text_click(event):
+    apps_text.config(state='normal')
+
     index = apps_text.index(f"@{event.x},{event.y}")
     line_num = index.split('.')[0]
     line_start = f"{line_num}.0"
@@ -522,25 +537,25 @@ def on_apps_text_click(event):
     app_name = apps_text.get(line_start, line_end).strip()
 
     if not app_name or not hasattr(apps_text, "full_path_map"):
+        apps_text.config(state='disabled')
         return
 
     apps_text.tag_remove("selected_app", "1.0", tk.END)
-
     apps_text.tag_add("selected_app", line_start, line_end)
 
     full_path = apps_text.full_path_map.get(app_name)
     if full_path:
-        app_path_combo.set(app_name)         
-        app_path_combo.full_path = full_path  
-
+        app_path_combo.set(app_name)
+        app_path_combo.full_path = full_path
         update_launch_button_text(app_name)
-
         apps_text.selected_app_name = app_name
     else:
         app_path_combo.set('')
         app_path_combo.full_path = None
         update_launch_button_text(None)
         apps_text.selected_app_name = None
+
+    apps_text.config(state='disabled')
 
 # === GUI SETUP ===
 root.title("Metal HUD Mobile Config")
@@ -592,7 +607,7 @@ if not is_xcode_installed():
 ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
 ttk.Button(scrollable_frame, text="List Devices", command=list_devices).pack(anchor="w", padx=padx_side)
 
-device_text = scrolledtext.ScrolledText(scrollable_frame, height=10)
+device_text = scrolledtext.ScrolledText(scrollable_frame, height=10, state='disabled')
 device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
 device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
 device_text.bind("<Button-1>", on_device_text_click)
@@ -602,7 +617,7 @@ device_udid_combo = ttk.Combobox(scrollable_frame, values=[])
 ttk.Button(scrollable_frame, text="Unpair", command=unpair_device).pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 ttk.Button(scrollable_frame, text="Show Running Games", command=show_apps).pack(anchor="w", padx=padx_side)
-apps_text = scrolledtext.ScrolledText(scrollable_frame, height=7)
+apps_text = scrolledtext.ScrolledText(scrollable_frame, height=7, state='disabled')
 apps_text.tag_configure("selected_app", background="#ffcc66", foreground="black")
 apps_text.pack(fill=tk.BOTH, padx=padx_side, pady=15, expand=True)
 apps_text.bind("<Button-1>", on_apps_text_click)
@@ -835,7 +850,7 @@ def toggle_logs():
 toggle_log_button = ttk.Button(scrollable_frame, text="Show Logs", command=toggle_logs)
 toggle_log_button.pack(anchor="w", padx=padx_side, pady=(0, 5))
 
-launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12)
+launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12, state='disabled')
 launch_output_text.pack_forget()
 
 root.protocol("WM_DELETE_WINDOW", on_close)
