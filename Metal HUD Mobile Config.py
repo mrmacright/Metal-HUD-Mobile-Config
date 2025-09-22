@@ -28,7 +28,6 @@ def check_macos_version(min_version="15.6"):
 
 check_macos_version()
 
-
 os.environ["LC_ALL"] = "en_US.UTF-8"
 os.environ["LANG"] = "en_US.UTF-8"
 
@@ -61,7 +60,6 @@ def get_device_display(udid: str) -> str:
         except Exception:
             pass
     return DEVICE_INFO_CACHE.get(udid, udid)
-# ----------------------------------------------------------------------------- 
 
 locale.setlocale( locale.LC_ALL, 'en_US.UTF-8' )
 
@@ -136,27 +134,44 @@ DATA_FILE = os.path.expanduser("~/ios_device_controller_data.json")
 
 saved_paths = {}  
 command_history = []
+hud_settings_saved = {} 
 
 def load_data():
-    global saved_paths, command_history
+    global saved_paths, command_history, hud_settings_saved
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r") as f:
                 data = json.load(f)
                 saved_paths = data.get("saved_paths", {})
                 command_history = data.get("command_history", [])
+                hud_settings_saved = data.get("hud_settings", {})
         except Exception as e:
             print("Error loading saved data:", e)
             saved_paths = {}
             command_history = []
+            hud_settings_saved = {}
     else:
         saved_paths = {}
         command_history = []
+        hud_settings_saved = {}
 
 def save_data():
+    try:
+        hud_settings = {
+            "preset": hud_preset_var.get(),
+            "alignment": hud_alignment_var.get(),
+            "scale": hud_scale_var.get(),
+            "custom_elements": {
+            key: var.get() for key, var in hud_elements_vars.items()
+        }
+    }
+    except Exception:
+        hud_settings = {}
+
     data = {
         "saved_paths": saved_paths,
-        "command_history": command_history
+        "command_history": command_history,
+        "hud_settings": hud_settings
     }
     try:
         with open(DATA_FILE, "w") as f:
@@ -202,7 +217,6 @@ def set_text_widget(widget, text):
     if text:
         widget.insert(tk.END, text)
     widget.config(state='disabled')
-# -----------------------------------------------------------
 
 def is_xcode_installed():
     return os.path.exists("/Applications/Xcode.app")
@@ -263,6 +277,23 @@ def list_devices():
 
     refresh_command_history_combo()
 
+    device_text.config(state='normal')
+    lines = device_text.get("1.0", "end-1c").splitlines()
+    if lines:
+        device_text.tag_remove("selected_device", "1.0", tk.END)
+        device_text.tag_add("selected_device", "1.0", "1.end")
+        device_text.mark_set("insert", "1.0")
+        device_text.see("insert")
+        first_name = lines[0].split("  ")[0].strip()
+        if hasattr(device_text, "name_to_udid") and first_name in device_text.name_to_udid:
+            device_udid_combo.set(device_text.name_to_udid[first_name])
+    device_text.config(state='disabled')
+
+    device_text.focus_set()
+    device_text.bind("<Up>", lambda e: move_selection(device_text, "up"))
+    device_text.bind("<Down>", lambda e: move_selection(device_text, "down"))
+    device_text.bind("<Return>", lambda e: show_apps())
+
 def unpair_device():
     """Unpair the selected/highlighted device."""
     udid = device_udid_combo.get().strip()
@@ -305,7 +336,6 @@ def show_apps():
             "Make sure your selected game is open and all other apps are closed before clicking Show Running Games"
         )
         OPEN_GAME_WARNING_SHOWN = True
-        return
 
     command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
     output = run_command(command)
@@ -352,7 +382,7 @@ def show_apps():
         for _, app_name in sorted_apps
     ]
 
-    set_text_widget(apps_text, "\n\n".join(display_names))
+    set_text_widget(apps_text, "\n".join(display_names))
 
     app_name_to_full_path = {}
     for full_path, app_name in sorted_apps:
@@ -373,6 +403,25 @@ def show_apps():
 
     if not sorted_apps:
         update_launch_button_text(None)
+
+    apps_text.config(state='normal')
+    lines = apps_text.get("1.0", "end-1c").splitlines()
+    if lines:
+        apps_text.tag_remove("selected_app", "1.0", tk.END)
+        apps_text.tag_add("selected_app", "1.0", "1.end")
+        apps_text.mark_set("insert", "1.0")
+        apps_text.see("insert")
+        first_app = lines[0].strip()
+        if first_app in app_name_to_full_path:
+            app_path_combo.set(first_app)
+            app_path_combo.full_path = app_name_to_full_path[first_app]
+            update_launch_button_text(first_app)
+    apps_text.config(state='disabled')
+
+    apps_text.focus_set()
+    apps_text.bind("<Up>", lambda e: move_selection(apps_text, "up"))
+    apps_text.bind("<Down>", lambda e: move_selection(apps_text, "down"))
+    apps_text.bind("<Return>", lambda e: launch_app())     
 
 def update_command_history(cmd):
     if cmd not in command_history:
@@ -527,6 +576,17 @@ def on_device_text_click(event):
 
     device_text.config(state='disabled')
 
+    device_text.bind("<Up>", lambda e: move_selection(device_text, "up"))
+    device_text.bind("<Down>", lambda e: move_selection(device_text, "down"))
+    device_text.focus_set()  
+    device_text.bind("<Return>", lambda e: show_apps())
+
+def device_enter(event):
+    show_apps()
+    return "break"  
+
+    device_text.bind("<Return>", device_enter)
+
 def on_apps_text_click(event):
     apps_text.config(state='normal')
 
@@ -556,6 +616,52 @@ def on_apps_text_click(event):
         apps_text.selected_app_name = None
 
     apps_text.config(state='disabled')
+
+    apps_text.bind("<Up>", lambda e: move_selection(apps_text, "up"))
+    apps_text.bind("<Down>", lambda e: move_selection(apps_text, "down"))
+
+def move_selection(widget, direction="down"):
+    """
+    Move the selection in a scrolledtext widget up or down by one line.
+    direction: "up" or "down"
+    """
+    widget.config(state='normal')
+    ranges = widget.tag_ranges("selected_device") if widget == device_text else widget.tag_ranges("selected_app")
+    if ranges:
+        line_start = widget.index(ranges[0])
+        line_num = int(line_start.split('.')[0])
+    else:
+        line_num = 1  
+
+    if direction == "down":
+        new_line = line_num + 1
+        if new_line > int(widget.index(tk.END).split('.')[0]) - 1:
+            new_line = line_num  
+    else:
+        new_line = line_num - 1
+        if new_line < 1:
+            new_line = 1  
+
+    widget.tag_remove("selected_device" if widget == device_text else "selected_app", "1.0", tk.END)
+
+    line_start = f"{new_line}.0"
+    line_end = f"{new_line}.end"
+    widget.tag_add("selected_device" if widget == device_text else "selected_app", line_start, line_end)
+    widget.see(line_start) 
+
+    line_text = widget.get(line_start, line_end).strip()
+    if widget == device_text and hasattr(widget, "name_to_udid"):
+        name = line_text.split("  ")[0].strip()
+        if name in widget.name_to_udid:
+            device_udid_combo.set(widget.name_to_udid[name])
+    elif widget == apps_text and hasattr(widget, "full_path_map"):
+        app_name = line_text.strip()
+        full_path = widget.full_path_map.get(app_name)
+        if full_path:
+            app_path_combo.set(app_name)
+            app_path_combo.full_path = full_path
+            update_launch_button_text(app_name)
+    widget.config(state='disabled')
 
 # === GUI SETUP ===
 root.title("Metal HUD Mobile Config")
@@ -605,7 +711,7 @@ if not is_xcode_installed():
     prompt_install_xcode()
 
 ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
-ttk.Button(scrollable_frame, text="List Devices", command=list_devices).pack(anchor="w", padx=padx_side)
+ttk.Button(scrollable_frame, text="List Devices (Cmd+L)", command=list_devices).pack(anchor="w", padx=padx_side)
 
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10, state='disabled')
 device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
@@ -693,13 +799,15 @@ def on_command_history_select(event):
             app_path_combo.set(app_name)
             app_path_combo.full_path = full_path
 
-        alignment_match = re.search(r'"MTL_HUD_ALIGNMENT"\s*:\s*"(\w+)"', full_command)
-        if alignment_match:
-            hud_alignment_var.set(alignment_match.group(1))
-        else:
-            hud_alignment_var.set("")
+    alignment_match = re.search(r'"MTL_HUD_ALIGNMENT"\s*:\s*"(\w+)"', full_command)
+    if alignment_match:
+        internal = alignment_match.group(1)
+        display_alignment = hud_alignment_internal_to_display.get(internal, internal)
+        hud_alignment_var.set(display_alignment)
+    else:
+        hud_alignment_var.set("")
 
-        update_launch_button_text(app_name)
+    update_launch_button_text(app_name)
 command_history_combo.bind("<<ComboboxSelected>>", on_command_history_select)
 
 # === HUD PRESETS ===
@@ -789,6 +897,8 @@ hud_alignment_display_map = {
     "Bottom-Left": "bottomleft"
 }
 
+hud_alignment_internal_to_display = {v: k for k, v in hud_alignment_display_map.items()}
+
 hud_alignment_combo = ttk.Combobox(
     scrollable_frame,
     textvariable=hud_alignment_var,
@@ -820,6 +930,26 @@ hud_scale_options = list(hud_scale_map.keys())
 
 hud_scale_optionmenu = ttk.OptionMenu(scrollable_frame, hud_scale_var, hud_scale_var.get(), *hud_scale_options)
 hud_scale_optionmenu.pack(fill=tk.X, padx=padx_side, pady=5)
+
+saved_custom = hud_settings_saved.get("custom_elements", {})
+for key, var in hud_elements_vars.items():
+    if key in saved_custom:
+        var.set(saved_custom[key])
+
+if hud_settings_saved:
+    saved_preset = hud_settings_saved.get("preset", "Default")
+    hud_preset_var.set(saved_preset)
+    try:
+        on_preset_change()
+    except Exception:
+        pass
+
+    saved_alignment = hud_settings_saved.get("alignment", "Top-Right")
+    saved_alignment_display = hud_alignment_internal_to_display.get(saved_alignment, saved_alignment)
+    hud_alignment_var.set(saved_alignment_display)
+
+    saved_scale = hud_settings_saved.get("scale", "Default")
+    hud_scale_var.set(saved_scale)
 
 # === LAUNCH METAL HUD ===
 
@@ -853,7 +983,7 @@ toggle_log_button.pack(anchor="w", padx=padx_side, pady=(0, 5))
 launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12, state='disabled')
 launch_output_text.pack_forget()
 
-root.protocol("WM_DELETE_WINDOW", on_close)
+root.bind("<Command-l>", lambda event: list_devices())
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 root.mainloop()
