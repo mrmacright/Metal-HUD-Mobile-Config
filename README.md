@@ -1,13 +1,12 @@
-# Metal HUD Mobile Config
-### Manage Metal Performance HUD on iPhone, iPad & Apple TV—no Terminal needed
+# Easily enable Metal HUD on iPhone, iPad & Apple TV!
 
 <p float="left">
   <img src="https://github.com/user-attachments/assets/75d1ed77-c9cc-4134-9268-21aea8c16fe6" width="700" height="700" />
 
-- Lists connected devices and shows only running games (hides system apps)
+- Lists connected devices & shows only running games (hides system apps)
 - Instantly launch Metal HUD for selected games
-- Choose HUD presets, locations, and scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
-- Save and quickly relaunch your favorite games with Metal HUD
+- Choose HUD presets, locations, & scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
+- Save & quickly relaunch your favorite games with Metal HUD
 - View logs directly from the interface for better debugging and tracking
 
 ## Requires 
