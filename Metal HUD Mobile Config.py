@@ -35,6 +35,30 @@ DEVICE_INFO_CACHE = {}
 
 WARNING_SHOWN = False  
 OPEN_GAME_WARNING_SHOWN = False
+WARZONE_WARNING_SHOWN = False
+
+WARZONE_LOG_INDICATORS = [
+    "telemetry.codefusion.technology",
+    "codefusion.technology",
+    "telemetry.codefusion",
+    "app terminated due to signal 10",
+    "acquired tunnel connection to device",
+]
+
+def detect_warzone_anti_cheat(output: str) -> bool:
+    """
+    Return True only if the output matches known Warzone anti-cheat patterns:
+    1. Connection to telemetry.codefusion.technology
+    2. App terminated due to signal 10
+    """
+    if not output:
+        return False
+
+    text = output.lower()
+    if "telemetry.codefusion.technology" in text and "app terminated due to signal 10" in text:
+        return True
+
+    return False
 
 def _fetch_device_info_map():
     """Query devicectl once and build a udid -> 'Model' map."""
@@ -439,6 +463,14 @@ def update_launch_output(output):
     if "OpenGL" in output:
         messagebox.showwarning("OpenGL Detected",
             "Warning: OpenGL detected in the logs. Metal HUD may not work!")
+        
+    global WARZONE_WARNING_SHOWN
+    if not WARZONE_WARNING_SHOWN and detect_warzone_anti_cheat(output):
+        WARZONE_WARNING_SHOWN = True
+        messagebox.showwarning(
+            "Warzone Not Supported",
+            "Note! Metal HUD doesn’t work with COD Warzone due to anti-cheat. The game may crash if you try to use it"
+    )
 
 def run_command_in_thread(command):
     output = run_command(command)
@@ -711,7 +743,7 @@ if not is_xcode_installed():
     prompt_install_xcode()
 
 ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
-ttk.Button(scrollable_frame, text="List Devices (Cmd+L)", command=list_devices).pack(anchor="w", padx=padx_side)
+ttk.Button(scrollable_frame, text="List Devices (Cmd+R)", command=list_devices).pack(anchor="w", padx=padx_side)
 
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10, state='disabled')
 device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
@@ -983,7 +1015,7 @@ toggle_log_button.pack(anchor="w", padx=padx_side, pady=(0, 5))
 launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12, state='disabled')
 launch_output_text.pack_forget()
 
-root.bind("<Command-l>", lambda event: list_devices())
+root.bind("<Command-r>", lambda event: list_devices())
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 root.mainloop()
