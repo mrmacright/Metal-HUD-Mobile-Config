@@ -711,7 +711,7 @@ if not is_xcode_installed():
     prompt_install_xcode()
 
 ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
-ttk.Button(scrollable_frame, text="List Devices (Cmd+L)", command=list_devices).pack(anchor="w", padx=padx_side)
+ttk.Button(scrollable_frame, text="List Devices (Cmd+R)", command=list_devices).pack(anchor="w", padx=padx_side)
 
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10, state='disabled')
 device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
@@ -983,7 +983,7 @@ toggle_log_button.pack(anchor="w", padx=padx_side, pady=(0, 5))
 launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12, state='disabled')
 launch_output_text.pack_forget()
 
-root.bind("<Command-l>", lambda event: list_devices())
+root.bind("<Command-r>", lambda event: list_devices())
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 root.mainloop()
