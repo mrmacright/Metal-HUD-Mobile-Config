@@ -35,6 +35,38 @@ DEVICE_INFO_CACHE = {}
 
 WARNING_SHOWN = False  
 OPEN_GAME_WARNING_SHOWN = False
+WARZONE_WARNING_SHOWN = False
+
+WARZONE_LOG_INDICATORS = [
+    "telemetry.codefusion.technology",
+    "codefusion.technology",
+    "telemetry.codefusion",
+    "app terminated due to signal 10",
+    "acquired tunnel connection to device",
+]
+
+def detect_warzone_anti_cheat(output: str) -> bool:
+    """
+    Return True when output contains patterns commonly present in Warzone / anti-cheat-related log terminations.
+    The check is conservative to avoid false positives; adjust WARZONE_LOG_INDICATORS if you need to be more/less sensitive.
+    """
+    if not output:
+        return False
+    text = output.lower()
+
+    for indicator in WARZONE_LOG_INDICATORS:
+        if indicator in text:
+            if indicator == "app terminated due to signal 10":
+                if any(h in text for h in ["telemetry.codefusion.technology", "telemetry", "codefusion", "acquired tunnel connection"]):
+                    return True
+                continue
+            return True
+
+    if re.search(r"app terminated due to signal \d+", text) and "telemetry" in text:
+        return True
+
+    return False
+
 
 def _fetch_device_info_map():
     """Query devicectl once and build a udid -> 'Model' map."""
@@ -439,6 +471,14 @@ def update_launch_output(output):
     if "OpenGL" in output:
         messagebox.showwarning("OpenGL Detected",
             "Warning: OpenGL detected in the logs. Metal HUD may not work!")
+        
+    global WARZONE_WARNING_SHOWN
+    if not WARZONE_WARNING_SHOWN and detect_warzone_anti_cheat(output):
+        WARZONE_WARNING_SHOWN = True
+    messagebox.showwarning(
+        "Warzone Not Supported",
+        "Note! Metal HUD doesn’t work with COD Warzone due to anti-cheat. The game may crash if you try to use it"
+    )
 
 def run_command_in_thread(command):
     output = run_command(command)
