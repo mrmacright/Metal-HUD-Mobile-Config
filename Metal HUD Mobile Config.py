@@ -8,6 +8,7 @@ import threading
 import json
 import locale   
 import platform
+import time
 
 def check_macos_version(min_version="15.6"):
     if sys.platform != "darwin":
@@ -36,6 +37,7 @@ DEVICE_INFO_CACHE = {}
 WARNING_SHOWN = False  
 OPEN_GAME_WARNING_SHOWN = False
 WARZONE_WARNING_SHOWN = False
+FARLIGHT_WARNING_SHOWN = False
 
 WARZONE_LOG_INDICATORS = [
     "telemetry.codefusion.technology",
@@ -59,6 +61,29 @@ def detect_warzone_anti_cheat(output: str) -> bool:
         return True
 
     return False
+
+FARLIGHT_LOG_INDICATORS = [
+    "device anomaly detected",                
+    "temporarily unable to access the game",  
+    "0-3-2048",                                
+    "accesskeyid not found",                  
+    "solarlandclient",                         
+    "farlight"                                
+]
+
+def detect_farlight_issue(output: str) -> bool:
+    """
+    Return True if any known Farlight/SolarlandClient log indicator appears.
+    Called per-line as logs stream in.
+    """
+    if not output:
+        return False
+    text = output.lower()
+    for indicator in FARLIGHT_LOG_INDICATORS:
+        if indicator in text:
+            return True
+    return False
+
 
 def _fetch_device_info_map():
     """Query devicectl once and build a udid -> 'Model' map."""
@@ -464,17 +489,33 @@ def update_launch_output(output):
         messagebox.showwarning("OpenGL Detected",
             "Warning: OpenGL detected in the logs. Metal HUD may not work!")
         
-    global WARZONE_WARNING_SHOWN
+    global WARZONE_WARNING_SHOWN, FARLIGHT_WARNING_SHOWN
+
     if not WARZONE_WARNING_SHOWN and detect_warzone_anti_cheat(output):
         WARZONE_WARNING_SHOWN = True
         messagebox.showwarning(
             "Warzone Not Supported",
             "Note! Metal HUD doesn’t work with COD Warzone due to anti-cheat. The game may crash if you try to use it"
-    )
+        )
+
+    if not FARLIGHT_WARNING_SHOWN and detect_farlight_issue(output):
+        FARLIGHT_WARNING_SHOWN = True
+        messagebox.showwarning(
+            "Farlight 84 Not Supported",
+            "Note! Metal HUD does not work with Farlight 84 (SolarlandClient.app).\n\n"
+            "The game detects the HUD as a device anomaly and will refuse to run. "
+            "In-game you may see: \"Device anomaly detected. Temporarily unable to access the game. (0-3-2048)\".\n\n"
+            "Launch the game without the HUD (disable the HUD preset or launch normally) to play."
+        )
 
 def run_command_in_thread(command):
-    output = run_command(command)
-    launch_output_text.after(0, lambda: update_launch_output(output))
+    try:
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        for line in process.stdout:
+            launch_output_text.after(0, lambda l=line: update_launch_output(l))
+        process.wait()
+    except Exception as e:
+        launch_output_text.after(0, lambda: update_launch_output(f"Error: {e}"))
 
 def show_temporary_status_message(message, duration=3000):
     status_label.config(text=message)
@@ -535,6 +576,11 @@ def get_hud_env_vars(preset):
             "MTL_HUD_ENABLED": "1",
             "MTL_HUD_ELEMENTS": "fps"
         }
+    elif preset == "Thermals":
+        return {
+            "MTL_HUD_ENABLED": "1",
+            "MTL_HUD_ELEMENTS": "device,layersize,memory,fps,frameinterval,gputime,thermal,frameintervalgraph,metalfx"
+        }
     elif preset == "Rich":
         return {
             "MTL_HUD_ENABLED": "1",
@@ -555,15 +601,44 @@ def get_hud_env_vars(preset):
     else:
         return {"MTL_HUD_ENABLED": "1"}
 
+def is_app_running(udid, bundle_id):
+    result = subprocess.run(
+        f"xcrun devicectl device process list --device {udid}",
+        shell=True, capture_output=True, text=True
+    )
+    return bundle_id in result.stdout
+
 def launch_app():
     udid = device_udid_combo.get().strip()
     app_path = getattr(app_path_combo, "full_path", None)
 
-    alignment = get_alignment_internal()
-
     if not udid or not app_path:
         messagebox.showwarning("Missing Info", "Please select Device and Game")
         return
+
+    app_path_clean = app_path.rstrip("/")
+    app_basename = os.path.basename(app_path_clean)
+    app_name = app_basename[:-4] if app_basename.lower().endswith(".app") else app_basename
+    bundle_id = app_name  
+
+    global FARLIGHT_WARNING_SHOWN
+    try:
+        normalized = app_name.lower()
+        if (not FARLIGHT_WARNING_SHOWN) and ("solarland" in normalized or "farlight" in normalized):
+            FARLIGHT_WARNING_SHOWN = True
+            messagebox.showwarning(
+                "Farlight 84 Not Supported",
+                "Note! Metal HUD does not work with Farlight 84 due to Anti-cheat"
+            )
+    except Exception:
+        pass
+
+    if is_app_running(udid, bundle_id):
+        terminate_cmd = f"xcrun devicectl device process terminate --device {udid} {bundle_id}"
+        subprocess.run(terminate_cmd, shell=True)
+        time.sleep(2)
+
+    alignment = get_alignment_internal()
 
     show_temporary_status_message(
         "If the Metal HUD doesn't appear, please close and reopen App on your device"
@@ -854,6 +929,7 @@ preset_dropdown = ttk.OptionMenu(
     "Default",
     "Simple",
     "FPS Only",
+    "Thermals",
     "Rich",
     "Full",
     "Custom"
