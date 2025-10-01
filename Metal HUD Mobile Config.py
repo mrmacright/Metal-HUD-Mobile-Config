@@ -407,7 +407,8 @@ def show_apps():
         "Evernote.app", "FaceBook.app", "LinkedIn.app", "Notion.app", "Outlook-iOS.app", "PrimeVideo.app", 
         "Slack.app", "TeamSpaceApp.app", "Telegram.app", "YouTubeKids.app", "Zoom.app", "Signal.app", "Sheets.app", 
         "Netflix.app", "DisneyPlus.app", "OneNote.app", "Tachyon.app", "Word.app", "RunestoneEditor.app", "Contacts.app", 
-        "FaceTime.app", "Image Playground.app", "MobileStore.app", 
+        "FaceTime.app", "Image Playground.app", "MobileStore.app", "Amazon.app", "Apple Store.app", "Control Center.app", "Passwords.app",
+        "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app",
     ]
 
     unique_apps = {}
@@ -806,7 +807,7 @@ scrollbar.pack(side="right", fill="y")
 def prompt_install_xcode():
     messagebox.showwarning(
         "Xcode Missing",
-        "Xcode is not in the Applications folder.\nPlease download it from the App Store before continuing."
+        "Xcode not found in Applications.\nPlease install it from the App Store. No need to open it after install"
     )
 
     subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
