@@ -46,7 +46,6 @@
 1. Click List Devices (wireless operation after pairing)
 2. Open the game on your device before pressing "Show Running Games" 
 3. Click "Show Running Games" to see games running on your device. 
-- If Developer Mode is disabled, you’ll see an error. Enable dev mode following the instructions
 4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
 - Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 - Close and retry app if HUD doesn’t appear
