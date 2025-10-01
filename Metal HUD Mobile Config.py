@@ -84,6 +84,33 @@ def detect_farlight_issue(output: str) -> bool:
             return True
     return False
 
+APP_DISPLAY_SUFFIX = {
+    "ShadowTrackerExtra": "(PUBG MOBILE)",
+    "scimitar": "(Assassin's Creed Mirage)",
+    "SolarlandClient": "(Farlight 84)",
+}
+
+def add_suffix(app_name: str) -> str:
+    """Return a display name with suffix if one exists for this app."""
+    if not app_name:
+        return app_name
+    suffix = APP_DISPLAY_SUFFIX.get(app_name)
+    return f"{app_name}{suffix}" if suffix else app_name
+
+def strip_suffix(display_name: str) -> str:
+    """
+    Reverse the add_suffix transformation when possible.
+    If no match found, returns the input (assumes it is already original).
+    """
+    if not display_name:
+        return display_name
+    for orig, suffix in APP_DISPLAY_SUFFIX.items():
+        if display_name == f"{orig}{suffix}":
+            return orig
+    for suffix in set(APP_DISPLAY_SUFFIX.values()):
+        if display_name.endswith(suffix):
+            return display_name[: -len(suffix)]
+    return display_name
 
 def _fetch_device_info_map():
     """Query devicectl once and build a udid -> 'Model' map."""
@@ -159,7 +186,7 @@ def run_setup_xcode():
     if not os.path.exists("/Applications/Xcode.app"):
         messagebox.showwarning(
             "Xcode Missing",
-            "Xcode is not in the Applications folder.\nPlease download it from the App Store before continuing."
+            "Xcode not found in Applications.\nPlease install it from the App Store. No need to open it after install"
         )
         subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
         root.destroy()
@@ -407,7 +434,8 @@ def show_apps():
         "Evernote.app", "FaceBook.app", "LinkedIn.app", "Notion.app", "Outlook-iOS.app", "PrimeVideo.app", 
         "Slack.app", "TeamSpaceApp.app", "Telegram.app", "YouTubeKids.app", "Zoom.app", "Signal.app", "Sheets.app", 
         "Netflix.app", "DisneyPlus.app", "OneNote.app", "Tachyon.app", "Word.app", "RunestoneEditor.app", "Contacts.app", 
-        "FaceTime.app", "Image Playground.app", "MobileStore.app", 
+        "FaceTime.app", "Image Playground.app", "MobileStore.app", "Amazon.app", "Apple Store.app", "Control Center.app", "Passwords.app",
+        "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app",
     ]
 
     unique_apps = {}
@@ -426,17 +454,26 @@ def show_apps():
 
     sorted_apps = sorted(unique_apps.items(), key=lambda x: x[1].lower())
 
-    display_names = [
-        app_name[:-4] if app_name.endswith(".app") else app_name
-        for _, app_name in sorted_apps
-    ]
+    APP_DISPLAY_SUFFIX = {
+        "ShadowTrackerExtra": "(PUBG MOBILE)",
+        "scimitar": "(Assassin's Creed Mirage)",
+        "SolarlandClient": "(Farlight 84)",
+    }
+
+    def add_suffix(app_name: str) -> str:
+        return f"{app_name}{APP_DISPLAY_SUFFIX[app_name]}" if app_name in APP_DISPLAY_SUFFIX else app_name
+
+    display_names = []
+    app_name_to_full_path = {}
+
+    for full_path, app_name in sorted_apps:
+        base_name = app_name[:-4] if app_name.endswith(".app") else app_name
+        display_name = add_suffix(base_name)
+        if display_name not in app_name_to_full_path:  
+            app_name_to_full_path[display_name] = full_path
+            display_names.append(display_name)
 
     set_text_widget(apps_text, "\n".join(display_names))
-
-    app_name_to_full_path = {}
-    for full_path, app_name in sorted_apps:
-        key = app_name[:-4] if app_name.endswith(".app") else app_name
-        app_name_to_full_path[key] = full_path
 
     apps_text.full_path_map = app_name_to_full_path
 
@@ -806,7 +843,7 @@ scrollbar.pack(side="right", fill="y")
 def prompt_install_xcode():
     messagebox.showwarning(
         "Xcode Missing",
-        "Xcode is not in the Applications folder.\nPlease download it from the App Store before continuing."
+        "Xcode not found in Applications.\nPlease install it from the App Store. No need to open it after install"
     )
 
     subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
@@ -869,10 +906,11 @@ def extract_device_and_app_from_command(cmd):
         full_path = app_match.group(1)
         app_basename = os.path.basename(full_path)
         app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
+        display_app_name = add_suffix(app_name)
     else:
-        app_name = "Unknown App"
+        display_app_name = "Unknown App"
 
-    return f"{device_display} - {app_name}", cmd
+    return f"{device_display} - {display_app_name}", cmd
 
 history_display_entries = []
 appname_to_command = {}
@@ -902,9 +940,11 @@ def on_command_history_select(event):
             full_path = app_path_match.group(1)
             app_basename = os.path.basename(full_path)
             app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
+            display_name = add_suffix(app_name)
 
-            app_path_combo.set(app_name)
+            app_path_combo.set(display_name)
             app_path_combo.full_path = full_path
+
 
     alignment_match = re.search(r'"MTL_HUD_ALIGNMENT"\s*:\s*"(\w+)"', full_command)
     if alignment_match:
