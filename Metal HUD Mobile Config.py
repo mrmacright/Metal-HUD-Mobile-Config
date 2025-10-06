@@ -9,6 +9,9 @@ import json
 import locale   
 import platform
 import time
+import signal
+
+process = None
 
 def check_macos_version(min_version="15.6"):
     if sys.platform != "darwin":
@@ -547,6 +550,7 @@ def update_launch_output(output):
 
 def run_command_in_thread(command):
     try:
+        global process
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
         for line in process.stdout:
             launch_output_text.after(0, lambda l=line: update_launch_output(l))
@@ -645,6 +649,27 @@ def is_app_running(udid, bundle_id):
     )
     return bundle_id in result.stdout
 
+def kill_app():
+    global process
+
+    if process and process.poll() is None:
+        confirm = messagebox.askyesno(
+            "Confirm Kill",
+            "Are you sure you want to terminate the running Metal HUD session?"
+        )
+        if not confirm:
+            return
+
+        try:
+            process.send_signal(signal.SIGINT)  
+            show_temporary_status_message("Sent Ctrl+C to terminate app.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to send Ctrl+C: {e}")
+    else:
+        messagebox.showinfo("No Active Process", "No Metal HUD launch is currently running.")
+
+import subprocess, threading, time, os, json, signal
+
 def launch_app():
     udid = device_udid_combo.get().strip()
     app_path = getattr(app_path_combo, "full_path", None)
@@ -658,29 +683,7 @@ def launch_app():
     app_name = app_basename[:-4] if app_basename.lower().endswith(".app") else app_basename
     bundle_id = app_name  
 
-    global FARLIGHT_WARNING_SHOWN
-    try:
-        normalized = app_name.lower()
-        if (not FARLIGHT_WARNING_SHOWN) and ("solarland" in normalized or "farlight" in normalized):
-            FARLIGHT_WARNING_SHOWN = True
-            messagebox.showwarning(
-                "Farlight 84 Not Supported",
-                "Note! Metal HUD does not work with Farlight 84 due to Anti-cheat"
-            )
-    except Exception:
-        pass
-
-    if is_app_running(udid, bundle_id):
-        terminate_cmd = f"xcrun devicectl device process terminate --device {udid} {bundle_id}"
-        subprocess.run(terminate_cmd, shell=True)
-        time.sleep(2)
-
     alignment = get_alignment_internal()
-
-    show_temporary_status_message(
-        "If the Metal HUD doesn't appear, please close and reopen App on your device"
-    )
-
     preset = hud_preset_var.get()
     env_vars = get_hud_env_vars(preset)
     env_vars["MTL_HUD_ALIGNMENT"] = alignment
@@ -688,14 +691,42 @@ def launch_app():
     env_vars["MTL_HUD_SCALE"] = hud_scale_map.get(selected_label, "0.4")
     env_json = json.dumps(env_vars)
 
-    command = (
+    base_command = (
         f"xcrun devicectl device process launch "
         f"-e '{env_json}' "
         f"--console --device {udid} \"{app_path}\""
     )
 
-    update_command_history(command)
-    threading.Thread(target=run_command_in_thread, args=(command,), daemon=True).start()
+    update_command_history(base_command)
+
+    def launch_with_restart():
+        show_temporary_status_message("Launching app with Metal HUD...")
+
+        process = subprocess.Popen(base_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+        time.sleep(0.5)
+
+        try:
+            show_temporary_status_message("Restarting app with Metal HUD...")
+            process.send_signal(signal.SIGINT)
+            process.wait(timeout=5)
+        except Exception:
+            process.kill()
+
+        time.sleep(0.2)
+        show_temporary_status_message(
+        "If the Metal HUD doesn’t appear, please close and reopen the app on your device."
+        )
+        relaunch_process = subprocess.Popen(base_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+
+        for line in relaunch_process.stdout:
+            launch_output_text.after(0, lambda l=line: update_launch_output(l))
+        relaunch_process.stdout.close()
+        relaunch_process.wait()
+
+        show_temporary_status_message("App relaunched with Metal HUD.")
+
+    threading.Thread(target=launch_with_restart, daemon=True).start()
 
 def on_device_text_click(event):
     device_text.config(state='normal')
@@ -1103,6 +1134,10 @@ if hud_settings_saved:
 
 launch_button = ttk.Button(scrollable_frame, text="Launch App with Metal Performance HUD", command=launch_app)
 launch_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
+
+kill_button = ttk.Button(scrollable_frame, text="Terminate App (Manual)", command=kill_app)
+kill_button.pack(anchor="w", padx=padx_side, pady=(0, 15))
+
 
 status_label = ttk.Label(scrollable_frame, text="", foreground="red")
 status_label.pack(anchor="w", padx=padx_side, pady=(0, 5))

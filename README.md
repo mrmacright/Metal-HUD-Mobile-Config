@@ -24,7 +24,7 @@
 ✅ Apple TV HD (2015) or later
 
 ## Launching The App 
-<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/048fe425-97ef-482f-a2b6-1c3dd23f7d77" />
+<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/7550a75a-c1dc-459a-bfc2-68ab984b0b03" />
 
 ### iPhone / iPad
 
@@ -48,7 +48,6 @@
 3. Click "Show Running Games" to see games running on your device. 
 4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
 - Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
-- Close and retry app if HUD doesn’t appear
 
 ## Troubleshooting 
 
@@ -145,6 +144,15 @@ xcrun devicectl device process launch \
 ```
 xcrun devicectl manage unpair --device <DEVICE-UDID>
 ```
+
+**Terminate an App**
+
+If you need to manually stop an app on your device, use:
+```
+xcrun devicectl device process terminate --device <DEVICE-UDID> <AppName>
+```
+When launched via this tool, the app is stopped automatically by sending a background Ctrl + C (process.send_signal(signal.SIGINT) in Python).
+This gracefully ends the devicectl session before relaunching the app to ensure the Metal HUD attaches correctly.
 
 ## Other
 
