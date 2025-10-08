@@ -48,7 +48,6 @@
 3. Click "Show Running Games" to see games running on your device. 
 4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
 - Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
-- Close and retry app if HUD doesn’t appear
 
 ## Troubleshooting 
 
