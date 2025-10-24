@@ -1,3 +1,11 @@
+# ==========================================================
+#  METAL HUD MOBILE CONFIG 
+#  Author: Stewie (MrMacRight)
+#  Purpose: iOS device management & Metal HUD launcher GUI
+#  Platform: macOS Sequoia 15.6+
+# ==========================================================
+
+# === IMPORTS AND INITIAL SETUP ===
 import tkinter as tk
 from tkinter import Tk, ttk, scrolledtext, messagebox, simpledialog
 import subprocess
@@ -13,6 +21,7 @@ import signal
 
 process = None
 
+# === MACOS VERSION CHECK ===
 def check_macos_version(min_version="15.6"):
     if sys.platform != "darwin":
         return  
@@ -32,6 +41,7 @@ def check_macos_version(min_version="15.6"):
 
 check_macos_version()
 
+# === ENVIRONMENT VARIABLES AND GLOBAL FLAGS ===
 os.environ["LC_ALL"] = "en_US.UTF-8"
 os.environ["LANG"] = "en_US.UTF-8"
 
@@ -42,6 +52,7 @@ OPEN_GAME_WARNING_SHOWN = False
 WARZONE_WARNING_SHOWN = False
 FARLIGHT_WARNING_SHOWN = False
 
+# === LOG AND DEVICE DETECTION HELPERS ===
 WARZONE_LOG_INDICATORS = [
     "telemetry.codefusion.technology",
     "codefusion.technology",
@@ -93,6 +104,87 @@ APP_DISPLAY_SUFFIX = {
     "SolarlandClient": "(Farlight 84)",
 }
 
+# === MISSING DDI DETECTION ===
+MISSING_DDI_WARNING_SHOWN = False
+
+DDI_ERROR_KEYWORDS = [
+    "developer disk image could not be mounted",
+    "missing the requested variant for this device",
+    "kamdmobileimagemounterpersonalizedbundlemissingvarianterror",
+    "unable to find a valid ddi for the ios platform",
+    "unable to find a developer disk image to use for the ios platform",
+    "ddi not found",
+    "0xe800010f",
+    "com.apple.mobiledevice error -402652913",
+    "com.apple.dt.coredeviceerror error 12001",
+    "com.apple.dt.coredeviceerror error 12007",
+]
+
+def get_current_device_model() -> str:
+    """
+    Returns the Model string for the currently selected UDID, e.g. 'iPad (iPad17,1)'.
+    Falls back to UDID or '' if unknown.
+    """
+    udid = device_udid_combo.get().strip()
+    if not udid:
+        return ""
+    return DEVICE_INFO_CACHE.get(udid, udid)
+
+def detect_missing_ddi_issue(model: str, output: str) -> bool:
+    """
+    True if the connected device is the new M5 iPad Pro (iPad17,1)
+    AND the output contains any of the known DDI mount failure indicators.
+    """
+    if not model or not output:
+        return False
+
+    model_l = model.lower()
+    out_l = output.lower()
+
+    if "ipad17,1" not in model_l:
+        return False
+
+    for key in DDI_ERROR_KEYWORDS:
+        if key in out_l:
+            return True
+
+    return False
+
+def prompt_update_for_missing_ddi():
+    """
+    Show a single-shot warning and open Apple's Developer downloads page.
+    """
+    global MISSING_DDI_WARNING_SHOWN
+    if MISSING_DDI_WARNING_SHOWN:
+        return
+
+    MISSING_DDI_WARNING_SHOWN = True
+
+def _do():
+    import webbrowser
+    try:
+        xcode_ver = subprocess.check_output(
+            ["xcodebuild", "-version"], text=True
+        ).splitlines()[0]
+    except Exception:
+        xcode_ver = "Xcode (version unknown)"
+
+    result = messagebox.showwarning(
+        "Update Required",
+        f"{xcode_ver}\n\n"
+        "⚠️ Your version of Xcode or Command Line Tools doesn't include the "
+        "Developer Disk Image required for this iPad Pro (iPad17,1).\n\n"
+        "👉 Click OK to open Apple's Developer Downloads page and install the latest beta tools."
+    )
+
+    if result == "ok":
+        webbrowser.open("https://developer.apple.com/download/all/")
+        root.destroy()
+        os._exit(0)
+
+    root.after(0, _do)
+
+# === APP DISPLAY AND DEVICE INFO HELPERS ===
 def add_suffix(app_name: str) -> str:
     """Return a display name with suffix if one exists for this app."""
     if not app_name:
@@ -142,6 +234,7 @@ def get_device_display(udid: str) -> str:
 
 locale.setlocale( locale.LC_ALL, 'en_US.UTF-8' )
 
+# === XCODE AND COMMAND LINE TOOL SETUP ===
 def is_xcode_installed():
     """Check if Xcode Command Line Tools are installed."""
     try:
@@ -155,6 +248,7 @@ def is_xcode_installed():
     except subprocess.CalledProcessError:
         return False
 
+# === LICENSE ACCEPTANCE AND VALIDATION ===
 def has_agreed_to_license():
     """Check if the Xcode license has been agreed to."""
     try:
@@ -169,18 +263,100 @@ def has_agreed_to_license():
         return False
 
 def accept_xcode_license_gui():
-    """Attempt to accept the Xcode license using AppleScript (GUI prompt for password)."""
-    applescript = '''
-    do shell script "xcodebuild -license accept" with administrator privileges
-    '''
+    """
+    Ensure the system is pointing to the full Xcode developer directory,
+    then attempt to accept the Xcode license automatically using AppleScript.
+    """
+    import subprocess
+
     try:
+        current_path = subprocess.check_output(
+            ["xcode-select", "-p"], text=True
+        ).strip()
+
+        if "CommandLineTools" in current_path:
+            subprocess.run(
+                ["sudo", "xcode-select", "-s", "/Applications/Xcode.app/Contents/Developer"],
+                check=True
+            )
+
+        applescript = '''
+        do shell script "xcodebuild -license accept" with administrator privileges
+        '''
         subprocess.run(["osascript", "-e", applescript], check=True)
+
         return True
+
     except subprocess.CalledProcessError as e:
         messagebox.showwarning(
             "Xcode License",
-            "Failed to automatically accept the Xcode license.\n"
-            "Please run 'sudo xcodebuild -license accept' manually."
+            "Failed to automatically accept the Xcode license.\n\n"
+            "Please run the following command manually in Terminal:\n\n"
+            "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer\n"
+            "sudo xcodebuild -license accept\n\n"
+            f"Error details:\n{e}"
+        )
+        return False
+
+def ensure_xcode_beta_selected(model: str = None):
+    """
+    Automatically switches to Xcode Beta if the connected device requires it.
+    Uses AppleScript to perform the switch with admin privileges (no sudo prompt).
+    Silently skips if Beta isn't needed or already selected.
+    """
+    import subprocess
+    import os
+    import webbrowser
+    from tkinter import messagebox
+
+    try:
+        current_path = subprocess.check_output(
+            ["xcode-select", "-p"], text=True
+        ).strip()
+
+        if "Xcode-beta.app" in current_path:
+            return True
+
+        needs_beta = False
+        if model:
+            lower_model = model.lower()
+            # Only these specific models currently require Xcode Beta
+            BETA_REQUIRED_MODELS = ["ipad17,1", "ipad17,2"]
+            needs_beta = any(m in lower_model for m in BETA_REQUIRED_MODELS)
+
+        if not needs_beta:
+            return True
+
+        beta_path = "/Applications/Xcode-beta.app/Contents/Developer"
+        if os.path.exists(beta_path):
+            applescript = f'''
+            do shell script "xcode-select -s {beta_path}" with administrator privileges
+            '''
+            subprocess.run(["osascript", "-e", applescript], check=True)
+            return True
+
+        messagebox.showwarning(
+            "Xcode Beta Required",
+            (
+                f"Your connected device ({model or 'new device'}) requires Xcode Beta and Command Line Tools Beta "
+                "to work properly.\n\nClick OK to open Apple's Developer Downloads page."
+            ),
+        )
+        webbrowser.open("https://developer.apple.com/download/all/")
+        root.destroy()
+        os._exit(0)
+
+    except subprocess.CalledProcessError as e:
+        messagebox.showwarning(
+            "Xcode Switch Failed",
+            f"Unable to switch to Xcode Beta.\n\nError details:\n{e}"
+        )
+        return False
+
+    except Exception as e:
+        messagebox.showwarning(
+            "Unexpected Error",
+            f"An unexpected error occurred while switching Xcode:\n\n{e}"
         )
         return False
 
@@ -189,7 +365,7 @@ def run_setup_xcode():
     if not os.path.exists("/Applications/Xcode.app"):
         messagebox.showwarning(
             "Xcode Missing",
-            "Xcode not found in Applications.\nPlease install it from the App Store. No need to open it after install"
+            "Xcode not found in Applications.\nPlease install it from the App Store. No need to open it after install."
         )
         subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
         root.destroy()
@@ -201,14 +377,46 @@ def run_setup_xcode():
             root.destroy()
             os._exit(0)
 
+def prompt_update_for_missing_ddi():
+    """
+    Show a single-shot warning and open Apple's Developer Downloads page.
+    Then exit the app completely after OK is clicked.
+    """
+    global MISSING_DDI_WARNING_SHOWN
+    if MISSING_DDI_WARNING_SHOWN:
+        return
+    MISSING_DDI_WARNING_SHOWN = True
+
+    try:
+        xcode_ver = subprocess.check_output(
+            ["xcodebuild", "-version"], text=True
+        ).splitlines()[0]
+    except Exception:
+        xcode_ver = "Unknown Xcode version"
+
+    def _do():
+        import webbrowser
+        result = messagebox.showwarning(
+            "Update Required",
+            f"{xcode_ver}\n\n"
+            "Your version of Xcode or Command Line Tools doesn't include the "
+            "Developer Disk Image required for this iPad Pro (iPad17,1).\n\n"
+            "Click OK to open Apple's Developer Downloads page."
+        )
+        if result == "ok":
+            webbrowser.open("https://developer.apple.com/download/all/")
+            root.destroy()
+            os._exit(0)  
+
+    root.after(0, _do)
+
 # === GUI root ===
 root = tk.Tk()
 root.withdraw()  
 
-run_setup_xcode()  
-
 root.deiconify()  
 
+# === DATA LOADING AND SAVING ===
 DATA_FILE = os.path.expanduser("~/ios_device_controller_data.json")
 
 saved_paths = {}  
@@ -260,31 +468,34 @@ def save_data():
     except Exception as e:
         print("Error saving data:", e)
 
+# === GUI UTILITIES AND EVENT HANDLERS ===
 def on_close():
     print("on_close called")
     save_data()
     root.destroy()
 
+# === COMMAND EXECUTION AND LOGGING ===
 def run_command(command):
+    """
+    Run a shell command, capture both success and error output,
+    and always display it in the launch_output_text log window.
+    """
     try:
         output = subprocess.check_output(command, shell=True, text=True, stderr=subprocess.STDOUT)
-        print(f"Output:\n{output}")
-        if "Developer Mode is disabled" in output:
-            root.after(0, lambda: messagebox.showwarning(
-                "Developer Mode Disabled",
-                "Operation failed because Developer Mode is disabled on your iPhone or iPad.\n\n"
-                "Go to Settings > Privacy & Security > Developer Mode on your device to enable it."
-            ))
-        return output.strip()
     except subprocess.CalledProcessError as e:
-        print(f"Error output:\n{e.output}")
-        if e.output and "Developer Mode is disabled" in e.output:
-            root.after(0, lambda: messagebox.showwarning(
-                "Developer Mode Disabled",
-                "Operation failed because Developer Mode is disabled on your iPhone or iPad.\n\n"
-                "Go to Settings > Privacy & Security > Developer Mode on your device to enable it."
-            ))
-        return f"Error:\n{e.output.strip() if e.output else str(e)}"
+        output = e.output if e.output else str(e)
+
+    print(f"Command Output:\n{output}")
+    root.after(0, lambda: update_launch_output(output))  
+
+    if output and "Developer Mode is disabled" in output:
+        root.after(0, lambda: messagebox.showwarning(
+            "Developer Mode Disabled",
+            "Operation failed because Developer Mode is disabled on your iPhone or iPad.\n\n"
+            "Go to Settings > Privacy & Security > Developer Mode on your device to enable it."
+        ))
+
+    return output.strip()
 
 def set_text_widget(widget, text):
     """
@@ -303,6 +514,7 @@ def is_xcode_installed():
 def open_xcode_download():
     subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
 
+# === DEVICE MANAGEMENT ===
 def list_devices():
     global WARNING_SHOWN  
 
@@ -409,12 +621,38 @@ def show_apps():
     if not udid:
         return
 
+    model = get_device_display(udid)
+    ensure_xcode_beta_selected(model)
+
     if not OPEN_GAME_WARNING_SHOWN:
         messagebox.showwarning(
             "Open Game Reminder",
             "Make sure your selected game is open and all other apps are closed before clicking Show Running Games"
         )
         OPEN_GAME_WARNING_SHOWN = True
+
+       # --- Auto repair wireless mount for M5 iPads ---
+    model = get_current_device_model().lower()
+    if "ipad17" in model:
+        try:
+            connection_info = subprocess.check_output(
+                ["xcrun", "devicectl", "list", "devices"],
+                text=True
+            )
+
+            if "wireless" in connection_info.lower():
+                print("🔄 Detected wireless M5 iPad — trying auto repair...")
+                
+                subprocess.run("xcrun devicectl discover start", shell=True, check=False)
+                time.sleep(2)
+                subprocess.run("xcrun devicectl discover stop", shell=True, check=False)
+
+                subprocess.run(f"xcrun devicectl device pair --device {udid}", shell=True, check=False)
+
+                subprocess.run(f"xcrun devicectl device info --device {udid}", shell=True, check=False)
+
+        except Exception as e:
+            print(f"⚠️ Wireless auto-mount check failed: {e}")
 
     command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
     output = run_command(command)
@@ -522,32 +760,43 @@ def update_command_history(cmd):
         command_history_combo.set(display_str)
         save_data()
 
+# === OUTPUT PROCESSING AND WARNINGS ===
 def update_launch_output(output):
     set_text_widget(launch_output_text, output)
 
     if "OpenGL" in output:
-        messagebox.showwarning("OpenGL Detected",
-            "Warning: OpenGL detected in the logs. Metal HUD may not work!")
-        
-    global WARZONE_WARNING_SHOWN, FARLIGHT_WARNING_SHOWN
+        root.after(0, lambda: messagebox.showwarning(
+            "OpenGL Detected",
+            "Warning: OpenGL detected in the logs. Metal HUD may not work!"
+        ))
 
+    global WARZONE_WARNING_SHOWN, FARLIGHT_WARNING_SHOWN
     if not WARZONE_WARNING_SHOWN and detect_warzone_anti_cheat(output):
         WARZONE_WARNING_SHOWN = True
-        messagebox.showwarning(
+        root.after(0, lambda: messagebox.showwarning(
             "Warzone Not Supported",
             "Note! Metal HUD doesn’t work with COD Warzone due to anti-cheat. The game may crash if you try to use it"
-        )
+        ))
 
     if not FARLIGHT_WARNING_SHOWN and detect_farlight_issue(output):
         FARLIGHT_WARNING_SHOWN = True
-        messagebox.showwarning(
+        root.after(0, lambda: messagebox.showwarning(
             "Farlight 84 Not Supported",
             "Note! Metal HUD does not work with Farlight 84 (SolarlandClient.app).\n\n"
             "The game detects the HUD as a device anomaly and will refuse to run. "
             "In-game you may see: \"Device anomaly detected. Temporarily unable to access the game. (0-3-2048)\".\n\n"
             "Launch the game without the HUD (disable the HUD preset or launch normally) to play."
-        )
+        ))
 
+    try:
+        model = get_current_device_model() 
+    except Exception:
+        model = ""
+
+    if detect_missing_ddi_issue(model, output):
+        prompt_update_for_missing_ddi()
+
+# === THREADING AND BACKGROUND TASKS ===
 def run_command_in_thread(command):
     try:
         global process
@@ -649,6 +898,7 @@ def is_app_running(udid, bundle_id):
     )
     return bundle_id in result.stdout
 
+# === APP LAUNCH AND METAL HUD EXECUTION ===
 def launch_app():
     udid = device_udid_combo.get().strip()
     app_path = getattr(app_path_combo, "full_path", None)
@@ -817,7 +1067,7 @@ def move_selection(widget, direction="down"):
             update_launch_button_text(app_name)
     widget.config(state='disabled')
 
-# === GUI SETUP ===
+# === GUI INITIALIZATION ===
 root.title("Metal HUD Mobile Config")
 
 root.update_idletasks()
@@ -850,6 +1100,7 @@ canvas.configure(yscrollcommand=scrollbar.set)
 canvas.pack(side="left", fill="both", expand=True)
 scrollbar.pack(side="right", fill="y")
 
+# --- XCODE INSTALLATION PROMPT ---
 def prompt_install_xcode():
     messagebox.showwarning(
         "Xcode Missing",
@@ -1127,6 +1378,7 @@ def update_launch_button_text(app_name):
     else:
         launch_button.config(text="Launch App with Metal Performance HUD")
 
+# === GUI UTILITIES AND EVENT HANDLERS ===
 def toggle_logs():
     if launch_output_text.winfo_ismapped():
         launch_output_text.pack_forget()
@@ -1144,4 +1396,6 @@ launch_output_text.pack_forget()
 root.bind("<Command-r>", lambda event: list_devices())
 
 root.protocol("WM_DELETE_WINDOW", on_close)
+
+# === MAINLOOP AND EXIT HANDLERS ===
 root.mainloop()
