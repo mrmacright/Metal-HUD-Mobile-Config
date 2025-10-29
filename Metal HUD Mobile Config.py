@@ -102,6 +102,10 @@ APP_DISPLAY_SUFFIX = {
     "ShadowTrackerExtra": "(PUBG MOBILE)",
     "scimitar": "(Assassin's Creed Mirage)",
     "SolarlandClient": "(Farlight 84)",
+    "hkrpg": "(Honkai: Star Rail)",
+    "bh3oversea": "(Honkai Impact 3)",
+    "X6Game": "(Infinity Nikki)",
+   "ExtremeGame": "(PUBG: New State)"
 }
 
 # === MISSING DDI DETECTION ===
@@ -676,7 +680,8 @@ def show_apps():
         "Slack.app", "TeamSpaceApp.app", "Telegram.app", "YouTubeKids.app", "Zoom.app", "Signal.app", "Sheets.app", 
         "Netflix.app", "DisneyPlus.app", "OneNote.app", "Tachyon.app", "Word.app", "RunestoneEditor.app", "Contacts.app", 
         "FaceTime.app", "Image Playground.app", "MobileStore.app", "Amazon.app", "Apple Store.app", "Control Center.app", "Passwords.app",
-        "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app",
+        "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app", "GooglePhotos",
+        "Geekbench 6",   
     ]
 
     unique_apps = {}
@@ -699,6 +704,10 @@ def show_apps():
         "ShadowTrackerExtra": "(PUBG MOBILE)",
         "scimitar": "(Assassin's Creed Mirage)",
         "SolarlandClient": "(Farlight 84)",
+        "hkrpg": "(Honkai: Star Rail)",
+        "bh3oversea": "(Honkai Impact 3)",
+        "X6Game": "(Infinity Nikki)",
+        "ExtremeGame": "(PUBG: New State)"
     }
 
     def add_suffix(app_name: str) -> str:
@@ -933,11 +942,11 @@ def launch_app():
 
         process = subprocess.Popen(base_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 
-        time.sleep(0.5)
+        time.sleep(1)
 
         try:
             show_temporary_status_message("Restarting app with Metal HUD...")
-            process.send_signal(signal.SIGINT)
+            process.terminate()
             process.wait(timeout=5)
         except Exception:
             process.kill()
@@ -957,6 +966,7 @@ def launch_app():
 
     threading.Thread(target=launch_with_restart, daemon=True).start()
 
+# === DEVICE AND APP SELECTION HANDLERS ===
 def on_device_text_click(event):
     device_text.config(state='normal')
 
@@ -1100,7 +1110,7 @@ canvas.configure(yscrollcommand=scrollbar.set)
 canvas.pack(side="left", fill="both", expand=True)
 scrollbar.pack(side="right", fill="y")
 
-# --- XCODE INSTALLATION PROMPT ---
+# === XCODE INSTALLATION PROMPT ===
 def prompt_install_xcode():
     messagebox.showwarning(
         "Xcode Missing",
