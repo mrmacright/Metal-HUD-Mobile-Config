@@ -9,13 +9,15 @@
 - Save & quickly relaunch your favorite games with Metal HUD
 - View logs directly from the interface for better debugging and tracking
 
-## Requires 
+## Platform support 
 
 ✅ Mac [(macOS Sequoia 15.6 or later) ](https://support.apple.com/en-au/120282)
 
-❌ Windows is not supported (needs macOS tools like xcrun devicectl)
+❌ Windows support is impossible — Xcode is required and only runs on macOS
 
-❌ System-wide HUD support is not available, Metal HUD works per app on iPhone, iPad and Apple TV!
+❌ System-wide HUD support is impossible, Metal HUD works per app on iPhone, iPad & Apple TV!
+
+❌ Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which can’t run on iOS
 
 ### Supported devices for Metal HUD
 
@@ -86,6 +88,8 @@ sudo xcode-select -r
 - Game names may differ from App Store names
 
 - Metal HUD does not work with OpenGL-based games
+  
+- Some games anti-cheat might not work with Metal HUD or could possibly ban you
   
 - If you’ve manually adjusted Metal HUD Metrics on your iPhone/iPad under Developer → Graphics HUD (iOS 26 / iPadOS 26 / tvOS 26), the Default Metal HUD preset will launch using your custom metrics. Press **Reset** on your device to revert to the default metrics
 
