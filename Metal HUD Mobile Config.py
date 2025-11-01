@@ -18,6 +18,7 @@ import locale
 import platform
 import time
 import signal
+from tkinter.ttk import Progressbar
 
 process = None
 
@@ -618,6 +619,16 @@ def refresh_command_history_combo():
         appname_to_command[display_str] = full_cmd
     command_history_combo['values'] = history_display_entries
 
+def update_command_history(cmd):
+    if cmd not in command_history:
+        command_history.insert(0, cmd)
+        if len(command_history) > 10:
+            command_history.pop()
+        refresh_command_history_combo()
+        display_str, _ = extract_device_and_app_from_command(cmd)
+        command_history_combo.set(display_str)
+        save_data()
+
 def show_apps():
     global OPEN_GAME_WARNING_SHOWN
 
@@ -635,7 +646,7 @@ def show_apps():
         )
         OPEN_GAME_WARNING_SHOWN = True
 
-       # --- Auto repair wireless mount for M5 iPads ---
+# === Auto repair wireless mount for M5 iPads ===
     model = get_current_device_model().lower()
     if "ipad17" in model:
         try:
@@ -652,16 +663,31 @@ def show_apps():
                 subprocess.run("xcrun devicectl discover stop", shell=True, check=False)
 
                 subprocess.run(f"xcrun devicectl device pair --device {udid}", shell=True, check=False)
-
                 subprocess.run(f"xcrun devicectl device info --device {udid}", shell=True, check=False)
 
         except Exception as e:
             print(f"⚠️ Wireless auto-mount check failed: {e}")
 
-    command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
-    output = run_command(command)
-    ...
+# === Progress bar and threaded process scan ===
+    progress_bar.pack(fill=tk.X, pady=(0, 10))
+    progress_bar.start(10)
+    show_temporary_status_message("Searching for games...")
 
+    def background_task():
+        try:
+            command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
+            output = run_command(command)
+            root.after(0, lambda: process_apps_output(output))
+        finally:
+            root.after(0, lambda: (
+                progress_bar.stop(),
+                progress_bar.pack_forget(),
+                status_label.config(text="")
+            ))
+
+    threading.Thread(target=background_task, daemon=True).start()
+
+def process_apps_output(output):
     filter_out = [
         "Photos.app", "Weather.app", "VoiceMemos.app", "News.app", "Tips.app",
         "Reminders.app", "Music.app", "Maps.app", "Stocks.app", "AppStore.app",
@@ -681,11 +707,10 @@ def show_apps():
         "Netflix.app", "DisneyPlus.app", "OneNote.app", "Tachyon.app", "Word.app", "RunestoneEditor.app", "Contacts.app", 
         "FaceTime.app", "Image Playground.app", "MobileStore.app", "Amazon.app", "Apple Store.app", "Control Center.app", "Passwords.app",
         "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app", "GooglePhotos",
-        "Geekbench 6",   
+        "Geekbench 6",
     ]
 
     unique_apps = {}
-
     for line in output.splitlines():
         cleaned_line = re.sub(r"^\s*\d+\s+", "", line.strip())
         if cleaned_line:
@@ -757,17 +782,7 @@ def show_apps():
     apps_text.focus_set()
     apps_text.bind("<Up>", lambda e: move_selection(apps_text, "up"))
     apps_text.bind("<Down>", lambda e: move_selection(apps_text, "down"))
-    apps_text.bind("<Return>", lambda e: launch_app())     
-
-def update_command_history(cmd):
-    if cmd not in command_history:
-        command_history.insert(0, cmd)
-        if len(command_history) > 10:
-            command_history.pop()
-        refresh_command_history_combo()
-        display_str, _ = extract_device_and_app_from_command(cmd)
-        command_history_combo.set(display_str)
-        save_data()
+    apps_text.bind("<Return>", lambda e: launch_app())
 
 # === OUTPUT PROCESSING AND WARNINGS ===
 def update_launch_output(output):
@@ -1137,7 +1152,21 @@ device_udid_combo = ttk.Combobox(scrollable_frame, values=[])
 
 ttk.Button(scrollable_frame, text="Unpair", command=unpair_device).pack(anchor="w", padx=padx_side, pady=(0, 10))
 
-ttk.Button(scrollable_frame, text="Show Running Games", command=show_apps).pack(anchor="w", padx=padx_side)
+# === SHOW RUNNING GAMES SECTION (button + status + progress bar) ===
+show_games_frame = ttk.Frame(scrollable_frame)
+show_games_frame.pack(anchor="w", fill="x", padx=padx_side, pady=(0, 2))
+
+show_games_button = ttk.Button(show_games_frame, text="Show Running Games", command=show_apps)
+show_games_button.pack(anchor="w")
+
+status_label = ttk.Label(show_games_frame, text="", foreground="red")
+status_label.pack(anchor="w", pady=(5, 2))
+
+progress_bar = ttk.Progressbar(show_games_frame, mode='indeterminate')
+progress_bar.pack(fill=tk.X, pady=(0, 10))
+progress_bar.pack_forget()
+
+# === APPS LIST ===
 apps_text = scrolledtext.ScrolledText(scrollable_frame, height=7, state='disabled')
 apps_text.tag_configure("selected_app", background="#ffcc66", foreground="black")
 apps_text.pack(fill=tk.BOTH, padx=padx_side, pady=15, expand=True)
@@ -1374,9 +1403,6 @@ if hud_settings_saved:
 
 launch_button = ttk.Button(scrollable_frame, text="Launch App with Metal Performance HUD", command=launch_app)
 launch_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
-
-status_label = ttk.Label(scrollable_frame, text="", foreground="red")
-status_label.pack(anchor="w", padx=padx_side, pady=(0, 5))
 
 def update_launch_button_text(app_name):
     """
