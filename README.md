@@ -62,7 +62,7 @@
 
 ### Switch to Xcode Beta (sometimes required for new devices)
 
-If your device doesn’t appear or isn’t connecting, it may be due to the device requiring a newer version of Xcode and Command Line Tools.
+If your device doesn’t appear or isn’t connecting, it may be due to the device requiring a newer version of Xcode and Command Line Tools. For example the M5 iPad Pro
 
 Try switching to the latest Xcode Beta and its Command Line Tools:
 ```
@@ -73,6 +73,8 @@ Then verify your setup:
 xcode-select -p
 xcodebuild -version
 ```
+
+You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.1`).
 
 ### Still not working? Run the following in Terminal:
 
