@@ -62,7 +62,9 @@
 
 ### Switch to Xcode Beta (sometimes required for new devices)
 
-If your device doesn’t appear or isn’t connecting, it may be due to the device requiring a newer version of Xcode and Command Line Tools. For example the M5 iPad Pro
+If your device doesn’t appear or isn’t connecting, it may be due to the device requiring a newer version of Xcode and Command Line Tools. 
+
+Install the latest XCODE beta and Command Line tools here: https://developer.apple.com/download/ 
 
 Try switching to the latest Xcode Beta and its Command Line Tools:
 ```
