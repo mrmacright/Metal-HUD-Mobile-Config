@@ -60,6 +60,20 @@
 - Turning Wi-Fi off and back on may help
 4. Re-open the app
 
+### Switch to Xcode Beta (sometimes required for new devices)
+
+If your device doesn’t appear or isn’t connecting, it may be due to the device requiring a newer version of Xcode and Command Line Tools.
+
+Try switching to the latest Xcode Beta and its Command Line Tools:
+```
+sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer
+```
+Then verify your setup:
+```
+xcode-select -p
+xcodebuild -version
+```
+
 ### Still not working? Run the following in Terminal:
 
 Install Command Line Tools
