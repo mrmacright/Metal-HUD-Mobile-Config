@@ -11,7 +11,7 @@
 
 ## Platform support 
 
-✅ Mac [(macOS Sequoia 15.6 or later) ](https://support.apple.com/en-au/120282)
+✅ Mac [(macOS Sequoia 15.6 or later / ≈ 20-30 GB free space recommended) ](https://support.apple.com/en-au/120282)
 
 ❌ Windows support is impossible — Xcode is required and only runs on macOS
 
@@ -60,13 +60,14 @@
 - Turning Wi-Fi off and back on may help
 4. Re-open the app
 
-### Switch to Xcode Beta (sometimes required for new devices)
+### New iPhone or iPad isn't connecting?
 
-If your device doesn’t appear or isn’t connecting, it may be due to the device requiring a newer version of Xcode and Command Line Tools. 
+If your new iPhone or iPad isn’t appearing or showing any games, it’s usually because very new Apple devices (like upcoming iPhones or iPads) require a newer version of Xcode and Command Line Tools than what’s currently installed on your Mac. 
+Apple often releases support for these devices first in the latest Xcode Beta, before the stable version becomes available.
 
 Install the latest XCODE beta and Command Line tools here: https://developer.apple.com/download/ 
 
-Try switching to the latest Xcode Beta and its Command Line Tools:
+Switching to the latest Xcode Beta and its Command Line Tools in Terminal:
 ```
 sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer
 ```
@@ -75,8 +76,7 @@ Then verify your setup:
 xcode-select -p
 xcodebuild -version
 ```
-
-You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.1`).
+You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.x (or newer)`).
 
 ### Still not working? Run the following in Terminal:
 
