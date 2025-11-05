@@ -223,68 +223,6 @@ def accept_xcode_license_gui():
         )
         return False
 
-def ensure_xcode_beta_selected(model: str = None):
-    """
-    Automatically switches to Xcode Beta if the connected device requires it.
-    Uses AppleScript to perform the switch with admin privileges (no sudo prompt).
-    Silently skips if Beta isn't needed or already selected.
-    """
-    import subprocess
-    import os
-    import webbrowser
-    from tkinter import messagebox
-
-    try:
-        current_path = subprocess.check_output(
-            ["xcode-select", "-p"], text=True
-        ).strip()
-
-        if "Xcode-beta.app" in current_path:
-            return True
-
-        needs_beta = False
-        if model:
-            lower_model = model.lower()
-            # Only these specific models currently require Xcode Beta
-            BETA_REQUIRED_MODELS = ["ipad17,1", "ipad17,2"]
-            needs_beta = any(m in lower_model for m in BETA_REQUIRED_MODELS)
-
-        if not needs_beta:
-            return True
-
-        beta_path = "/Applications/Xcode-beta.app/Contents/Developer"
-        if os.path.exists(beta_path):
-            applescript = f'''
-            do shell script "xcode-select -s {beta_path}" with administrator privileges
-            '''
-            subprocess.run(["osascript", "-e", applescript], check=True)
-            return True
-
-        messagebox.showwarning(
-            "Xcode Beta Required",
-            (
-                f"Your connected device ({model or 'new device'}) requires Xcode Beta and Command Line Tools Beta "
-                "to work properly.\n\nClick OK to open Apple's Developer Downloads page."
-            ),
-        )
-        webbrowser.open("https://developer.apple.com/download/all/")
-        root.destroy()
-        os._exit(0)
-
-    except subprocess.CalledProcessError as e:
-        messagebox.showwarning(
-            "Xcode Switch Failed",
-            f"Unable to switch to Xcode Beta.\n\nError details:\n{e}"
-        )
-        return False
-
-    except Exception as e:
-        messagebox.showwarning(
-            "Unexpected Error",
-            f"An unexpected error occurred while switching Xcode:\n\n{e}"
-        )
-        return False
-
 def run_setup_xcode():
     """Ensure Xcode is installed and the license is accepted."""
     if not os.path.exists("/Applications/Xcode.app"):
@@ -522,9 +460,6 @@ def show_apps():
     udid = device_udid_combo.get().strip()
     if not udid:
         return
-
-    model = get_device_display(udid)
-    ensure_xcode_beta_selected(model)
 
     if not OPEN_GAME_WARNING_SHOWN:
         messagebox.showwarning(

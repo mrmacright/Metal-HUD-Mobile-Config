@@ -13,7 +13,7 @@
 
 ✅ Mac [(macOS Sequoia 15.6 or later) ](https://support.apple.com/en-au/120282) | 20-30 GB free space recommended
 
-❌ Windows support is impossible — Xcode is required and only runs on macOS
+❌ Windows support is impossible — Xcode is required & only runs on macOS
 
 ❌ System-wide HUD support is impossible, Metal HUD works per app on iPhone, iPad & Apple TV!
 
