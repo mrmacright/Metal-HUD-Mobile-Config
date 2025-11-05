@@ -106,7 +106,7 @@ sudo xcode-select -r
 
 - Metal HUD does not work with OpenGL-based games
   
-- Some games anti-cheat might not work with Metal HUD or could possibly ban you
+- Some games with anti-cheat might not work with Metal HUD or could possibly ban you
   
 - If you’ve manually adjusted Metal HUD Metrics on your iPhone/iPad under Developer → Graphics HUD (iOS 26 / iPadOS 26 / tvOS 26), the Default Metal HUD preset will launch using your custom metrics. Press **Reset** on your device to revert to the default metrics
 
