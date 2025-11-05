@@ -109,86 +109,6 @@ APP_DISPLAY_SUFFIX = {
    "ExtremeGame": "(PUBG: New State)"
 }
 
-# === MISSING DDI DETECTION ===
-MISSING_DDI_WARNING_SHOWN = False
-
-DDI_ERROR_KEYWORDS = [
-    "developer disk image could not be mounted",
-    "missing the requested variant for this device",
-    "kamdmobileimagemounterpersonalizedbundlemissingvarianterror",
-    "unable to find a valid ddi for the ios platform",
-    "unable to find a developer disk image to use for the ios platform",
-    "ddi not found",
-    "0xe800010f",
-    "com.apple.mobiledevice error -402652913",
-    "com.apple.dt.coredeviceerror error 12001",
-    "com.apple.dt.coredeviceerror error 12007",
-]
-
-def get_current_device_model() -> str:
-    """
-    Returns the Model string for the currently selected UDID, e.g. 'iPad (iPad17,1)'.
-    Falls back to UDID or '' if unknown.
-    """
-    udid = device_udid_combo.get().strip()
-    if not udid:
-        return ""
-    return DEVICE_INFO_CACHE.get(udid, udid)
-
-def detect_missing_ddi_issue(model: str, output: str) -> bool:
-    """
-    True if the connected device is the new M5 iPad Pro (iPad17,1)
-    AND the output contains any of the known DDI mount failure indicators.
-    """
-    if not model or not output:
-        return False
-
-    model_l = model.lower()
-    out_l = output.lower()
-
-    if "ipad17,1" not in model_l:
-        return False
-
-    for key in DDI_ERROR_KEYWORDS:
-        if key in out_l:
-            return True
-
-    return False
-
-def prompt_update_for_missing_ddi():
-    """
-    Show a single-shot warning and open Apple's Developer downloads page.
-    """
-    global MISSING_DDI_WARNING_SHOWN
-    if MISSING_DDI_WARNING_SHOWN:
-        return
-
-    MISSING_DDI_WARNING_SHOWN = True
-
-def _do():
-    import webbrowser
-    try:
-        xcode_ver = subprocess.check_output(
-            ["xcodebuild", "-version"], text=True
-        ).splitlines()[0]
-    except Exception:
-        xcode_ver = "Xcode (version unknown)"
-
-    result = messagebox.showwarning(
-        "Update Required",
-        f"{xcode_ver}\n\n"
-        "⚠️ Your version of Xcode or Command Line Tools doesn't include the "
-        "Developer Disk Image required for this iPad Pro (iPad17,1).\n\n"
-        "👉 Click OK to open Apple's Developer Downloads page and install the latest beta tools."
-    )
-
-    if result == "ok":
-        webbrowser.open("https://developer.apple.com/download/all/")
-        root.destroy()
-        os._exit(0)
-
-    root.after(0, _do)
-
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
 def add_suffix(app_name: str) -> str:
     """Return a display name with suffix if one exists for this app."""
@@ -381,39 +301,6 @@ def run_setup_xcode():
         if not success:
             root.destroy()
             os._exit(0)
-
-def prompt_update_for_missing_ddi():
-    """
-    Show a single-shot warning and open Apple's Developer Downloads page.
-    Then exit the app completely after OK is clicked.
-    """
-    global MISSING_DDI_WARNING_SHOWN
-    if MISSING_DDI_WARNING_SHOWN:
-        return
-    MISSING_DDI_WARNING_SHOWN = True
-
-    try:
-        xcode_ver = subprocess.check_output(
-            ["xcodebuild", "-version"], text=True
-        ).splitlines()[0]
-    except Exception:
-        xcode_ver = "Unknown Xcode version"
-
-    def _do():
-        import webbrowser
-        result = messagebox.showwarning(
-            "Update Required",
-            f"{xcode_ver}\n\n"
-            "Your version of Xcode or Command Line Tools doesn't include the "
-            "Developer Disk Image required for this iPad Pro (iPad17,1).\n\n"
-            "Click OK to open Apple's Developer Downloads page."
-        )
-        if result == "ok":
-            webbrowser.open("https://developer.apple.com/download/all/")
-            root.destroy()
-            os._exit(0)  
-
-    root.after(0, _do)
 
 # === GUI root ===
 root = tk.Tk()
@@ -646,28 +533,6 @@ def show_apps():
         )
         OPEN_GAME_WARNING_SHOWN = True
 
-# === Auto repair wireless mount for M5 iPads ===
-    model = get_current_device_model().lower()
-    if "ipad17" in model:
-        try:
-            connection_info = subprocess.check_output(
-                ["xcrun", "devicectl", "list", "devices"],
-                text=True
-            )
-
-            if "wireless" in connection_info.lower():
-                print("🔄 Detected wireless M5 iPad — trying auto repair...")
-                
-                subprocess.run("xcrun devicectl discover start", shell=True, check=False)
-                time.sleep(2)
-                subprocess.run("xcrun devicectl discover stop", shell=True, check=False)
-
-                subprocess.run(f"xcrun devicectl device pair --device {udid}", shell=True, check=False)
-                subprocess.run(f"xcrun devicectl device info --device {udid}", shell=True, check=False)
-
-        except Exception as e:
-            print(f"⚠️ Wireless auto-mount check failed: {e}")
-
 # === Progress bar and threaded process scan ===
     progress_bar.pack(fill=tk.X, pady=(0, 10))
     progress_bar.start(10)
@@ -687,6 +552,7 @@ def show_apps():
 
     threading.Thread(target=background_task, daemon=True).start()
 
+# === FILTER AND UPDATE RUNNING APP LIST ===
 def process_apps_output(output):
     filter_out = [
         "Photos.app", "Weather.app", "VoiceMemos.app", "News.app", "Tips.app",
@@ -706,8 +572,9 @@ def process_apps_output(output):
         "Slack.app", "TeamSpaceApp.app", "Telegram.app", "YouTubeKids.app", "Zoom.app", "Signal.app", "Sheets.app", 
         "Netflix.app", "DisneyPlus.app", "OneNote.app", "Tachyon.app", "Word.app", "RunestoneEditor.app", "Contacts.app", 
         "FaceTime.app", "Image Playground.app", "MobileStore.app", "Amazon.app", "Apple Store.app", "Control Center.app", "Passwords.app",
-        "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app", "GooglePhotos",
-        "Geekbench 6",
+        "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app", "GooglePhotos.app",
+        "Geekbench 6.app", "WeatherViewer.app", "Twitter.app", "narwhal2.app", "OneDrive.app", "To Do.app", "Todoist.app", "CapCut.app", "HelloTalk_Binary.app",
+        "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app",
     ]
 
     unique_apps = {}
@@ -811,14 +678,6 @@ def update_launch_output(output):
             "In-game you may see: \"Device anomaly detected. Temporarily unable to access the game. (0-3-2048)\".\n\n"
             "Launch the game without the HUD (disable the HUD preset or launch normally) to play."
         ))
-
-    try:
-        model = get_current_device_model() 
-    except Exception:
-        model = ""
-
-    if detect_missing_ddi_issue(model, output):
-        prompt_update_for_missing_ddi()
 
 # === THREADING AND BACKGROUND TASKS ===
 def run_command_in_thread(command):
