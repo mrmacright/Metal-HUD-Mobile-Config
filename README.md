@@ -11,7 +11,7 @@
 
 ## Platform support 
 
-✅ Mac [(macOS Sequoia 15.6 or later / ≈ 20-30 GB free space recommended) ](https://support.apple.com/en-au/120282)
+✅ Mac [(macOS Sequoia 15.6 or later) ](https://support.apple.com/en-au/120282) | 20-30 GB free space recommended
 
 ❌ Windows support is impossible — Xcode is required and only runs on macOS
 
