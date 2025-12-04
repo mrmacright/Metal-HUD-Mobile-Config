@@ -37,10 +37,11 @@
 
 ### Apple TV
 
-1. Download Xcode
-2. Open Xcode → Window → Devices and Simulators → Discovered
-3. Pair Apple TV → enter verification code → Connect
-4. Open Metal HUD Mobile Config → List Devices
+1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
+2. Download Xcode
+3. Open Xcode → Window → Devices and Simulators → Discovered
+4. Pair Apple TV → enter verification code → Connect
+5. Open Metal HUD Mobile Config → List Devices
 - You might need to re-pair after tvOS/macOS updates
 
 ## Using The App
