@@ -106,7 +106,8 @@ APP_DISPLAY_SUFFIX = {
     "hkrpg": "(Honkai: Star Rail)",
     "bh3oversea": "(Honkai Impact 3)",
     "X6Game": "(Infinity Nikki)",
-   "ExtremeGame": "(PUBG: New State)"
+   "ExtremeGame": "(PUBG: New State)",
+   "librdr_1.50.60293175_ios-netflix_ww": "(Red Dead 1)"
 }
 
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
@@ -534,7 +535,8 @@ def process_apps_output(output):
         "hkrpg": "(Honkai: Star Rail)",
         "bh3oversea": "(Honkai Impact 3)",
         "X6Game": "(Infinity Nikki)",
-        "ExtremeGame": "(PUBG: New State)"
+        "ExtremeGame": "(PUBG: New State)",
+        "librdr_1.50.60293175_ios-netflix_ww": "(Red Dead 1)"
     }
 
     def add_suffix(app_name: str) -> str:
@@ -693,6 +695,11 @@ def get_hud_env_vars(preset):
         return {
             "MTL_HUD_ENABLED": "1",
             "MTL_HUD_ELEMENTS": "device,layersize,layerscale,gamemode,memory,refreshrate,fps,frameinterval,gputime,thermal,frameintervalgraph,presentdelay,metalcpu,shaders,metalfx"
+        }
+    elif preset == "Compiled Shaders":
+        return {
+            "MTL_HUD_ENABLED": "1",
+            "MTL_HUD_ELEMENTS": "device,layersize,memory,thermal,fps,gputime,frameinterval,frameintervalgraph,shaders,metalfx"
         }
     elif preset == "Full":
         return {
@@ -887,37 +894,44 @@ def move_selection(widget, direction="down"):
     widget.config(state='disabled')
 
 # === GUI INITIALIZATION ===
+
+# Set the window title
 root.title("Metal HUD Mobile Config")
 
+# Full-screen window size
 root.update_idletasks()
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 root.geometry(f"{screen_width}x{screen_height}+0+0")
 
 padx_side = 30
-
 load_data()
 
-canvas = tk.Canvas(root)
+# === Scrollable Layout ===
+
+canvas = tk.Canvas(root, highlightthickness=0)
 scrollbar = ttk.Scrollbar(root, orient="vertical", command=canvas.yview)
-scrollable_frame = ttk.Frame(canvas)
-
-scrollable_frame.bind(
-    "<Configure>",
-    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-)
-
-canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-
-def resize_scrollable_frame(event):
-    canvas.itemconfig(canvas_window, width=event.width)
-
-canvas.bind("<Configure>", resize_scrollable_frame)
+scrollbar.pack(side="right", fill="y")
+canvas.pack(side="left", fill="both", expand=True)
 
 canvas.configure(yscrollcommand=scrollbar.set)
 
-canvas.pack(side="left", fill="both", expand=True)
-scrollbar.pack(side="right", fill="y")
+scrollable_frame = ttk.Frame(canvas)
+
+# Create window inside canvas
+canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+
+# Update scrollregion when content size changes
+def on_frame_configure(event):
+    canvas.configure(scrollregion=canvas.bbox("all"))
+
+scrollable_frame.bind("<Configure>", on_frame_configure)
+
+# Always match frame width to canvas width
+def on_canvas_configure(event):
+    canvas.itemconfig(canvas_window, width=event.width)
+
+canvas.bind("<Configure>", on_canvas_configure)
 
 # === XCODE INSTALLATION PROMPT ===
 def prompt_install_xcode():
@@ -1064,6 +1078,7 @@ preset_dropdown = ttk.OptionMenu(
     "Simple",
     "FPS Only",
     "Thermals",
+    "Compiled Shaders",
     "Rich",
     "Full",
     "Custom"
@@ -1227,5 +1242,5 @@ root.bind("<Command-r>", lambda event: list_devices())
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 
-# === MAINLOOP AND EXIT HANDLERS ===
+# === MAINLOOP ===
 root.mainloop()
