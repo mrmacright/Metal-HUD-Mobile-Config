@@ -1,8 +1,7 @@
 # ==========================================================
 #  METAL HUD MOBILE CONFIG 
 #  Author: Stewie (MrMacRight)
-#  Purpose: iOS device management & Metal HUD launcher GUI
-#  Platform: macOS Sequoia 15.6+
+#  Purpose: Metal HUD iOS launcher GUI & iOS device management 
 # ==========================================================
 
 # === IMPORTS AND INITIAL SETUP ===
@@ -99,24 +98,22 @@ def detect_farlight_issue(output: str) -> bool:
             return True
     return False
 
-APP_DISPLAY_SUFFIX = {
-    "ShadowTrackerExtra": "(PUBG MOBILE)",
-    "scimitar": "(Assassin's Creed Mirage)",
-    "SolarlandClient": "(Farlight 84)",
-    "hkrpg": "(Honkai: Star Rail)",
-    "bh3oversea": "(Honkai Impact 3)",
-    "X6Game": "(Infinity Nikki)",
-   "ExtremeGame": "(PUBG: New State)",
-   "librdr_1.50.60293175_ios-netflix_ww": "(Red Dead 1)"
+APP_DISPLAY_RENAME = {
+    "ShadowTrackerExtra": "PUBG MOBILE",
+    "scimitar": "Assassin's Creed Mirage",
+    "SolarlandClient": "Farlight 84",
+    "hkrpg": "Honkai: Star Rail",
+    "bh3oversea": "Honkai Impact 3",
+    "X6Game": "Infinity Nikki",
+    "ExtremeGame": "PUBG: New State",
+    "librdr_1.50.60293175_ios-netflix_ww": "Red Dead Redemption Netflix",
+    "WWE2K_Apple": "WWE 2K25: Netflix Edition",
+    "narutoNext1": "NARUTO: Ultimate Ninja STORM"
 }
 
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
-def add_suffix(app_name: str) -> str:
-    """Return a display name with suffix if one exists for this app."""
-    if not app_name:
-        return app_name
-    suffix = APP_DISPLAY_SUFFIX.get(app_name)
-    return f"{app_name}{suffix}" if suffix else app_name
+def add_display_name(app_name: str) -> str:
+    return APP_DISPLAY_RENAME.get(app_name, app_name)
 
 def strip_suffix(display_name: str) -> str:
     """
@@ -339,6 +336,15 @@ def set_text_widget(widget, text):
         widget.insert(tk.END, text)
     widget.config(state='disabled')
 
+def append_log(text):
+    """
+    Append text to the launch_output_text widget and keep it read-only.
+    """
+    launch_output_text.config(state='normal')
+    launch_output_text.insert(tk.END, text)
+    launch_output_text.see(tk.END)
+    launch_output_text.config(state='disabled')
+
 def is_xcode_installed():
     return os.path.exists("/Applications/Xcode.app")
 
@@ -431,7 +437,7 @@ def unpair_device():
     command = f"xcrun devicectl manage unpair --device {udid}"
     output = run_command(command)
 
-    set_text_widget(launch_output_text, output)
+    append_log(output + "\n")
 
     list_devices()
 
@@ -488,6 +494,52 @@ def show_apps():
 
     threading.Thread(target=background_task, daemon=True).start()
 
+# === Select game with keyboard ===
+last_letter_pressed = None
+last_letter_index = -1
+
+def jump_to_app_starting_with(letter):
+    global last_letter_pressed, last_letter_index
+
+    apps_text.config(state='normal')
+    lines = apps_text.get("1.0", "end-1c").splitlines()
+
+    matches = []
+    for i, line in enumerate(lines, start=1):
+        if line.lower().startswith(letter.lower()):
+            matches.append((i, line))
+
+    if not matches:
+        apps_text.config(state='disabled')
+        return
+
+    if last_letter_pressed == letter:
+        last_letter_index = (last_letter_index + 1) % len(matches)
+    else:
+        last_letter_pressed = letter
+        last_letter_index = 0
+
+    target_line_num, target_line_text = matches[last_letter_index]
+
+    apps_text.tag_remove("selected_app", "1.0", tk.END)
+    start = f"{target_line_num}.0"
+    end = f"{target_line_num}.end"
+    apps_text.tag_add("selected_app", start, end)
+    apps_text.see(start)
+
+    full_path = apps_text.full_path_map.get(target_line_text)
+    if full_path:
+        app_path_combo.set(target_line_text)
+        app_path_combo.full_path = full_path
+        update_launch_button_text(target_line_text)
+
+    apps_text.config(state='disabled')
+
+def on_apps_keypress(event):
+    if not event.char or not event.char.isalpha():
+        return
+    jump_to_app_starting_with(event.char)
+
 # === FILTER AND UPDATE RUNNING APP LIST ===
 def process_apps_output(output):
     filter_out = [
@@ -528,16 +580,19 @@ def process_apps_output(output):
 
     sorted_apps = sorted(unique_apps.items(), key=lambda x: x[1].lower())
 
-    APP_DISPLAY_SUFFIX = {
-        "ShadowTrackerExtra": "(PUBG MOBILE)",
-        "scimitar": "(Assassin's Creed Mirage)",
-        "SolarlandClient": "(Farlight 84)",
-        "hkrpg": "(Honkai: Star Rail)",
-        "bh3oversea": "(Honkai Impact 3)",
-        "X6Game": "(Infinity Nikki)",
-        "ExtremeGame": "(PUBG: New State)",
-        "librdr_1.50.60293175_ios-netflix_ww": "(Red Dead 1)"
+    APP_DISPLAY_RENAME = {
+        "ShadowTrackerExtra": "PUBG MOBILE",
+        "scimitar": "Assassin's Creed Mirage",
+        "SolarlandClient": "Farlight 84",
+        "hkrpg": "Honkai: Star Rail",
+        "bh3oversea": "Honkai Impact 3",
+        "X6Game": "Infinity Nikki",
+        "ExtremeGame": "PUBG: New State",
+        "librdr_1.50.60293175_ios-netflix_ww": "Red Dead Redemption Netflix",
+        "WWE2K_Apple": "WWE 2K25: Netflix Edition",
+        "narutoNext1": "NARUTO: Ultimate Ninja STORM"
     }
+
 
     def add_suffix(app_name: str) -> str:
         return f"{app_name}{APP_DISPLAY_SUFFIX[app_name]}" if app_name in APP_DISPLAY_SUFFIX else app_name
@@ -547,7 +602,7 @@ def process_apps_output(output):
 
     for full_path, app_name in sorted_apps:
         base_name = app_name[:-4] if app_name.endswith(".app") else app_name
-        display_name = add_suffix(base_name)
+        display_name = add_display_name(base_name)
         if display_name not in app_name_to_full_path:  
             app_name_to_full_path[display_name] = full_path
             display_names.append(display_name)
@@ -587,10 +642,11 @@ def process_apps_output(output):
     apps_text.bind("<Up>", lambda e: move_selection(apps_text, "up"))
     apps_text.bind("<Down>", lambda e: move_selection(apps_text, "down"))
     apps_text.bind("<Return>", lambda e: launch_app())
+    apps_text.bind("<Key>", on_apps_keypress)
 
 # === OUTPUT PROCESSING AND WARNINGS ===
 def update_launch_output(output):
-    set_text_widget(launch_output_text, output)
+    append_log(output + "\n")
 
     if "OpenGL" in output:
         root.after(0, lambda: messagebox.showwarning(
@@ -893,6 +949,29 @@ def move_selection(widget, direction="down"):
             update_launch_button_text(app_name)
     widget.config(state='disabled')
 
+# === Export logs to desktop ===
+def export_logs_to_desktop():
+    try:
+        launch_output_text.config(state='normal')
+        log_text = launch_output_text.get("1.0", tk.END).strip()
+        launch_output_text.config(state='disabled')
+
+        if not log_text:
+            messagebox.showwarning("No Logs", "There are no logs to export.")
+            return
+
+        desktop_path = os.path.join(os.path.expanduser("~/Desktop"), "MetalHUD_Logs.txt")
+
+        with open(desktop_path, "w", encoding="utf-8") as f:
+            f.write(log_text)
+
+        subprocess.Popen(["open", desktop_path])
+
+        messagebox.showinfo("Logs Exported", f"Saved to Desktop:\nMetalHUD_Logs.txt")
+
+    except Exception as e:
+        messagebox.showerror("Export Failed", f"Could not export logs:\n{e}")
+
 # === GUI INITIALIZATION ===
 
 # Set the window title
@@ -1014,7 +1093,7 @@ def extract_device_and_app_from_command(cmd):
         full_path = app_match.group(1)
         app_basename = os.path.basename(full_path)
         app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
-        display_app_name = add_suffix(app_name)
+        display_app_name = add_display_name(app_name)
     else:
         display_app_name = "Unknown App"
 
@@ -1048,7 +1127,7 @@ def on_command_history_select(event):
             full_path = app_path_match.group(1)
             app_basename = os.path.basename(full_path)
             app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
-            display_name = add_suffix(app_name)
+            display_name = add_display_name(app_name)
 
             app_path_combo.set(display_name)
             app_path_combo.full_path = full_path
@@ -1110,6 +1189,26 @@ hud_elements_display_map = {
 hud_elements_vars = {}
 custom_elements_frame = ttk.Frame(scrollable_frame)
 
+def clear_hud_elements():
+    for var in hud_elements_vars.values():
+        var.set(0)
+
+clear_button = ttk.Button(
+    scrollable_frame,
+    text="Clear List",
+    command=clear_hud_elements
+)
+
+clear_button = ttk.Button(
+    scrollable_frame,
+    text="Clear List",
+    command=clear_hud_elements
+)
+
+def clear_hud_elements():
+    for var in hud_elements_vars.values():
+        var.set(0)
+
 row = 0
 col = 0
 max_cols = 4  
@@ -1130,8 +1229,10 @@ custom_elements_frame.pack_forget()
 def on_preset_change(*args):
     if hud_preset_var.get() == "Custom":
         custom_elements_frame.pack(fill=tk.X, padx=padx_side, pady=(0,10))
+        clear_button.pack(anchor="w", padx=padx_side, pady=(0,10))
     else:
         custom_elements_frame.pack_forget()
+        clear_button.pack_forget()
 
 hud_preset_var.trace_add("write", on_preset_change)
 on_preset_change()  
@@ -1234,6 +1335,8 @@ def toggle_logs():
 
 toggle_log_button = ttk.Button(scrollable_frame, text="Show Logs", command=toggle_logs)
 toggle_log_button.pack(anchor="w", padx=padx_side, pady=(0, 5))
+export_logs_button = ttk.Button(scrollable_frame, text="Export Logs", command=export_logs_to_desktop)
+export_logs_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12, state='disabled')
 launch_output_text.pack_forget()
