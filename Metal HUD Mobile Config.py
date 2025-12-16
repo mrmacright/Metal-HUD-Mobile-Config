@@ -107,6 +107,7 @@ APP_DISPLAY_RENAME = {
     "X6Game": "Infinity Nikki",
     "ExtremeGame": "PUBG: New State",
     "librdr_1.50.60293175_ios-netflix_ww": "Red Dead Redemption Netflix",
+    "librdr_1.50.60293175_ios_ww": "Red Dead Redemption",
     "WWE2K_Apple": "WWE 2K25: Netflix Edition",
     "narutoNext1": "NARUTO: Ultimate Ninja STORM"
 }
@@ -589,6 +590,7 @@ def process_apps_output(output):
         "X6Game": "Infinity Nikki",
         "ExtremeGame": "PUBG: New State",
         "librdr_1.50.60293175_ios-netflix_ww": "Red Dead Redemption Netflix",
+        "librdr_1.50.60293175_ios_ww": "Red Dead Redemption",
         "WWE2K_Apple": "WWE 2K25: Netflix Edition",
         "narutoNext1": "NARUTO: Ultimate Ninja STORM"
     }
@@ -1043,7 +1045,7 @@ ttk.Button(scrollable_frame, text="Unpair", command=unpair_device).pack(anchor="
 show_games_frame = ttk.Frame(scrollable_frame)
 show_games_frame.pack(anchor="w", fill="x", padx=padx_side, pady=(0, 2))
 
-show_games_button = ttk.Button(show_games_frame, text="Show Running Games", command=show_apps)
+show_games_button = ttk.Button(show_games_frame, text="Show Running Games (Cmd+S)", command=show_apps)
 show_games_button.pack(anchor="w")
 
 status_label = ttk.Label(show_games_frame, text="", foreground="red")
@@ -1342,6 +1344,7 @@ launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12, stat
 launch_output_text.pack_forget()
 
 root.bind("<Command-r>", lambda event: list_devices())
+root.bind("<Command-s>", lambda event: show_apps())
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 
