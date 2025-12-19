@@ -52,14 +52,30 @@
 4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
 - Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 
-## Troubleshooting 
+## Troubleshooting / Device not appearing?
 
-### Device not appearing?
+If your device is not appearing under **List Devices**, please try the below steps. 
+
+### Connect & Disconnect 
 
 1. Close Metal HUD Mobile Config
 2. Unplug iPhone or iPad from Mac and reconnect
 - Turning Wi-Fi off and back on may help
 4. Re-open the app
+
+### Connect via XCODE 
+1. Open Xcode
+2. Window → Devices and Simulators → Connected
+
+- Make sure Xcode is showing your device is connected.
+
+<img width="354" height="70" alt="Xcode_Connected" src="https://github.com/user-attachments/assets/d02a60b0-dec7-4852-94e4-aeb9b9989004" />
+
+-  If you see **Connecting to device** or **Copying shared cache symbols**, please wait for this to complete and go back to Metal HUD Config.
+  
+<img width="892" height="66" alt="XCODE Connecting2" src="https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c" />
+
+<img width="898" height="62" alt="XCODE Connecting" src="https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286" />
 
 ### New iPhone or iPad isn't connecting?
 
