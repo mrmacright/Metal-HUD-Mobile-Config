@@ -64,8 +64,9 @@ If your device is not appearing under **List Devices**, please try the below ste
 4. Re-open the app
 
 ### Connect via XCODE 
-1. Open Xcode
-2. Window → Devices and Simulators → Connected
+1. Close Metal HUD Mobile Config
+2. Open Xcode
+3. Window → Devices and Simulators → Connected
 
 - Make sure Xcode is showing your device is connected.
 
