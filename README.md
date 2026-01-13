@@ -28,24 +28,6 @@
 ## Launching The App 
 <img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/048fe425-97ef-482f-a2b6-1c3dd23f7d77" />
 
-### iPhone / iPad
-
-1. Connect iPhone or iPad to Mac via USB
-- You may need to tap "Trust This Computer" on iPhone/iPad and "Allow accessory" on Mac
-2. Launch Metal HUD Mobile Config
-- If prompted, download Xcode and reopen (Apple files may take a while).
-
-### Apple TV
-
-1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
-2. Download Xcode
-3. Open Xcode → Window → Devices and Simulators → Discovered
-4. Pair Apple TV → enter verification code → Connect
-5. Open Metal HUD Mobile Config → List Devices
-- You might need to re-pair after tvOS/macOS updates
-
-## Using The App
-
 1. Click List Devices (wireless operation after pairing)
 2. Open the game on your device before pressing "Show Running Games" 
 3. Click "Show Running Games" to see games running on your device. 
@@ -72,19 +54,23 @@ Settings → General → Transfer or Reset iPhone → Reset → Reset Location &
 
 - Open **Xcode → Window → Devices and Simulators**
 - Confirm your device appears as connected
+<img src="https://github.com/user-attachments/assets/d02a60b0-dec7-4852-94e4-aeb9b9989004" width="350" />
 
-![Xcode device connected](https://github.com/user-attachments/assets/d02a60b0-dec7-4852-94e4-aeb9b9989004)
+If Xcode shows <strong>Connecting to device</strong> or <strong>Copying shared cache symbols</strong>, wait until this finishes, then return to Metal HUD Mobile Config.
 
-If Xcode shows **Connecting to device** or **Copying shared cache symbols**, wait until this finishes, then return to Metal HUD Mobile Config.
+<img src="https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c" width="600" />
+<img src="https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286" width="600" />
 
-![Xcode connecting](https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c)
-![Xcode copying symbols](https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286)
+The app normally accepts the Xcode license automatically on first launch. If it fails, you can do it manually in Terminal:
 
+```
+Agree to Xcode License
+```
 ---
 
 ### NO GAMES DETECTED?
 
-If you see **NO GAMES DETECTED**, or **NO USER APPS RUNNING** this means:
+If you see **NO GAMES DETECTED** or **NO USER APPS RUNNING**, this means:
 
 - The device is connected and responding correctly
 - No user games are currently running
@@ -107,6 +93,17 @@ If you see **DEVICE NOT PAIRED**, try the following:
 
 ---
 
+### How to connect to Apple TV
+
+1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
+2. Download Xcode
+3. Open Xcode → Window → Devices and Simulators → Discovered
+4. Pair Apple TV → enter verification code → Connect
+5. Open Metal HUD Mobile Config → List Devices
+- You might need to re-pair after tvOS/macOS updates
+
+---
+
 ### New iPhone or iPad isn't connecting?
 
 If your new iPhone or iPad isn’t appearing or showing any games, it’s usually because very new Apple devices (like upcoming iPhones or iPads) require a newer version of Xcode and Command Line Tools than what’s currently available from App Store. 
@@ -123,31 +120,6 @@ xcode-select -p
 xcodebuild -version
 ```
 You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.x (or newer)`
-
----
-
-### Still not working? Run the following in Terminal:
-
-Install Command Line Tools
-```
-xcode-select --install
-```
-Check if XCODE is installed:
-```
-xcode-select -p
-```
-Set Xcode Path 
-```
-sudo xcode-select -s /Applications/Xcode.app
-```
-Agree to Xcode License
-```
-sudo xcodebuild -license
-```
-Reset Xcode Path (if things break)
-```
-sudo xcode-select -r
-```
 
 ## Known Issues
 
