@@ -15,7 +15,7 @@
 
 ❌ Windows support is impossible — Xcode is required & only runs on macOS
 
-❌ System-wide HUD support is impossible, Metal HUD works per app on iPhone, iPad & Apple TV!
+❌ System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS & tvOS
 
 ❌ Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which can’t run on iOS
 
@@ -52,31 +52,58 @@
 4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
 - Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 
-## Troubleshooting / Device not appearing?
+# Connection help
 
-If your device is not appearing under **List Devices**, please try the below steps. 
+## Device not appearing?
 
-### Connect & Disconnect 
+If you see **NO DEVICES WERE FOUND**, this usually means:
 
-1. Close Metal HUD Mobile Config
-2. Unplug iPhone or iPad from Mac and reconnect
-- Turning Wi-Fi off and back on may help
-4. Re-open the app
+- The device is not connected via USB
+- “Trust This Computer” was not accepted on the device or Mac
+- Xcode is still preparing the device (first connection or after updates)
 
-### Connect via XCODE 
-1. Close Metal HUD Mobile Config
-2. Open Xcode
-3. Window → Devices and Simulators → Connected
+**Fix:**
+- Connect your iPhone or iPad via USB and unlock it
+- On the device, tap **Trust This Computer** if prompted
+- On the Mac, click **Allow** if asked to connect the accessory
 
-- Make sure Xcode is showing your device is connected.
+If you previously dismissed the trust prompt, reset it on the device:
+Settings → General → Transfer or Reset iPhone → Reset → Reset Location & Privacy
 
-<img width="354" height="70" alt="Xcode_Connected" src="https://github.com/user-attachments/assets/d02a60b0-dec7-4852-94e4-aeb9b9989004" />
+- Open **Xcode → Window → Devices and Simulators**
+- Confirm your device appears as connected
 
--  If you see **Connecting to device** or **Copying shared cache symbols**, please wait for this to complete and go back to Metal HUD Config.
-  
-<img width="892" height="66" alt="XCODE Connecting2" src="https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c" />
+![Xcode device connected](https://github.com/user-attachments/assets/d02a60b0-dec7-4852-94e4-aeb9b9989004)
 
-<img width="898" height="62" alt="XCODE Connecting" src="https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286" />
+If Xcode shows **Connecting to device** or **Copying shared cache symbols**, wait until this finishes, then return to Metal HUD Mobile Config.
+
+![Xcode connecting](https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c)
+![Xcode copying symbols](https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286)
+
+---
+
+## No games detected?
+
+If you see **NO GAMES DETECTED**, this means:
+
+- The device is connected and responding correctly
+- No user games are currently running
+
+**Fix:**
+1. Launch a game on the device
+2. Ensure the game is in the foreground
+3. Click **Show Running Games** again
+
+---
+
+## Device visible but not paired?
+
+If you see **DEVICE NOT PAIRED**, try the following:
+
+- Unlock the device
+- Unplug and reconnect the USB cable
+- Tap **Trust This Computer** if prompted
+- Click **Show Running Games** again
 
 ### New iPhone or iPad isn't connecting?
 
