@@ -18,6 +18,8 @@ import platform
 import time
 import signal
 from tkinter.ttk import Progressbar
+import tkinter.font as tkfont
+import webbrowser
 
 process = None
 
@@ -46,11 +48,14 @@ os.environ["LC_ALL"] = "en_US.UTF-8"
 os.environ["LANG"] = "en_US.UTF-8"
 
 DEVICE_INFO_CACHE = {}  
+APP_DISPLAY_SUFFIX = {}
 
 WARNING_SHOWN = False  
 OPEN_GAME_WARNING_SHOWN = False
 WARZONE_WARNING_SHOWN = False
 FARLIGHT_WARNING_SHOWN = False
+DEVICE_PREPARING_WARNING_SHOWN = False
+RESTORING_FROM_PROFILE = False
 
 # === LOG AND DEVICE DETECTION HELPERS ===
 WARZONE_LOG_INDICATORS = [
@@ -172,6 +177,13 @@ def is_xcode_installed():
     except subprocess.CalledProcessError:
         return False
 
+def is_using_command_line_tools_only() -> bool:
+    try:
+        path = subprocess.check_output(["xcode-select", "-p"], text=True).strip()
+        return "CommandLineTools" in path
+    except Exception:
+        return False
+
 # === LICENSE ACCEPTANCE AND VALIDATION ===
 def has_agreed_to_license():
     """Check if the Xcode license has been agreed to."""
@@ -277,10 +289,13 @@ def save_data():
             "preset": hud_preset_var.get(),
             "alignment": hud_alignment_var.get(),
             "scale": hud_scale_var.get(),
+            "advanced_open": hud_advanced_open.get(),
             "custom_elements": {
-            key: var.get() for key, var in hud_elements_vars.items()
+                key: var.get()
+                for key, var in hud_elements_vars.items()
+            }
         }
-    }
+
     except Exception:
         hud_settings = {}
 
@@ -303,6 +318,19 @@ def on_close():
     save_data()
     root.destroy()
 
+    # Connection help button
+def show_device_checklist():
+    messagebox.showinfo(
+        "Connection Help",
+        "For setup instructions and troubleshooting,\n"
+        "please see the README on GitHub.\n\n"
+        "For further assistance, you can also contact:\n"
+        "business@mrmacright.com"
+    )
+
+    webbrowser.open(
+        "https://github.com/mrmacright/Metal-HUD-Mobile-Config#connection-help"
+    )
 # === COMMAND EXECUTION AND LOGGING ===
 def run_command(command):
     """
@@ -325,6 +353,33 @@ def run_command(command):
         ))
 
     return output.strip()
+
+def looks_like_xcode_preparing(raw_output: str) -> bool:
+    if not raw_output:
+        return True
+
+    text = raw_output.lower()
+
+    # If the device table header is present, devices ARE listed
+    if "identifier" in text and "state" in text and "model" in text:
+        return False
+
+    return any(s in text for s in (
+        "waiting for device",
+        "connecting",
+        "acquired tunnel connection",
+    ))
+
+def is_pairing_error(output: str) -> bool:
+    if not output:
+        return False
+
+    text = output.lower()
+    return (
+        "must be paired" in text or
+        "remotepairingerror" in text or
+        "coredeviceerror error 2" in text
+    )
 
 def set_text_widget(widget, text):
     """
@@ -356,6 +411,17 @@ def open_xcode_download():
 def list_devices():
     global WARNING_SHOWN  
 
+    if is_using_command_line_tools_only():
+        messagebox.showerror(
+            "Full Xcode Required",
+            "You are currently using Command Line Tools only.\n\n"
+            "Metal HUD requires the full Xcode app.\n\n"
+            "Fix (Terminal):\n"
+            "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer\n\n"
+            "Then reopen this app and click List Devices."
+        )
+        return
+    
     if not WARNING_SHOWN:
         messagebox.showwarning(
             "Connect Device",
@@ -363,35 +429,91 @@ def list_devices():
         )
         WARNING_SHOWN = True  
 
-    raw_output = run_command("xcrun devicectl list devices")
+    attempts = 3
+    raw_output = ""
+    for attempt in range(attempts):
+        show_temporary_status_message("Checking for devices…")
+        raw_output = run_command("xcrun devicectl list devices")
+        if raw_output and not looks_like_xcode_preparing(raw_output):
+            break
+        time.sleep(2)
+
     lines = raw_output.splitlines()
     content_lines = lines[2:]  
 
-    device_lines = []
+    devices = []
     device_ids = {}
     device_info = {}
 
     for line in content_lines:
-        match = re.match(r"^(.*?)\s{2,}.*?\s{2,}(.*?)\s{2,}(.*?)\s{2,}(.*)$", line)
-        if match:
-            name = match.group(1).strip()
-            identifier = match.group(2).strip()  
-            state = match.group(3).strip()
-            model = match.group(4).strip()
+        parts = re.split(r"\s{2,}", line.strip())
+        if len(parts) < 5:
+            continue
 
-            device_ids[name] = identifier  
-            device_info[identifier] = model  
+        name = parts[0].strip()
+        identifier = parts[2].strip()
+        state = parts[3].strip()
+        model = parts[4].strip()
 
-            device_lines.append(f"{name:<40}  {state:<40}  {model}")
+        devices.append({
+            "name": name,
+            "identifier": identifier,
+            "state": state,
+            "model": model
+        })
+
+    def device_sort_key(d):
+        return (
+            not d["state"].lower().startswith("available"),
+            d["name"].lower()
+        )
+
+    devices.sort(key=device_sort_key)
+
+    device_ids.clear()
+    device_info.clear()
+
+    for d in devices:
+        device_ids[d["name"]] = d["identifier"]
+        device_info[d["identifier"]] = d["model"]
 
     global DEVICE_INFO_CACHE
     DEVICE_INFO_CACHE = device_info.copy()
 
-    if device_lines:
-        formatted = "\n".join(device_lines)
-        formatted = formatted.replace("?", "'")
+    device_lines = []
+
+    if devices:
+        device_lines = [
+            f"{d['name']:<40}  {d['state']:<40}  {d['model']}"
+            for d in devices
+        ]
+        formatted = "\n".join(device_lines).replace("?", "'")
     else:
         formatted = "No devices found."
+
+    # NO DEVICES WERE FOUND
+    if not device_lines:
+        set_text_widget(
+            device_text,
+            "NO DEVICES WERE FOUND\n\n"
+            "MOST COMMON REASONS:\n"
+            "• Device is not connected via USB\n"
+            "• macOS accessory permission was not allowed\n"
+            "• Device is locked or \"Trust This Computer\" was not accepted\n"
+            "• Xcode is still preparing the device (first connection or after updates)\n\n"
+            "FIX:\n"
+            "1) Connect your iPhone or iPad via USB and unlock it\n"
+            "2) On your Mac, click \"Allow\" if asked to connect the accessory\n"
+            "3) On your device, tap \"Trust This Computer\" if prompted\n"
+            "4) Open Xcode → Window → Devices and Simulators\n"
+            "5) Wait until preparation finishes\n\n"
+            "Then click:\n"
+            "List Devices (Cmd+R)"
+        )
+        device_udid_combo['values'] = []
+        device_udid_var.set("")
+        unpair_button.config(state="disabled")
+        return
 
     set_text_widget(device_text, formatted)
 
@@ -399,10 +521,14 @@ def list_devices():
     device_text.device_info = device_info 
 
     if device_ids:
-        device_udid_combo['values'] = list(device_ids.values())
-        device_udid_combo.set(list(device_ids.values())[0])
+        udids = list(device_ids.values())
+        device_udid_combo['values'] = udids
+        device_udid_var.set(udids[0])
     else:
-        device_udid_combo.set('')
+        device_udid_combo['values'] = []
+        device_udid_var.set("")
+
+    unpair_button.config(state="normal" if device_ids else "disabled")
 
     refresh_command_history_combo()
 
@@ -425,7 +551,7 @@ def list_devices():
 
 def unpair_device():
     """Unpair the selected/highlighted device."""
-    udid = device_udid_combo.get().strip()
+    udid = device_udid_var.get().strip()
     if not udid:
         messagebox.showwarning("No Device Selected", "Please select a device to unpair.")
         return
@@ -444,23 +570,44 @@ def unpair_device():
 
 def refresh_command_history_combo():
     global appname_to_command
-    history_display_entries = []
     appname_to_command.clear()
-    for cmd in command_history:
-        display_str, full_cmd = extract_device_and_app_from_command(cmd)
-        history_display_entries.append(display_str)
-        appname_to_command[display_str] = full_cmd
-    command_history_combo['values'] = history_display_entries
 
-def update_command_history(cmd):
-    if cmd not in command_history:
-        command_history.insert(0, cmd)
-        if len(command_history) > 10:
-            command_history.pop()
-        refresh_command_history_combo()
-        display_str, _ = extract_device_and_app_from_command(cmd)
-        command_history_combo.set(display_str)
-        save_data()
+    display_entries = []
+
+    for entry in command_history:
+        if not isinstance(entry, dict):
+            continue
+
+        if "command" not in entry:
+            continue
+
+        display_str, _ = extract_device_and_app_from_command(entry["command"])
+        display_entries.append(display_str)
+        appname_to_command[display_str] = entry
+
+    command_history_combo["values"] = display_entries
+
+def update_command_history(cmd, udid, app_path):
+    entry = {
+        "command": cmd,
+        "udid": udid,
+        "app_path": app_path,
+        "hud": {
+            "preset": hud_preset_var.get(),
+            "alignment": hud_alignment_var.get(),
+            "scale": hud_scale_var.get(),
+            "custom_elements": {
+                key: var.get()
+                for key, var in hud_elements_vars.items()
+            }
+        }
+    }
+
+    command_history.insert(0, entry)
+    command_history[:] = command_history[:10]
+
+    refresh_command_history_combo()
+    save_data()
 
 def show_apps():
     global OPEN_GAME_WARNING_SHOWN
@@ -483,7 +630,7 @@ def show_apps():
 
     def background_task():
         try:
-            command = f"xcrun devicectl device info processes --device {udid} | grep 'Bundle/Application'"
+            command = f"xcrun devicectl device info processes --device {udid} 2>&1"
             output = run_command(command)
             root.after(0, lambda: process_apps_output(output))
         finally:
@@ -543,6 +690,55 @@ def on_apps_keypress(event):
 
 # === FILTER AND UPDATE RUNNING APP LIST ===
 def process_apps_output(output):
+    global DEVICE_PREPARING_WARNING_SHOWN
+
+    # 1) Pairing error (DEVICE NOT PAIRED)
+    if is_pairing_error(output):
+        set_text_widget(
+            apps_text,
+            "DEVICE NOT PAIRED\n\n"
+            "This device is visible but not paired.\n\n"
+            "FIX:\n"
+            "• Unlock the device\n"
+            "• Unplug the USB cable\n"
+            "• Reconnect the USB cable\n"
+            "• Tap “Trust This Computer” if prompted\n\n"
+            "Then click:\n"
+            "Show Running Games"
+        )
+        return
+
+    # 2) No processes returned yet (Xcode preparing)
+    if not output or not output.strip():
+        set_text_widget(
+            apps_text,
+            "DEVICE PREPARING\n\n"
+            "No running games were found yet.\n\n"
+            "This is normal the first time a device is connected\n"
+            "or after iOS / Xcode updates.\n\n"
+            "FIX:\n"
+            "• Open Xcode\n"
+            "• Window → Devices and Simulators\n"
+            "• Wait until preparation finishes\n\n"
+            "Then click:\n"
+            "Show Running Games"
+        )
+        return
+    
+    # 3) Device is ready but no user apps are running
+    if "Bundle/Application" not in output:
+        set_text_widget(
+            apps_text,
+            "NO GAMES DETECTED\n\n"
+            "The device is connected and responding,\n"
+            "but no user games are currently running.\n\n"
+            "FIX:\n"
+            "• Launch a game on the device\n"
+            "• Ensure it is in the foreground\n"
+            "• Click: Show Running Games"
+        )
+        return
+
     filter_out = [
         "Photos.app", "Weather.app", "VoiceMemos.app", "News.app", "Tips.app",
         "Reminders.app", "Music.app", "Maps.app", "Stocks.app", "AppStore.app",
@@ -579,6 +775,23 @@ def process_apps_output(output):
                 if full_path not in unique_apps:
                     unique_apps[full_path] = app_name
 
+    # === NO USER APPS RUNNING (ONLY SYSTEM PROCESSES FOUND) ===
+    if not unique_apps:
+        set_text_widget(
+            apps_text,
+            "NO GAMES DETECTED\n\n"
+            "The device is connected and responding,\n"
+            "but no user games are currently running.\n\n"
+            "FIX:\n"
+            "• Launch a game on the device\n"
+            "• Ensure it is in the foreground\n"
+            "• Click: Show Running Games"
+        )
+        return
+
+    if unique_apps:
+        DEVICE_PREPARING_WARNING_SHOWN = False
+
     sorted_apps = sorted(unique_apps.items(), key=lambda x: x[1].lower())
 
     APP_DISPLAY_RENAME = {
@@ -594,7 +807,6 @@ def process_apps_output(output):
         "WWE2K_Apple": "WWE 2K25: Netflix Edition",
         "narutoNext1": "NARUTO: Ultimate Ninja STORM"
     }
-
 
     def add_suffix(app_name: str) -> str:
         return f"{app_name}{APP_DISPLAY_SUFFIX[app_name]}" if app_name in APP_DISPLAY_SUFFIX else app_name
@@ -701,7 +913,20 @@ def save_app_path():
     if not name:
         return
 
-    saved_paths[name] = {'udid': udid, 'app_path': app_path}
+    saved_paths[name] = {
+        'udid': udid,
+        'app_path': app_path,
+        'hud': {
+            'preset': hud_preset_var.get(),
+            'alignment': hud_alignment_var.get(),
+            'scale': hud_scale_var.get(),
+            'custom_elements': {
+                key: var.get()
+                for key, var in hud_elements_vars.items()
+            }
+        }
+    }
+
     refresh_saved_paths_combo()
     saved_paths_combo.set(name)
     save_data() 
@@ -725,11 +950,42 @@ def delete_saved_path():
             app_path_combo.set('')
         save_data()  
 
+ #save game
 def on_saved_path_select(event):
+    global RESTORING_FROM_PROFILE
+    RESTORING_FROM_PROFILE = True
+
     name = saved_paths_combo.get()
-    if name in saved_paths:
-        device_udid_combo.set(saved_paths[name]['udid'])
-        app_path_combo.set(saved_paths[name]['app_path'])
+    if name not in saved_paths:
+        RESTORING_FROM_PROFILE = False
+        return
+
+    entry = saved_paths[name]
+
+    device_udid_combo.set(entry['udid'])
+
+    full_path = entry['app_path']
+    app_basename = os.path.basename(full_path)
+    app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
+    display_name = add_display_name(app_name)
+
+    app_path_combo.set(display_name)
+    app_path_combo.full_path = full_path
+    update_launch_button_text(display_name)
+
+    hud = entry.get('hud')
+    if hud:
+        hud_preset_var.set(hud.get('preset', 'Default'))
+        hud_alignment_var.set(hud.get('alignment', 'Top-Right'))
+        hud_scale_var.set(hud.get('scale', 'Default'))
+
+        saved_custom = hud.get('custom_elements', {})
+        for key, var in hud_elements_vars.items():
+            var.set(saved_custom.get(key, 0))
+
+        on_preset_change()
+
+    RESTORING_FROM_PROFILE = False
 
 def get_hud_env_vars(preset):
     if preset == "Default":
@@ -809,7 +1065,7 @@ def launch_app():
         f"--console --device {udid} \"{app_path}\""
     )
 
-    update_command_history(base_command)
+    update_command_history(base_command, udid, app_path)
 
     def launch_with_restart():
         show_temporary_status_message("Launching app with Metal HUD...")
@@ -1022,34 +1278,62 @@ def prompt_install_xcode():
     )
 
     subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
-    
     root.destroy()
     os._exit(0)
 
 if not is_xcode_installed():
     prompt_install_xcode()
 
-ttk.Label(scrollable_frame, text="Devices").pack(anchor="w", padx=padx_side)
-ttk.Button(scrollable_frame, text="List Devices (Cmd+R)", command=list_devices).pack(anchor="w", padx=padx_side)
+# === DEVICES HEADER (label left, help right) ===
+devices_header = ttk.Frame(scrollable_frame)
+devices_header.pack(fill="x", padx=padx_side, pady=(0, 5))
+
+ttk.Label(devices_header, text="Devices").pack(side="left")
+
+ttk.Button(
+    devices_header,
+    text="Connection help",
+    command=show_device_checklist
+).pack(side="right")
+
+# === LIST DEVICES BUTTON ===
+ttk.Button(
+    scrollable_frame,
+    text="List Devices (Cmd+R)",
+    command=list_devices
+).pack(anchor="w", padx=padx_side)
 
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10, state='disabled')
 device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
 device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
 device_text.bind("<Button-1>", on_device_text_click)
 
-device_udid_combo = ttk.Combobox(scrollable_frame, values=[])
+device_udid_var = tk.StringVar(value="")
 
-ttk.Button(scrollable_frame, text="Unpair", command=unpair_device).pack(anchor="w", padx=padx_side, pady=(0, 10))
+device_udid_combo = ttk.Combobox(
+    scrollable_frame,
+    textvariable=device_udid_var,
+    values=[],
+    state="readonly"
+)
 
-# === SHOW RUNNING GAMES SECTION (button + status + progress bar) ===
+status_label = ttk.Label(scrollable_frame, text="", foreground="red")
+status_label.pack(anchor="w", padx=padx_side, pady=(5, 5))
+
+unpair_button = ttk.Button(scrollable_frame, text="Unpair", command=unpair_device)
+unpair_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
+unpair_button.config(state="disabled")
+
+# === SHOW RUNNING GAMES SECTION (button + progress bar) ===
 show_games_frame = ttk.Frame(scrollable_frame)
 show_games_frame.pack(anchor="w", fill="x", padx=padx_side, pady=(0, 2))
 
-show_games_button = ttk.Button(show_games_frame, text="Show Running Games (Cmd+S)", command=show_apps)
+show_games_button = ttk.Button(
+    show_games_frame,
+    text="Show Running Games (Cmd+S)",
+    command=show_apps
+)
 show_games_button.pack(anchor="w")
-
-status_label = ttk.Label(show_games_frame, text="", foreground="red")
-status_label.pack(anchor="w", pady=(5, 2))
 
 progress_bar = ttk.Progressbar(show_games_frame, mode='indeterminate')
 progress_bar.pack(fill=tk.X, pady=(0, 10))
@@ -1104,11 +1388,6 @@ def extract_device_and_app_from_command(cmd):
 history_display_entries = []
 appname_to_command = {}
 
-for cmd in command_history:
-    display_str, full_cmd = extract_device_and_app_from_command(cmd)
-    history_display_entries.append(display_str)
-    appname_to_command[display_str] = full_cmd
-
 ttk.Label(scrollable_frame, text="Previous Games").pack(anchor="w", padx=padx_side)
 command_history_combo = ttk.Combobox(scrollable_frame, values=[], state="readonly")
 command_history_combo.pack(fill=tk.X, padx=padx_side, pady=(0, 10))
@@ -1116,43 +1395,88 @@ command_history_combo.pack(fill=tk.X, padx=padx_side, pady=(0, 10))
 refresh_command_history_combo()
 
 def on_command_history_select(event):
-    selected_appname = command_history_combo.get()
-    full_command = appname_to_command.get(selected_appname)
+    global RESTORING_FROM_PROFILE
+    RESTORING_FROM_PROFILE = True
 
-    if full_command:
-        udid_match = re.search(r"--device\s+([^\s]+)", full_command)
-        if udid_match:
-            device_udid_combo.set(udid_match.group(1))
+    entry = appname_to_command.get(command_history_combo.get())
+    if not entry:
+        RESTORING_FROM_PROFILE = False
+        return
 
-        app_path_match = re.search(r'"([^"]+)"$', full_command)
-        if app_path_match:
-            full_path = app_path_match.group(1)
-            app_basename = os.path.basename(full_path)
-            app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
-            display_name = add_display_name(app_name)
+    device_udid_combo.set(entry["udid"])
 
-            app_path_combo.set(display_name)
-            app_path_combo.full_path = full_path
+    full_path = entry["app_path"]
+    app_basename = os.path.basename(full_path)
+    app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
+    display_name = add_display_name(app_name)
 
+    app_path_combo.set(display_name)
+    app_path_combo.full_path = full_path
+    update_launch_button_text(display_name)
 
-    alignment_match = re.search(r'"MTL_HUD_ALIGNMENT"\s*:\s*"(\w+)"', full_command)
-    if alignment_match:
-        internal = alignment_match.group(1)
-        display_alignment = hud_alignment_internal_to_display.get(internal, internal)
-        hud_alignment_var.set(display_alignment)
-    else:
-        hud_alignment_var.set("")
+    hud = entry.get("hud", {})
+    hud_preset_var.set(hud.get("preset", "Default"))
+    hud_alignment_var.set(hud.get("alignment", "Top-Right"))
+    hud_scale_var.set(hud.get("scale", "Default"))
 
-    update_launch_button_text(app_name)
+    saved_custom = hud.get("custom_elements", {})
+    for key, var in hud_elements_vars.items():
+        var.set(saved_custom.get(key, 0))
+
+    on_preset_change()
+
+    RESTORING_FROM_PROFILE = False
+
 command_history_combo.bind("<<ComboboxSelected>>", on_command_history_select)
+
+# === HUD STATE VARIABLES (MUST EXIST BEFORE UI) ===
+hud_preset_var = tk.StringVar(value="Default")
+
+# === HUD ADVANCED OPTIONS (COLLAPSIBLE) ===
+
+hud_arrow_font = tkfont.Font(size=18, weight="bold")
+
+hud_advanced_open = tk.BooleanVar(value=False)
+
+hud_advanced_header = ttk.Frame(scrollable_frame)
+hud_advanced_header.pack(fill="x", padx=padx_side, pady=(10, 5))
+
+hud_arrow_label = ttk.Label(
+    hud_advanced_header,
+    text="▾",
+    font=hud_arrow_font
+)
+hud_arrow_label.pack(side="left")
+
+hud_advanced_title = ttk.Label(hud_advanced_header, text="HUD Advanced Options")
+hud_advanced_title.pack(side="left", padx=(5, 0))
+
+hud_advanced_frame = ttk.Frame(scrollable_frame)
+
+def toggle_hud_advanced():
+    is_open = hud_advanced_open.get()
+    hud_advanced_open.set(not is_open)
+
+    if is_open:
+        hud_advanced_frame.pack_forget()
+        hud_arrow_label.config(text="▸")
+    else:
+        hud_advanced_frame.pack(fill=tk.X, padx=padx_side)
+        hud_arrow_label.config(text="▾")
+
+    root.update_idletasks()
+    canvas.configure(scrollregion=canvas.bbox("all"))
+
+hud_advanced_header.bind("<Button-1>", lambda e: toggle_hud_advanced())
+hud_arrow_label.bind("<Button-1>", lambda e: toggle_hud_advanced())
+hud_advanced_title.bind("<Button-1>", lambda e: toggle_hud_advanced())
 
 # === HUD PRESETS ===
 
-ttk.Label(scrollable_frame, text="HUD Preset").pack(anchor="w", padx=padx_side)
+ttk.Label(hud_advanced_frame, text="HUD Preset").pack(anchor="w")
 
-hud_preset_var = tk.StringVar(value="Default")
 preset_dropdown = ttk.OptionMenu(
-    scrollable_frame,
+    hud_advanced_frame,
     hud_preset_var,
     "Default",
     "Default",
@@ -1164,7 +1488,7 @@ preset_dropdown = ttk.OptionMenu(
     "Full",
     "Custom"
 )
-preset_dropdown.pack(fill=tk.X, padx=padx_side, pady=(0, 10))
+preset_dropdown.pack(fill=tk.X, pady=(0, 10))
 
 hud_elements_display_map = {
     "Metal Device": "device",
@@ -1189,27 +1513,18 @@ hud_elements_display_map = {
 }
 
 hud_elements_vars = {}
-custom_elements_frame = ttk.Frame(scrollable_frame)
+
+custom_elements_frame = ttk.Frame(hud_advanced_frame)
 
 def clear_hud_elements():
     for var in hud_elements_vars.values():
         var.set(0)
 
 clear_button = ttk.Button(
-    scrollable_frame,
+    hud_advanced_frame,
     text="Clear List",
     command=clear_hud_elements
 )
-
-clear_button = ttk.Button(
-    scrollable_frame,
-    text="Clear List",
-    command=clear_hud_elements
-)
-
-def clear_hud_elements():
-    for var in hud_elements_vars.values():
-        var.set(0)
 
 row = 0
 col = 0
@@ -1229,6 +1544,9 @@ for display_name, internal_name in hud_elements_display_map.items():
 custom_elements_frame.pack_forget()
 
 def on_preset_change(*args):
+    if RESTORING_FROM_PROFILE:
+        return
+
     if hud_preset_var.get() == "Custom":
         custom_elements_frame.pack(fill=tk.X, padx=padx_side, pady=(0,10))
         clear_button.pack(anchor="w", padx=padx_side, pady=(0,10))
@@ -1241,7 +1559,7 @@ on_preset_change()
 
 # === HUD ALIGNMENT OPTIONS ===
 
-ttk.Label(scrollable_frame, text="Set HUD Location").pack(anchor="w", padx=padx_side)
+ttk.Label(hud_advanced_frame, text="Set HUD Location").pack(anchor="w", pady=(5, 0))
 
 hud_alignment_var = tk.StringVar(value="Top-Right")
 
@@ -1260,12 +1578,12 @@ hud_alignment_display_map = {
 hud_alignment_internal_to_display = {v: k for k, v in hud_alignment_display_map.items()}
 
 hud_alignment_combo = ttk.Combobox(
-    scrollable_frame,
+    hud_advanced_frame,
     textvariable=hud_alignment_var,
     values=list(hud_alignment_display_map.keys()),
     state="readonly"
 )
-hud_alignment_combo.pack(fill=tk.X, padx=padx_side, pady=5)
+hud_alignment_combo.pack(fill=tk.X, pady=(0, 10))
 
 def get_alignment_internal():
     """Return the internal string used by HUD (e.g., 'topleft')."""
@@ -1282,14 +1600,21 @@ hud_scale_map = {
     "Max": "1.0"
 }
 
-ttk.Label(scrollable_frame, text="Set HUD Scale").pack(anchor="w", padx=padx_side)
+ttk.Label(hud_advanced_frame, text="Set HUD Scale").pack(anchor="w")
 
-hud_scale_var = tk.StringVar(value="Default")  
+hud_scale_var = tk.StringVar(value="Default")
 
 hud_scale_options = list(hud_scale_map.keys())
 
-hud_scale_optionmenu = ttk.OptionMenu(scrollable_frame, hud_scale_var, hud_scale_var.get(), *hud_scale_options)
-hud_scale_optionmenu.pack(fill=tk.X, padx=padx_side, pady=5)
+hud_scale_optionmenu = ttk.OptionMenu(
+    hud_advanced_frame,
+    hud_scale_var,
+    hud_scale_var.get(),
+    *hud_scale_options
+)
+hud_scale_optionmenu.pack(fill=tk.X, pady=(0, 10))
+
+# === RESTORE SAVED HUD STATE ===
 
 saved_custom = hud_settings_saved.get("custom_elements", {})
 for key, var in hud_elements_vars.items():
@@ -1304,8 +1629,22 @@ if hud_settings_saved:
     except Exception:
         pass
 
+    saved_open = hud_settings_saved.get("advanced_open", False)
+
+    hud_advanced_open.set(saved_open)
+
+    if saved_open:
+        hud_advanced_frame.pack(fill=tk.X, padx=padx_side)
+        hud_arrow_label.config(text="▾")
+    else:
+        hud_advanced_frame.pack_forget()
+        hud_arrow_label.config(text="▸")
+
     saved_alignment = hud_settings_saved.get("alignment", "Top-Right")
-    saved_alignment_display = hud_alignment_internal_to_display.get(saved_alignment, saved_alignment)
+    saved_alignment_display = hud_alignment_internal_to_display.get(
+        saved_alignment,
+        saved_alignment
+    )
     hud_alignment_var.set(saved_alignment_display)
 
     saved_scale = hud_settings_saved.get("scale", "Default")

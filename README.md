@@ -9,33 +9,112 @@
 - Save & quickly relaunch your favorite games with Metal HUD
 - View logs directly from the interface for better debugging and tracking
 
-## Platform support 
+## PLATFORM SUPPORT 
 
 ✅ Mac [(macOS Sequoia 15.6 or later) ](https://support.apple.com/en-au/120282) | 20-30 GB free space recommended
 
 ❌ Windows support is impossible — Xcode is required & only runs on macOS
 
-❌ System-wide HUD support is impossible, Metal HUD works per app on iPhone, iPad & Apple TV!
+❌ System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS & tvOS
 
 ❌ Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which can’t run on iOS
 
-### Supported devices for Metal HUD
+### SUPPORTED DEVICES FOR METAL HUD
 
 ✅ iOS / iPadOS 16+ (iPhone 8 or later / iPads from 2016 or later)
 
 ✅ Apple TV HD (2015) or later
 
-## Launching The App 
+## LAUNCHING THE APP 
 <img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/048fe425-97ef-482f-a2b6-1c3dd23f7d77" />
 
-### iPhone / iPad
+1. Click List Devices (wireless operation after pairing)
+2. Open the game on your device before pressing "Show Running Games" 
+3. Click "Show Running Games" to see games running on your device. 
+4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
+- Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 
-1. Connect iPhone or iPad to Mac via USB
-- You may need to tap "Trust This Computer" on iPhone/iPad and "Allow accessory" on Mac
-2. Launch Metal HUD Mobile Config
-- If prompted, download Xcode and reopen (Apple files may take a while).
+## CONNECTION HELP
 
-### Apple TV
+### DEVICE NOT APPEARING?
+
+If you see **NO DEVICES WERE FOUND**, follow the steps below in order.
+
+---
+
+### STEP 1 — CHECK USB & TRUST (MOST CASES)
+
+In most cases, the device is simply not trusted or not fully connected.
+
+Do the following:
+
+- Connect your iPhone or iPad via USB  
+- Unlock the device  
+- On the device, tap **Trust This Computer** if prompted  
+- On the Mac, click **Allow** if asked to connect the accessory  
+
+If you previously dismissed the trust prompt, reset it on the device:
+
+Settings → General → Transfer or Reset iPhone → Reset → Reset Location & Privacy
+
+After doing this, quit and relaunch **Metal HUD Mobile Config** and check again.
+
+If the device still does not appear, continue to Step 2.
+
+---
+
+### STEP 2 — FORCE DEVICE PREP USING XCODE (FALLBACK)
+
+Sometimes macOS has not finished preparing the device, especially on first connection or after iOS/macOS updates.
+
+1. Open **Xcode → Window → Devices and Simulators**  
+2. Confirm your device appears as connected  
+
+<img src="https://github.com/user-attachments/assets/d02a60b0-dec7-4852-94e4-aeb9b9989004" width="350" />
+
+If Xcode shows **Connecting to device** or **Copying shared cache symbols**, wait until this process completes.
+
+<img src="https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c" width="600" />
+<img src="https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286" width="600" />
+
+Once finished, return to **Metal HUD Mobile Config** — the device should now appear.
+
+---
+
+### STEP 3 - XCODE LICENSE (RARE)
+
+Normally the Xcode license is accepted automatically on first launch. If it possibly failed, run this once in Terminal:
+
+```bash
+sudo xcodebuild -license
+```
+
+### NO GAMES DETECTED?
+
+If you see **NO GAMES DETECTED** or **NO USER APPS RUNNING**, this means:
+
+- The device is connected and responding correctly
+- No user games are currently running
+
+**Fix:**
+1. Launch a game on the device
+2. Ensure the game is in the foreground
+3. Click **Show Running Games** again
+   
+---
+
+### DEVICE VISIBLE BUT NOT PAIRED?
+
+If you see **DEVICE NOT PAIRED**, try the following:
+
+- Unlock the device
+- Unplug and reconnect the USB cable
+- Tap **Trust This Computer** if prompted
+- Click **Show Running Games** again
+
+---
+
+### How to connect to Apple TV
 
 1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
 2. Download Xcode
@@ -44,22 +123,7 @@
 5. Open Metal HUD Mobile Config → List Devices
 - You might need to re-pair after tvOS/macOS updates
 
-## Using The App
-
-1. Click List Devices (wireless operation after pairing)
-2. Open the game on your device before pressing "Show Running Games" 
-3. Click "Show Running Games" to see games running on your device. 
-4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
-- Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
-
-## Troubleshooting 
-
-### Device not appearing?
-
-1. Close Metal HUD Mobile Config
-2. Unplug iPhone or iPad from Mac and reconnect
-- Turning Wi-Fi off and back on may help
-4. Re-open the app
+---
 
 ### New iPhone or iPad isn't connecting?
 
@@ -77,29 +141,6 @@ xcode-select -p
 xcodebuild -version
 ```
 You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.x (or newer)`
-
-### Still not working? Run the following in Terminal:
-
-Install Command Line Tools
-```
-xcode-select --install
-```
-Check if XCODE is installed:
-```
-xcode-select -p
-```
-Set Xcode Path 
-```
-sudo xcode-select -s /Applications/Xcode.app
-```
-Agree to Xcode License
-```
-sudo xcodebuild -license
-```
-Reset Xcode Path (if things break)
-```
-sudo xcode-select -r
-```
 
 ## Known Issues
 
