@@ -52,9 +52,9 @@
 4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
 - Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 
-# Connection help
+## Connection help
 
-## Device not appearing?
+### DEVICE NOT APPEARING?
 
 If you see **NO DEVICES WERE FOUND**, this usually means:
 
@@ -82,9 +82,9 @@ If Xcode shows **Connecting to device** or **Copying shared cache symbols**, wai
 
 ---
 
-## No games detected?
+### NO GAMES DETECTED?
 
-If you see **NO GAMES DETECTED**, this means:
+If you see **NO GAMES DETECTED**, or **NO USER APPS RUNNING** this means:
 
 - The device is connected and responding correctly
 - No user games are currently running
@@ -93,10 +93,10 @@ If you see **NO GAMES DETECTED**, this means:
 1. Launch a game on the device
 2. Ensure the game is in the foreground
 3. Click **Show Running Games** again
-
+   
 ---
 
-## Device visible but not paired?
+### DEVICE VISIBLE BUT NOT PAIRED?
 
 If you see **DEVICE NOT PAIRED**, try the following:
 
@@ -104,6 +104,8 @@ If you see **DEVICE NOT PAIRED**, try the following:
 - Unplug and reconnect the USB cable
 - Tap **Trust This Computer** if prompted
 - Click **Show Running Games** again
+
+---
 
 ### New iPhone or iPad isn't connecting?
 
@@ -121,6 +123,8 @@ xcode-select -p
 xcodebuild -version
 ```
 You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.x (or newer)`
+
+---
 
 ### Still not working? Run the following in Terminal:
 
