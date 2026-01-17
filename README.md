@@ -26,7 +26,7 @@
 ✅ Apple TV HD (2015) or later
 
 ## LAUNCHING THE APP 
-<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/048fe425-97ef-482f-a2b6-1c3dd23f7d77" />
+<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/fd18de6e-efa2-4687-bc83-464adc442368" />
 
 1. Click List Devices (wireless operation after pairing)
 2. Open the game on your device before pressing "Show Running Games" 

@@ -114,7 +114,8 @@ APP_DISPLAY_RENAME = {
     "librdr_1.50.60293175_ios-netflix_ww": "Red Dead Redemption Netflix",
     "librdr_1.50.60293175_ios_ww": "Red Dead Redemption",
     "WWE2K_Apple": "WWE 2K25: Netflix Edition",
-    "narutoNext1": "NARUTO: Ultimate Ninja STORM"
+    "narutoNext1": "NARUTO: Ultimate Ninja STORM",
+    "Civ6_iOS64_Metal_FinalRelease": "CIV 6"
 }
 
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
@@ -317,6 +318,24 @@ def on_close():
     print("on_close called")
     save_data()
     root.destroy()
+
+def disable_text_selection(widget):
+    # Disable mouse drag text selection
+    widget.bind("<B1-Motion>", lambda e: "break")
+    widget.bind("<Double-Button-1>", lambda e: "break")
+    widget.bind("<Triple-Button-1>", lambda e: "break")
+
+    # Disable keyboard text selection
+    widget.bind("<Shift-Left>", lambda e: "break")
+    widget.bind("<Shift-Right>", lambda e: "break")
+    widget.bind("<Shift-Up>", lambda e: "break")
+    widget.bind("<Shift-Down>", lambda e: "break")
+
+    # Disable Select All (Cmd+A on macOS, Ctrl+A elsewhere)
+    widget.bind("<Command-a>", lambda e: "break")
+    widget.bind("<Control-a>", lambda e: "break")
+
+    widget.configure(takefocus=0)
 
     # Connection help button
 def show_device_checklist():
@@ -759,7 +778,8 @@ def process_apps_output(output):
         "FaceTime.app", "Image Playground.app", "MobileStore.app", "Amazon.app", "Apple Store.app", "Control Center.app", "Passwords.app",
         "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app", "GooglePhotos.app",
         "Geekbench 6.app", "WeatherViewer.app", "Twitter.app", "narwhal2.app", "OneDrive.app", "To Do.app", "Todoist.app", "CapCut.app", "HelloTalk_Binary.app",
-        "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app",
+        "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app", "GrokApp.app", "DMSS-GSA.app", "MyDictionary.app",
+        "Strava.app", "dictionary-ios.app",
     ]
 
     unique_apps = {}
@@ -805,7 +825,8 @@ def process_apps_output(output):
         "librdr_1.50.60293175_ios-netflix_ww": "Red Dead Redemption Netflix",
         "librdr_1.50.60293175_ios_ww": "Red Dead Redemption",
         "WWE2K_Apple": "WWE 2K25: Netflix Edition",
-        "narutoNext1": "NARUTO: Ultimate Ninja STORM"
+        "narutoNext1": "NARUTO: Ultimate Ninja STORM",
+        "Civ6_iOS64_Metal_FinalRelease": "CIV 6"
     }
 
     def add_suffix(app_name: str) -> str:
@@ -1308,6 +1329,8 @@ device_text.tag_configure("selected_device", background="#ffcc66", foreground="b
 device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
 device_text.bind("<Button-1>", on_device_text_click)
 
+disable_text_selection(device_text)
+
 device_udid_var = tk.StringVar(value="")
 
 device_udid_combo = ttk.Combobox(
@@ -1344,6 +1367,8 @@ apps_text = scrolledtext.ScrolledText(scrollable_frame, height=7, state='disable
 apps_text.tag_configure("selected_app", background="#ffcc66", foreground="black")
 apps_text.pack(fill=tk.BOTH, padx=padx_side, pady=15, expand=True)
 apps_text.bind("<Button-1>", on_apps_text_click)
+
+disable_text_selection(apps_text)
 
 app_path_combo = ttk.Combobox(scrollable_frame, values=[])
 
@@ -1453,16 +1478,20 @@ hud_advanced_title.pack(side="left", padx=(5, 0))
 
 hud_advanced_frame = ttk.Frame(scrollable_frame)
 
-def toggle_hud_advanced():
-    is_open = hud_advanced_open.get()
-    hud_advanced_open.set(not is_open)
-
-    if is_open:
-        hud_advanced_frame.pack_forget()
-        hud_arrow_label.config(text="▸")
+def toggle_hud_advanced(force_state=None):
+    if force_state is None:
+        new_state = not hud_advanced_open.get()
     else:
+        new_state = force_state
+
+    hud_advanced_open.set(new_state)
+
+    if new_state:
         hud_advanced_frame.pack(fill=tk.X, padx=padx_side)
         hud_arrow_label.config(text="▾")
+    else:
+        hud_advanced_frame.pack_forget()
+        hud_arrow_label.config(text="▸")
 
     root.update_idletasks()
     canvas.configure(scrollregion=canvas.bbox("all"))
@@ -1630,15 +1659,8 @@ if hud_settings_saved:
         pass
 
     saved_open = hud_settings_saved.get("advanced_open", False)
-
     hud_advanced_open.set(saved_open)
-
-    if saved_open:
-        hud_advanced_frame.pack(fill=tk.X, padx=padx_side)
-        hud_arrow_label.config(text="▾")
-    else:
-        hud_advanced_frame.pack_forget()
-        hud_arrow_label.config(text="▸")
+    hud_arrow_label.config(text="▾" if saved_open else "▸")
 
     saved_alignment = hud_settings_saved.get("alignment", "Top-Right")
     saved_alignment_display = hud_alignment_internal_to_display.get(
@@ -1686,6 +1708,9 @@ root.bind("<Command-r>", lambda event: list_devices())
 root.bind("<Command-s>", lambda event: show_apps())
 
 root.protocol("WM_DELETE_WINDOW", on_close)
+
+# Restore HUD Advanced Options layout AFTER the UI is fully packed
+root.after(0, lambda: toggle_hud_advanced(force_state=hud_advanced_open.get()))
 
 # === MAINLOOP ===
 root.mainloop()
