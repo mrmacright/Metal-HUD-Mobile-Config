@@ -4,7 +4,8 @@ import subprocess
 import tkinter as tk
 from tkinter import messagebox
 
-APP_PATH = "/Applications/Metal HUD Mobile Config.app"
+INSTALL_DIR = "/Applications/Metal HUD Mobile Config"
+MAIN_APP_PATH = os.path.join(INSTALL_DIR, "Metal HUD Mobile Config.app")
 APP_DATA = os.path.expanduser("~/ios_device_controller_data.json")
 
 XCODE_PATHS = [
@@ -26,8 +27,8 @@ def remove_path(path):
 def uninstall_app_only(root):
     removed = False
 
-    if os.path.exists(APP_PATH):
-        remove_path(APP_PATH)
+    if os.path.exists(MAIN_APP_PATH):
+        remove_path(MAIN_APP_PATH)
         removed = True
 
     if os.path.exists(APP_DATA):
@@ -62,7 +63,9 @@ def uninstall_with_xcode(root):
         return
 
     # App
-    remove_path(APP_PATH)
+    if os.path.exists(MAIN_APP_PATH):
+        remove_path(MAIN_APP_PATH)
+
     if os.path.exists(APP_DATA):
         os.remove(APP_DATA)
 
