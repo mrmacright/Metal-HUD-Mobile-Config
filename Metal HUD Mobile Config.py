@@ -56,6 +56,7 @@ WARZONE_WARNING_SHOWN = False
 FARLIGHT_WARNING_SHOWN = False
 DEVICE_PREPARING_WARNING_SHOWN = False
 RESTORING_FROM_PROFILE = False
+OPENGL_WARNING_SHOWN = False
 
 # === LOG AND DEVICE DETECTION HELPERS ===
 WARZONE_LOG_INDICATORS = [
@@ -883,7 +884,9 @@ def process_apps_output(output):
 def update_launch_output(output):
     append_log(output + "\n")
 
-    if "OpenGL" in output:
+    global OPENGL_WARNING_SHOWN
+    if not OPENGL_WARNING_SHOWN and "OpenGL" in output:
+        OPENGL_WARNING_SHOWN = True
         root.after(0, lambda: messagebox.showwarning(
             "OpenGL Detected",
             "Warning: OpenGL detected in the logs. Metal HUD may not work!"
