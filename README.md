@@ -42,7 +42,7 @@ If you see **NO DEVICES WERE FOUND**, follow the steps below in order.
 
 ---
 
-### STEP 1 — CHECK USB & TRUST (MOST CASES)
+### STEP 1 — CHECK USB & TRUST 
 
 In most cases, the device is simply not trusted or not fully connected.
 
@@ -63,7 +63,7 @@ If the device still does not appear, continue to Step 2.
 
 ---
 
-### STEP 2 — FORCE DEVICE PREP USING XCODE (FALLBACK)
+### STEP 2 — FORCE DEVICE PREP USING XCODE 
 
 Sometimes macOS has not finished preparing the device, especially on first connection or after iOS/macOS updates.
 
@@ -81,7 +81,7 @@ Once finished, return to **Metal HUD Mobile Config** — the device should now a
 
 ---
 
-### STEP 3 - XCODE LICENSE (RARE)
+### STEP 3 - XCODE LICENSE
 
 Normally the Xcode license is accepted automatically on first launch. If it possibly failed, run this once in Terminal:
 

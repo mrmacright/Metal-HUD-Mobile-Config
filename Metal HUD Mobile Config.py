@@ -57,6 +57,7 @@ FARLIGHT_WARNING_SHOWN = False
 DEVICE_PREPARING_WARNING_SHOWN = False
 RESTORING_FROM_PROFILE = False
 OPENGL_WARNING_SHOWN = False
+WUTHERING_WAVES_WARNING_SHOWN = False
 
 # === LOG AND DEVICE DETECTION HELPERS ===
 WARZONE_LOG_INDICATORS = [
@@ -103,6 +104,22 @@ def detect_farlight_issue(output: str) -> bool:
         if indicator in text:
             return True
     return False
+
+def detect_wuthering_waves_issue(output: str) -> bool:
+    """
+    Detect Wuthering Waves Metal HUD startup conflict.
+    Identified by Client process + perfsight + apm_postCallGraph errors.
+    """
+    if not output:
+        return False
+
+    text = output.lower()
+
+    return (
+        "client[" in text
+        and "perfsight" in text
+        and "apm_postcallgraph" in text
+    )
 
 APP_DISPLAY_RENAME = {
     "ShadowTrackerExtra": "PUBG MOBILE",
@@ -745,8 +762,13 @@ def process_apps_output(output):
         )
         return
     
-    # 3) Device is ready but no user apps are running
-    if "Bundle/Application" not in output:
+    # 3) Device is ready but no obvious user apps are running
+    has_user_app = (
+        "Bundle/Application" in output or
+        ".app" in output
+    )
+
+    if not has_user_app:
         set_text_widget(
             apps_text,
             "NO GAMES DETECTED\n\n"
@@ -780,14 +802,14 @@ def process_apps_output(output):
         "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app", "GooglePhotos.app",
         "Geekbench 6.app", "WeatherViewer.app", "Twitter.app", "narwhal2.app", "OneDrive.app", "To Do.app", "Todoist.app", "CapCut.app", "HelloTalk_Binary.app",
         "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app", "GrokApp.app", "DMSS-GSA.app", "MyDictionary.app",
-        "Strava.app", "dictionary-ios.app",
+        "Strava.app", "dictionary-ios.app", "cpkamerasmart.app", "Flo.app", "HikConnect.app", "LegoApp.app", "ReelShort.app", "ReelShort.app", "LegoBuilder.app",
     ]
 
     unique_apps = {}
     for line in output.splitlines():
         cleaned_line = re.sub(r"^\s*\d+\s+", "", line.strip())
         if cleaned_line:
-            match = re.search(r'(/private/var/containers/Bundle/Application/[A-F0-9\-]+/.+?\.app)', cleaned_line)
+            match = re.search(r'(/private/var/containers/.+?\.app)', cleaned_line)
             if match:
                 full_path = match.group(1)
                 app_name = os.path.basename(full_path)
@@ -798,6 +820,8 @@ def process_apps_output(output):
 
     # === NO USER APPS RUNNING (ONLY SYSTEM PROCESSES FOUND) ===
     if not unique_apps:
+        append_log("\n[DEBUG] devicectl output:\n" + output + "\n")
+        
         set_text_widget(
             apps_text,
             "NO GAMES DETECTED\n\n"
@@ -908,6 +932,28 @@ def update_launch_output(output):
             "The game detects the HUD as a device anomaly and will refuse to run. "
             "In-game you may see: \"Device anomaly detected. Temporarily unable to access the game. (0-3-2048)\".\n\n"
             "Launch the game without the HUD (disable the HUD preset or launch normally) to play."
+        ))
+
+    global WUTHERING_WAVES_WARNING_SHOWN
+    if (
+        not WUTHERING_WAVES_WARNING_SHOWN
+        and detect_wuthering_waves_issue(output)
+    ):
+        WUTHERING_WAVES_WARNING_SHOWN = True
+        root.after(0, lambda: messagebox.showwarning(
+            "Wuthering Waves – Known Metal HUD Startup Issue",
+            "Metal HUD detected a known startup issue with Wuthering Waves.\n\n"
+            "When launched with Metal HUD enabled and network access active, "
+            "the game may appear frozen on the loading screen and stop responding.\n\n"
+            "Workaround (follow carefully):\n"
+            "• Launch the game with Metal HUD enabled\n"
+            "• If the game appears frozen, temporarily disable Wi-Fi or cellular data\n"
+            "• Return to the game without closing it\n"
+            "• Wait — the game may look stuck for a long time\n"
+            "• When the “No network connection” message appears, re-enable Wi-Fi or cellular data\n"
+            "• Return to the game and wait or tap the screen until it connects\n\n"
+            "This process can be slow and unreliable, but the game will eventually load "
+            "successfully with Metal HUD active."
         ))
 
 # === THREADING AND BACKGROUND TASKS ===
