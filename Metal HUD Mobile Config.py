@@ -22,18 +22,27 @@ import tkinter.font as tkfont
 import webbrowser
 
 process = None
+current_launch_process = None
+
+MAX_LOG_LINES = 5000  
+
+def trim_log_widget(widget):
+    try:
+        lines = int(widget.index("end-1c").split(".")[0])
+        if lines > MAX_LOG_LINES + 200:
+            widget.delete("1.0", f"{lines - MAX_LOG_LINES}.0")
+    except Exception:
+        pass
 
 # === MACOS VERSION CHECK ===
 def check_macos_version(min_version="15.6"):
     if sys.platform != "darwin":
         return  
-    
+
     ver_tuple = tuple(int(x) for x in platform.mac_ver()[0].split("."))
     min_tuple = tuple(int(x) for x in min_version.split("."))
 
     if ver_tuple < min_tuple:
-        root = tk.Tk()
-        root.withdraw()
         messagebox.showerror(
             "Unsupported macOS Version",
             f"This app requires macOS Sequoia 15.6 or later.\n"
@@ -58,6 +67,7 @@ DEVICE_PREPARING_WARNING_SHOWN = False
 RESTORING_FROM_PROFILE = False
 OPENGL_WARNING_SHOWN = False
 WUTHERING_WAVES_WARNING_SHOWN = False
+XCODE_VERSION_WARNING_SHOWN = False
 
 # === LOG AND DEVICE DETECTION HELPERS ===
 WARZONE_LOG_INDICATORS = [
@@ -133,7 +143,8 @@ APP_DISPLAY_RENAME = {
     "librdr_1.50.60293175_ios_ww": "Red Dead Redemption",
     "WWE2K_Apple": "WWE 2K25: Netflix Edition",
     "narutoNext1": "NARUTO: Ultimate Ninja STORM",
-    "Civ6_iOS64_Metal_FinalRelease": "CIV 6"
+    "Civ6_iOS64_Metal_FinalRelease": "CIV 6",
+    "cobalt-tv": "Beach Buggy Racing 2"
 }
 
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
@@ -180,22 +191,58 @@ def get_device_display(udid: str) -> str:
             pass
     return DEVICE_INFO_CACHE.get(udid, udid)
 
+def get_xcode_version():
+    try:
+        out = subprocess.check_output(
+            ["xcodebuild", "-version"],
+            text=True
+        )
+        # Example: "Xcode 26.2\nBuild version 15C500b"
+        match = re.search(r"Xcode\s+([0-9]+(?:\.[0-9]+)*)", out)
+        if match:
+            return match.group(1)
+    except Exception:
+        pass
+    return None
+
+
+def version_tuple(v):
+    return tuple(int(x) for x in v.split("."))
+
+
+def check_xcode_version(min_version="26.2"):
+    global XCODE_VERSION_WARNING_SHOWN
+
+    current = get_xcode_version()
+
+    if not current:
+        messagebox.showwarning(
+            "Xcode Version Unknown",
+            "Could not determine the installed Xcode version.\n"
+            "Metal HUD will continue, but issues may occur."
+        )
+        return
+
+    # Treat higher major versions as OK (e.g. 27.x beta)
+    try:
+        current_tuple = version_tuple(current)
+        min_tuple = version_tuple(min_version)
+    except Exception:
+        return
+
+    if current_tuple < min_tuple:
+        if not XCODE_VERSION_WARNING_SHOWN:
+            XCODE_VERSION_WARNING_SHOWN = True
+            messagebox.showwarning(
+                "Xcode Version Warning",
+                f"Detected: Xcode {current}\n\n"
+                "Please update to the latest version of Xcode\n"
+                "for the best compatibility."
+            )
+
 locale.setlocale( locale.LC_ALL, 'en_US.UTF-8' )
 
 # === XCODE AND COMMAND LINE TOOL SETUP ===
-def is_xcode_installed():
-    """Check if Xcode Command Line Tools are installed."""
-    try:
-        subprocess.run(
-            ["xcode-select", "-p"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
 def is_using_command_line_tools_only() -> bool:
     try:
         path = subprocess.check_output(["xcode-select", "-p"], text=True).strip()
@@ -203,78 +250,67 @@ def is_using_command_line_tools_only() -> bool:
     except Exception:
         return False
 
-# === LICENSE ACCEPTANCE AND VALIDATION ===
-def has_agreed_to_license():
-    """Check if the Xcode license has been agreed to."""
-    try:
-        subprocess.run(
-            ["xcrun", "devicectl", "list", "devices"],
-            check=True,
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-def accept_xcode_license_gui():
-    """
-    Ensure the system is pointing to the full Xcode developer directory,
-    then attempt to accept the Xcode license automatically using AppleScript.
-    """
-    import subprocess
-
-    try:
-        current_path = subprocess.check_output(
-            ["xcode-select", "-p"], text=True
-        ).strip()
-
-        if "CommandLineTools" in current_path:
-            subprocess.run(
-                ["sudo", "xcode-select", "-s", "/Applications/Xcode.app/Contents/Developer"],
-                check=True
-            )
-
-        applescript = '''
-        do shell script "xcodebuild -license accept" with administrator privileges
-        '''
-        subprocess.run(["osascript", "-e", applescript], check=True)
-
-        return True
-
-    except subprocess.CalledProcessError as e:
-        messagebox.showwarning(
-            "Xcode License",
-            "Failed to automatically accept the Xcode license.\n\n"
-            "Please run the following command manually in Terminal:\n\n"
-            "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer\n"
-            "sudo xcodebuild -license accept\n\n"
-            f"Error details:\n{e}"
-        )
-        return False
-
-def run_setup_xcode():
-    """Ensure Xcode is installed and the license is accepted."""
+def ensure_xcode_ready_or_exit():
     if not os.path.exists("/Applications/Xcode.app"):
         messagebox.showwarning(
             "Xcode Missing",
-            "Xcode not found in Applications.\nPlease install it from the App Store. No need to open it after install."
+            "Xcode not found in Applications.\nPlease install it from the App Store."
         )
         subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
-        root.destroy()
-        os._exit(0)
+        sys.exit(1)
 
-    if not has_agreed_to_license():
-        success = accept_xcode_license_gui()
-        if not success:
-            root.destroy()
-            os._exit(0)
+    try:
+        current = subprocess.check_output(["xcode-select", "-p"], text=True).strip()
+    except Exception:
+        current = ""
+
+    if "CommandLineTools" in current or not current:
+        subprocess.run(
+            [
+                "osascript", "-e",
+                'do shell script "xcode-select -s /Applications/Xcode.app/Contents/Developer" '
+                'with administrator privileges'
+            ],
+            check=True
+        )
+
+    license_ok = False
+    try:
+        subprocess.run(
+            ["xcodebuild", "-checkFirstLaunchStatus"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=True
+        )
+        license_ok = True
+    except subprocess.CalledProcessError:
+        license_ok = False
+
+    if not license_ok:
+        subprocess.run(
+            [
+                "osascript", "-e",
+                'do shell script "xcodebuild -license accept" '
+                'with administrator privileges'
+            ],
+            check=True
+        )
+
+    subprocess.run(
+        ["xcrun", "--find", "devicectl"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False
+    )
 
 # === GUI root ===
 root = tk.Tk()
-root.withdraw()  
+root.withdraw()
 
-root.deiconify()  
+ensure_xcode_ready_or_exit()
+check_xcode_version("26.2")
+
+root.deiconify()
 
 # === DATA LOADING AND SAVING ===
 DATA_FILE = os.path.expanduser("~/ios_device_controller_data.json")
@@ -430,16 +466,13 @@ def set_text_widget(widget, text):
     widget.config(state='disabled')
 
 def append_log(text):
-    """
-    Append text to the launch_output_text widget and keep it read-only.
-    """
+    if not launch_output_text.winfo_exists():
+        return
     launch_output_text.config(state='normal')
     launch_output_text.insert(tk.END, text)
+    trim_log_widget(launch_output_text)
     launch_output_text.see(tk.END)
     launch_output_text.config(state='disabled')
-
-def is_xcode_installed():
-    return os.path.exists("/Applications/Xcode.app")
 
 def open_xcode_download():
     subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
@@ -449,15 +482,12 @@ def list_devices():
     global WARNING_SHOWN  
 
     if is_using_command_line_tools_only():
-        messagebox.showerror(
-            "Full Xcode Required",
-            "You are currently using Command Line Tools only.\n\n"
-            "Metal HUD requires the full Xcode app.\n\n"
-            "Fix (Terminal):\n"
-            "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer\n\n"
-            "Then reopen this app and click List Devices."
+        messagebox.showwarning(
+            "Xcode Setup Required",
+            "Metal HUD needs the full Xcode selected.\n\n"
+            "macOS will now ask for administrator approval."
         )
-        return
+        ensure_xcode_ready_or_exit()
     
     if not WARNING_SHOWN:
         messagebox.showwarning(
@@ -851,7 +881,8 @@ def process_apps_output(output):
         "librdr_1.50.60293175_ios_ww": "Red Dead Redemption",
         "WWE2K_Apple": "WWE 2K25: Netflix Edition",
         "narutoNext1": "NARUTO: Ultimate Ninja STORM",
-        "Civ6_iOS64_Metal_FinalRelease": "CIV 6"
+        "Civ6_iOS64_Metal_FinalRelease": "CIV 6",
+        "cobalt-tv": "Beach Buggy Racing 2"
     }
 
     def add_suffix(app_name: str) -> str:
@@ -1108,7 +1139,10 @@ def is_app_running(udid, bundle_id):
     return bundle_id in result.stdout
 
 # === APP LAUNCH AND METAL HUD EXECUTION ===
+
 def launch_app():
+    global current_launch_process
+
     udid = device_udid_combo.get().strip()
     app_path = getattr(app_path_combo, "full_path", None)
 
@@ -1116,17 +1150,12 @@ def launch_app():
         messagebox.showwarning("Missing Info", "Please select Device and Game")
         return
 
-    app_path_clean = app_path.rstrip("/")
-    app_basename = os.path.basename(app_path_clean)
-    app_name = app_basename[:-4] if app_basename.lower().endswith(".app") else app_basename
-    bundle_id = app_name  
-
     alignment = get_alignment_internal()
     preset = hud_preset_var.get()
+
     env_vars = get_hud_env_vars(preset)
     env_vars["MTL_HUD_ALIGNMENT"] = alignment
-    selected_label = hud_scale_var.get()
-    env_vars["MTL_HUD_SCALE"] = hud_scale_map.get(selected_label, "0.4")
+    env_vars["MTL_HUD_SCALE"] = hud_scale_map.get(hud_scale_var.get(), "0.4")
     env_json = json.dumps(env_vars)
 
     base_command = (
@@ -1137,34 +1166,64 @@ def launch_app():
 
     update_command_history(base_command, udid, app_path)
 
-    def launch_with_restart():
-        show_temporary_status_message("Launching app with Metal HUD...")
+    # stop any previous devicectl session
+    try:
+        if current_launch_process and current_launch_process.poll() is None:
+            current_launch_process.terminate()
+            current_launch_process = None
+    except Exception:
+        pass
 
-        process = subprocess.Popen(base_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    def launch_close_relaunch():
+        global current_launch_process
 
-        time.sleep(1)
+        show_temporary_status_message("Launching app with Metal HUD…")
+
+        # first launch
+        first_proc = subprocess.Popen(
+            base_command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        current_launch_process = first_proc
+
+        time.sleep(1.0)
+
+        show_temporary_status_message("Restarting app with Metal HUD…")
+
+        # killing devicectl kills the app on-device
+        try:
+            first_proc.terminate()
+            first_proc.wait(timeout=5)
+        except Exception:
+            first_proc.kill()
+
+        time.sleep(0.3)
+
+        # second launch (HUD sticks)
+        second_proc = subprocess.Popen(
+            base_command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True
+        )
+        current_launch_process = second_proc
+
+        for line in second_proc.stdout:
+            launch_output_text.after(0, lambda l=line: update_launch_output(l))
 
         try:
-            show_temporary_status_message("Restarting app with Metal HUD...")
-            process.terminate()
-            process.wait(timeout=5)
+            second_proc.stdout.close()
         except Exception:
-            process.kill()
+            pass
 
-        time.sleep(0.2)
-        show_temporary_status_message(
-        "If the Metal HUD doesn’t appear, please close and reopen the app on your device."
-        )
-        relaunch_process = subprocess.Popen(base_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-
-        for line in relaunch_process.stdout:
-            launch_output_text.after(0, lambda l=line: update_launch_output(l))
-        relaunch_process.stdout.close()
-        relaunch_process.wait()
-
+        second_proc.wait()
         show_temporary_status_message("App relaunched with Metal HUD.")
 
-    threading.Thread(target=launch_with_restart, daemon=True).start()
+    threading.Thread(target=launch_close_relaunch, daemon=True).start()
 
 # === DEVICE AND APP SELECTION HANDLERS ===
 def on_device_text_click(event):
@@ -1325,34 +1384,17 @@ canvas.configure(yscrollcommand=scrollbar.set)
 
 scrollable_frame = ttk.Frame(canvas)
 
-# Create window inside canvas
 canvas_window = canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
 
-# Update scrollregion when content size changes
 def on_frame_configure(event):
     canvas.configure(scrollregion=canvas.bbox("all"))
 
 scrollable_frame.bind("<Configure>", on_frame_configure)
 
-# Always match frame width to canvas width
 def on_canvas_configure(event):
     canvas.itemconfig(canvas_window, width=event.width)
 
 canvas.bind("<Configure>", on_canvas_configure)
-
-# === XCODE INSTALLATION PROMPT ===
-def prompt_install_xcode():
-    messagebox.showwarning(
-        "Xcode Missing",
-        "Xcode not found in Applications.\nPlease install it from the App Store. No need to open it after install"
-    )
-
-    subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
-    root.destroy()
-    os._exit(0)
-
-if not is_xcode_installed():
-    prompt_install_xcode()
 
 # === DEVICES HEADER (label left, help right) ===
 devices_header = ttk.Frame(scrollable_frame)
