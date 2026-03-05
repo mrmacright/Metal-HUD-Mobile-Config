@@ -1,7 +1,7 @@
 # Easily enable Metal HUD on iPhone, iPad & Apple TV!
 
 <p float="left">
-  <img src="https://github.com/user-attachments/assets/75d1ed77-c9cc-4134-9268-21aea8c16fe6" width="700" height="700" />
+  <img src="https://github.com/user-attachments/assets/9e0892f7-8833-4643-94fd-389cb9a1ab5e" width="700" height="700" />
 
 - Lists connected devices & shows only running games (hides system apps)
 - Instantly launch Metal HUD for selected games
