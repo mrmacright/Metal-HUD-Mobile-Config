@@ -144,7 +144,8 @@ APP_DISPLAY_RENAME = {
     "WWE2K_Apple": "WWE 2K25: Netflix Edition",
     "narutoNext1": "NARUTO: Ultimate Ninja STORM",
     "Civ6_iOS64_Metal_FinalRelease": "CIV 6",
-    "cobalt-tv": "Beach Buggy Racing 2"
+    "cobalt-tv": "Beach Buggy Racing 2",
+    "OH2-IOS-Shipping": "Oceanhorn 3"
 }
 
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
@@ -197,7 +198,7 @@ def get_xcode_version():
             ["xcodebuild", "-version"],
             text=True
         )
-        # Example: "Xcode 26.2\nBuild version 15C500b"
+        # Example: Xcode 26.3
         match = re.search(r"Xcode\s+([0-9]+(?:\.[0-9]+)*)", out)
         if match:
             return match.group(1)
@@ -210,35 +211,39 @@ def version_tuple(v):
     return tuple(int(x) for x in v.split("."))
 
 
-def check_xcode_version(min_version="26.2"):
-    global XCODE_VERSION_WARNING_SHOWN
-
+def check_xcode_version_or_exit(min_version="26.3"):
     current = get_xcode_version()
 
     if not current:
-        messagebox.showwarning(
+        messagebox.showerror(
             "Xcode Version Unknown",
-            "Could not determine the installed Xcode version.\n"
-            "Metal HUD will continue, but issues may occur."
+            "Could not determine the installed Xcode version.\n\n"
+            "This app requires Xcode "
+            + min_version +
+            " or later.\n"
+            "Please install/update Xcode and try again."
         )
-        return
+        sys.exit(1)
 
-    # Treat higher major versions as OK (e.g. 27.x beta)
     try:
         current_tuple = version_tuple(current)
         min_tuple = version_tuple(min_version)
     except Exception:
-        return
+        messagebox.showerror(
+            "Xcode Version Error",
+            f"Could not parse Xcode version: {current}\n\n"
+            f"This app requires Xcode {min_version} or later."
+        )
+        sys.exit(1)
 
     if current_tuple < min_tuple:
-        if not XCODE_VERSION_WARNING_SHOWN:
-            XCODE_VERSION_WARNING_SHOWN = True
-            messagebox.showwarning(
-                "Xcode Version Warning",
-                f"Detected: Xcode {current}\n\n"
-                "Please update to the latest version of Xcode\n"
-                "for the best compatibility."
-            )
+        messagebox.showerror(
+            "Xcode Required",
+            f"Detected: Xcode {current}\n\n"
+            f"This app requires Xcode {min_version} or later.\n"
+            "Please update Xcode, then relaunch Metal HUD Mobile Config."
+        )
+        sys.exit(1)
 
 locale.setlocale( locale.LC_ALL, 'en_US.UTF-8' )
 
@@ -308,7 +313,7 @@ root = tk.Tk()
 root.withdraw()
 
 ensure_xcode_ready_or_exit()
-check_xcode_version("26.2")
+check_xcode_version_or_exit("26.3")
 
 root.deiconify()
 
@@ -832,7 +837,8 @@ def process_apps_output(output):
         "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app", "GooglePhotos.app",
         "Geekbench 6.app", "WeatherViewer.app", "Twitter.app", "narwhal2.app", "OneDrive.app", "To Do.app", "Todoist.app", "CapCut.app", "HelloTalk_Binary.app",
         "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app", "GrokApp.app", "DMSS-GSA.app", "MyDictionary.app",
-        "Strava.app", "dictionary-ios.app", "cpkamerasmart.app", "Flo.app", "HikConnect.app", "LegoApp.app", "ReelShort.app", "ReelShort.app", "LegoBuilder.app",
+        "Strava.app", "dictionary-ios.app", "cpkamerasmart.app", "Flo.app", "HikConnect.app", "LegoApp.app", "ReelShort.app", "ReelShort.app", "LegoBuilder.app", "Meesho.app",
+        "Paytm.app",
     ]
 
     unique_apps = {}
@@ -882,7 +888,8 @@ def process_apps_output(output):
         "WWE2K_Apple": "WWE 2K25: Netflix Edition",
         "narutoNext1": "NARUTO: Ultimate Ninja STORM",
         "Civ6_iOS64_Metal_FinalRelease": "CIV 6",
-        "cobalt-tv": "Beach Buggy Racing 2"
+        "cobalt-tv": "Beach Buggy Racing 2",
+        "OH2-IOS-Shipping": "Oceanhorn 3"
     }
 
     def add_suffix(app_name: str) -> str:

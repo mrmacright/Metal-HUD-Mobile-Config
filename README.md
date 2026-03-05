@@ -146,7 +146,7 @@ You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent
 
 - Game names may differ from App Store names
 
-- Metal HUD does not work with OpenGL-based games
+- Metal HUD does not work with games not powered by Metal, for example OpenGL-based games
   
 - Some games anti-cheat might not work with Metal HUD or could possibly ban you
   
