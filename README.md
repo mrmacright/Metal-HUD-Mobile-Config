@@ -1,7 +1,7 @@
 # Easily enable Metal HUD on iPhone, iPad & Apple TV!
 
 <p float="left">
-  <img src="https://github.com/user-attachments/assets/75d1ed77-c9cc-4134-9268-21aea8c16fe6" width="700" height="700" />
+  <img src="https://github.com/user-attachments/assets/9e0892f7-8833-4643-94fd-389cb9a1ab5e" width="700" height="700" />
 
 - Lists connected devices & shows only running games (hides system apps)
 - Instantly launch Metal HUD for selected games
@@ -13,17 +13,23 @@
 
 ✅ Mac [(macOS Sequoia 15.6 or later) ](https://support.apple.com/en-au/120282) | 20-30 GB free space recommended
 
+### SUPPORTED DEVICES FOR METAL HUD
+
+✅ iOS 17+ — [Supported devices](https://support.apple.com/en-au/guide/iphone/iphe3fa5df43/17.0/ios/17.0)
+
+✅ iPadOS 17+ — [Supported devices](https://support.apple.com/en-au/guide/ipad/ipad213a25b2/17.0/ipados/17.0)
+
+✅ Apple TV HD (2015) or later
+
+## LIMITATIONS
+
 ❌ Windows support is impossible — Xcode is required & only runs on macOS
 
 ❌ System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS & tvOS
 
 ❌ Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which can’t run on iOS
 
-### SUPPORTED DEVICES FOR METAL HUD
-
-✅ iOS / iPadOS 16+ (iPhone 8 or later / iPads from 2016 or later)
-
-✅ Apple TV HD (2015) or later
+❌ iOS 16 isn’t supported (devicectl is not available)
 
 ## LAUNCHING THE APP 
 <img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/fd18de6e-efa2-4687-bc83-464adc442368" />
