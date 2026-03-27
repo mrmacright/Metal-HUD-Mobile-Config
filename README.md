@@ -11,7 +11,7 @@
 
 ## PLATFORM SUPPORT 
 
-✅ Mac [(macOS Sequoia 15.6 or later) ](https://support.apple.com/en-au/120282) | 20-30 GB free space recommended
+✅ Mac [(macOS Sequoia 26.2 or later) ](https://support.apple.com/en-au/122867) | 20-30 GB free space recommended
 
 ### SUPPORTED DEVICES FOR METAL HUD
 
