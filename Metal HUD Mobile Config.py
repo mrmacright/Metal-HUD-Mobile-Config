@@ -35,7 +35,7 @@ def trim_log_widget(widget):
         pass
 
 # === MACOS VERSION CHECK ===
-def check_macos_version(min_version="15.6"):
+def check_macos_version(min_version="26.2"):
     if sys.platform != "darwin":
         return  
 
@@ -45,7 +45,7 @@ def check_macos_version(min_version="15.6"):
     if ver_tuple < min_tuple:
         messagebox.showerror(
             "Unsupported macOS Version",
-            f"This app requires macOS Sequoia 15.6 or later.\n"
+            f"This app requires macOS Tahoe 26.2 or later.\n"
             f"You are running {platform.mac_ver()[0]}"
         )
         sys.exit(1)
@@ -211,7 +211,7 @@ def version_tuple(v):
     return tuple(int(x) for x in v.split("."))
 
 
-def check_xcode_version_or_exit(min_version="26.3"):
+def check_xcode_version_or_exit(min_version="26.4"):
     current = get_xcode_version()
 
     if not current:
@@ -313,7 +313,7 @@ root = tk.Tk()
 root.withdraw()
 
 ensure_xcode_ready_or_exit()
-check_xcode_version_or_exit("26.3")
+check_xcode_version_or_exit("26.4")
 
 root.deiconify()
 
