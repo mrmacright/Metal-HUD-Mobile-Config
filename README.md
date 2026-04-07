@@ -237,8 +237,8 @@ Metal HUD Mobile Config can optionally send anonymous compatibility data to help
 
 You’ll be asked once on first launch. Data is only sent if you choose “Yes”.
 
-Includes:
-- Device model
+ONLY Includes:
+- Device model (eg - iPhone 17 Pro Max, iPhone18,2)
 - App/game name
 
 Does NOT include:
@@ -246,6 +246,7 @@ Does NOT include:
 - Device identifiers
 - Logs
 
-This helps improve app name detection and compatibility.
+This is to help improve app name detection and compatibility. 
+
 
 
