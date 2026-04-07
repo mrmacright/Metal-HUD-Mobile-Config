@@ -322,10 +322,11 @@ DATA_FILE = os.path.expanduser("~/ios_device_controller_data.json")
 
 saved_paths = {}  
 command_history = []
-hud_settings_saved = {} 
+hud_settings_saved = {}
+analytics_opt_in = None
 
 def load_data():
-    global saved_paths, command_history, hud_settings_saved
+    global saved_paths, command_history, hud_settings_saved, analytics_opt_in
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r") as f:
@@ -333,15 +334,18 @@ def load_data():
                 saved_paths = data.get("saved_paths", {})
                 command_history = data.get("command_history", [])
                 hud_settings_saved = data.get("hud_settings", {})
+                analytics_opt_in = data.get("analytics_opt_in", None)
         except Exception as e:
             print("Error loading saved data:", e)
             saved_paths = {}
             command_history = []
             hud_settings_saved = {}
+            analytics_opt_in = None
     else:
         saved_paths = {}
         command_history = []
         hud_settings_saved = {}
+        analytics_opt_in = None
 
 def save_data():
     try:
@@ -362,7 +366,8 @@ def save_data():
     data = {
         "saved_paths": saved_paths,
         "command_history": command_history,
-        "hud_settings": hud_settings
+        "hud_settings": hud_settings,
+        "analytics_opt_in": analytics_opt_in
     }
     try:
         with open(DATA_FILE, "w") as f:
@@ -373,6 +378,25 @@ def save_data():
         print("Error saving data:", e)
 
 # === GUI UTILITIES AND EVENT HANDLERS ===
+
+def ask_analytics_permission():
+    global analytics_opt_in
+
+    if analytics_opt_in is not None:
+        return
+
+    result = messagebox.askyesno(
+        "Help Improve Metal HUD",
+        "Would you like to share anonymous compatibility data to help improve Metal HUD?\n\n"
+        "This includes:\n"
+        "• Device model (iPhone/iPad/Apple TV)\n"
+        "• App/game name being tested\n\n"
+        "No personal information or device identifiers are collected."
+    )
+
+    analytics_opt_in = result
+    save_data()
+
 def on_close():
     print("on_close called")
     save_data()
@@ -995,6 +1019,38 @@ def update_launch_output(output):
         ))
 
 # === THREADING AND BACKGROUND TASKS ===
+
+def send_analytics(device_model, app_name):
+    if not analytics_opt_in:
+        return
+
+    def worker():
+        try:
+            import urllib.request
+            import urllib.error
+
+            url = "https://script.google.com/macros/s/AKfycbzfA2LfPx2jyjH5zCFOkcVCkIfVy0PjflU69DA6gYkJXy5spRfA3g9m3Nz-aA7s55Nr/exec"
+
+            payload = json.dumps({
+                "device_model": device_model,
+                "app_name": app_name
+            }).encode("utf-8")
+
+            req = urllib.request.Request(
+                url,
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST"
+            )
+
+            with urllib.request.urlopen(req, timeout=2) as response:
+                response.read()
+
+        except Exception as e:
+            print("Analytics send failed:", e)
+
+    threading.Thread(target=worker, daemon=True).start()
+
 def run_command_in_thread(command):
     try:
         global process
@@ -1156,6 +1212,12 @@ def launch_app():
     if not udid or not app_path:
         messagebox.showwarning("Missing Info", "Please select Device and Game")
         return
+    
+    device_model = get_device_display(udid)
+
+    app_basename = os.path.basename(app_path)
+    raw_app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
+    app_name = add_display_name(raw_app_name)
 
     alignment = get_alignment_internal()
     preset = hud_preset_var.get()
@@ -1172,6 +1234,8 @@ def launch_app():
     )
 
     update_command_history(base_command, udid, app_path)
+
+    send_analytics(device_model, app_name)
 
     # stop any previous devicectl session
     try:
@@ -1809,6 +1873,9 @@ root.protocol("WM_DELETE_WINDOW", on_close)
 
 # Restore HUD Advanced Options layout AFTER the UI is fully packed
 root.after(0, lambda: toggle_hud_advanced(force_state=hud_advanced_open.get()))
+
+# Ask once on first launch
+root.after(500, ask_analytics_permission)
 
 # === MAINLOOP ===
 root.mainloop()

@@ -11,7 +11,7 @@
 
 ## PLATFORM SUPPORT 
 
-✅ Mac [(macOS Sequoia 15.6 or later) ](https://support.apple.com/en-au/120282) | 20-30 GB free space recommended
+✅ Mac [(macOS Tahoe 26.2 or later)](https://support.apple.com/en-au/122867) | 20-30 GB free space recommended
 
 ### SUPPORTED DEVICES FOR METAL HUD
 
@@ -231,6 +231,19 @@ xcrun devicectl manage unpair --device <DEVICE-UDID>
 [LordOfTheUnicorn](https://github.com/LordOfTheUnicorn)
 
 and to many others who have helped! Thanks
+
+## Optional Compatibility Data
+Metal HUD Mobile Config can optionally send anonymous data to help improve the app. This is used to help fix app names and improve compatibility.
+You’ll be asked once on first launch. Data is only sent if you choose Allow. 
+
+Includes:
+- Device model
+- App/game name
+
+Does NOT include:
+- Personal info
+- Device identifiers
+- Logs
 
 
 
