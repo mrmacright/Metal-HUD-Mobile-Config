@@ -233,8 +233,9 @@ xcrun devicectl manage unpair --device <DEVICE-UDID>
 and to many others who have helped! Thanks
 
 ## Optional Compatibility Data
-Metal HUD Mobile Config can optionally send anonymous data to help improve the app. This is used to help fix app names and improve compatibility.
-You’ll be asked once on first launch. Data is only sent if you choose Allow. 
+Metal HUD Mobile Config can optionally send anonymous compatibility data to help improve the app. 
+
+You’ll be asked once on first launch. Data is only sent if you choose “Yes”.
 
 Includes:
 - Device model
@@ -245,7 +246,6 @@ Does NOT include:
 - Device identifiers
 - Logs
 
-
-
+This helps improve app name detection and compatibility.
 
 
