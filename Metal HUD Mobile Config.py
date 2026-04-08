@@ -59,7 +59,6 @@ os.environ["LANG"] = "en_US.UTF-8"
 DEVICE_INFO_CACHE = {}  
 APP_DISPLAY_SUFFIX = {}
 
-WARNING_SHOWN = False  
 OPEN_GAME_WARNING_SHOWN = False
 WARZONE_WARNING_SHOWN = False
 FARLIGHT_WARNING_SHOWN = False
@@ -68,6 +67,7 @@ RESTORING_FROM_PROFILE = False
 OPENGL_WARNING_SHOWN = False
 WUTHERING_WAVES_WARNING_SHOWN = False
 XCODE_VERSION_WARNING_SHOWN = False
+FIRST_DEVICE_SCAN_WARNING_SHOWN = False
 
 # === LOG AND DEVICE DETECTION HELPERS ===
 WARZONE_LOG_INDICATORS = [
@@ -145,7 +145,10 @@ APP_DISPLAY_RENAME = {
     "narutoNext1": "NARUTO: Ultimate Ninja STORM",
     "Civ6_iOS64_Metal_FinalRelease": "CIV 6",
     "cobalt-tv": "Beach Buggy Racing 2",
-    "OH2-IOS-Shipping": "Oceanhorn 3"
+    "OH2-IOS-Shipping": "Oceanhorn 3",
+    "OH2-TVOS-Shipping": "Oceanhorn 3",
+    "PrinceofPersiaTheLostCrown": "Prince of Persia The Lost Crown",
+    "EasyDeliveryCo.": "Easy Delivery Co."
 }
 
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
@@ -312,10 +315,14 @@ def ensure_xcode_ready_or_exit():
 root = tk.Tk()
 root.withdraw()
 
-ensure_xcode_ready_or_exit()
-check_xcode_version_or_exit("26.4")
+def startup_checks():
+    try:
+        ensure_xcode_ready_or_exit()
+        check_xcode_version_or_exit("26.4")
+    finally:
+        root.deiconify()
 
-root.deiconify()
+root.after(100, startup_checks)
 
 # === DATA LOADING AND SAVING ===
 DATA_FILE = os.path.expanduser("~/ios_device_controller_data.json")
@@ -324,9 +331,10 @@ saved_paths = {}
 command_history = []
 hud_settings_saved = {}
 analytics_opt_in = None
+first_device_scan_notice_shown = False
 
 def load_data():
-    global saved_paths, command_history, hud_settings_saved, analytics_opt_in
+    global saved_paths, command_history, hud_settings_saved, analytics_opt_in, first_device_scan_notice_shown
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r") as f:
@@ -335,17 +343,20 @@ def load_data():
                 command_history = data.get("command_history", [])
                 hud_settings_saved = data.get("hud_settings", {})
                 analytics_opt_in = data.get("analytics_opt_in", None)
+                first_device_scan_notice_shown = data.get("first_device_scan_notice_shown", False)
         except Exception as e:
             print("Error loading saved data:", e)
             saved_paths = {}
             command_history = []
             hud_settings_saved = {}
             analytics_opt_in = None
+            first_device_scan_notice_shown = False
     else:
         saved_paths = {}
         command_history = []
         hud_settings_saved = {}
         analytics_opt_in = None
+        first_device_scan_notice_shown = False
 
 def save_data():
     try:
@@ -367,7 +378,8 @@ def save_data():
         "saved_paths": saved_paths,
         "command_history": command_history,
         "hud_settings": hud_settings,
-        "analytics_opt_in": analytics_opt_in
+        "analytics_opt_in": analytics_opt_in,
+        "first_device_scan_notice_shown": first_device_scan_notice_shown
     }
     try:
         with open(DATA_FILE, "w") as f:
@@ -387,7 +399,7 @@ def ask_analytics_permission():
 
     result = messagebox.askyesno(
         "Help Improve Metal HUD",
-        "Would you like to share anonymous compatibility data to help improve Metal HUD?\n\n"
+        "Would you like to share compatibility data to help improve Metal HUD?\n\n"
         "This includes:\n"
         "• Device model (iPhone/iPad/Apple TV)\n"
         "• App/game name being tested\n\n"
@@ -403,24 +415,20 @@ def on_close():
     root.destroy()
 
 def disable_text_selection(widget):
-    # Disable mouse drag text selection
     widget.bind("<B1-Motion>", lambda e: "break")
     widget.bind("<Double-Button-1>", lambda e: "break")
     widget.bind("<Triple-Button-1>", lambda e: "break")
 
-    # Disable keyboard text selection
     widget.bind("<Shift-Left>", lambda e: "break")
     widget.bind("<Shift-Right>", lambda e: "break")
     widget.bind("<Shift-Up>", lambda e: "break")
     widget.bind("<Shift-Down>", lambda e: "break")
 
-    # Disable Select All (Cmd+A on macOS, Ctrl+A elsewhere)
     widget.bind("<Command-a>", lambda e: "break")
     widget.bind("<Control-a>", lambda e: "break")
 
     widget.configure(takefocus=0)
 
-    # Connection help button
 def show_device_checklist():
     messagebox.showinfo(
         "Connection Help",
@@ -462,7 +470,6 @@ def looks_like_xcode_preparing(raw_output: str) -> bool:
 
     text = raw_output.lower()
 
-    # If the device table header is present, devices ARE listed
     if "identifier" in text and "state" in text and "model" in text:
         return False
 
@@ -508,7 +515,7 @@ def open_xcode_download():
 
 # === DEVICE MANAGEMENT ===
 def list_devices():
-    global WARNING_SHOWN  
+    global FIRST_DEVICE_SCAN_WARNING_SHOWN, first_device_scan_notice_shown, status_clear_time
 
     if is_using_command_line_tools_only():
         messagebox.showwarning(
@@ -517,133 +524,202 @@ def list_devices():
             "macOS will now ask for administrator approval."
         )
         ensure_xcode_ready_or_exit()
-    
-    if not WARNING_SHOWN:
-        messagebox.showwarning(
-            "Connect Device",
-            "Please connect your device via USB. Wireless works after pairing."
-        )
-        WARNING_SHOWN = True  
 
-    attempts = 3
-    raw_output = ""
-    for attempt in range(attempts):
-        show_temporary_status_message("Checking for devices…")
-        raw_output = run_command("xcrun devicectl list devices")
-        if raw_output and not looks_like_xcode_preparing(raw_output):
-            break
-        time.sleep(2)
+    should_show_first_scan_notice = (
+        not first_device_scan_notice_shown
+        or is_using_command_line_tools_only()
+    )
 
-    lines = raw_output.splitlines()
-    content_lines = lines[2:]  
+    if should_show_first_scan_notice and not FIRST_DEVICE_SCAN_WARNING_SHOWN:
+        if is_using_command_line_tools_only():
+            message = (
+                "The first device scan can take a while.\n\n"
+                "Metal HUD may need to wait while Apple software finishes installing "
+                "because the full Xcode app is being selected.\n\n"
+                "Please wait for the loading bar to finish."
+            )
+        else:
+            message = (
+                "The first device scan can take a while.\n\n"
+                "Xcode may still be preparing the device.\n\n"
+                "Please wait for the loading bar to finish."
+            )
 
-    devices = []
-    device_ids = {}
-    device_info = {}
+        messagebox.showinfo("Checking for Devices", message)
+        FIRST_DEVICE_SCAN_WARNING_SHOWN = True
+        first_device_scan_notice_shown = True
+        save_data()
 
-    for line in content_lines:
-        parts = re.split(r"\s{2,}", line.strip())
-        if len(parts) < 5:
-            continue
+    list_devices_button.config(state="disabled")
+    device_progress_bar.pack(fill=tk.X, pady=(0, 10))
+    device_progress_bar.start(10)
+    status_label.config(text="Checking for devices… New devices usually need USB first. Wireless works after pairing.")
+    status_clear_time = time.time() + 2.5
 
-        name = parts[0].strip()
-        identifier = parts[2].strip()
-        state = parts[3].strip()
-        model = parts[4].strip()
+    def background_task():
+        attempts = 3
+        raw_output = ""
 
-        devices.append({
-            "name": name,
-            "identifier": identifier,
-            "state": state,
-            "model": model
-        })
+        try:
+            for attempt in range(attempts):
+                raw_output = run_command("xcrun devicectl list devices")
 
-    def device_sort_key(d):
-        return (
-            not d["state"].lower().startswith("available"),
-            d["name"].lower()
-        )
+                if looks_like_xcode_preparing(raw_output):
+                    root.after(0, lambda: status_label.config(
+                        text="Preparing device / installing Apple software… please wait."
+                    ))
 
-    devices.sort(key=device_sort_key)
+                if raw_output and not looks_like_xcode_preparing(raw_output):
+                    break
 
-    device_ids.clear()
-    device_info.clear()
+                time.sleep(2)
 
-    for d in devices:
-        device_ids[d["name"]] = d["identifier"]
-        device_info[d["identifier"]] = d["model"]
+            lines = raw_output.splitlines()
 
-    global DEVICE_INFO_CACHE
-    DEVICE_INFO_CACHE = device_info.copy()
+            content_lines = []
+            for line in lines:
+                stripped = line.strip()
 
-    device_lines = []
+                if not stripped:
+                    continue
 
-    if devices:
-        device_lines = [
-            f"{d['name']:<40}  {d['state']:<40}  {d['model']}"
-            for d in devices
-        ]
-        formatted = "\n".join(device_lines).replace("?", "'")
-    else:
-        formatted = "No devices found."
+                if stripped.startswith("Failed to load provisioning"):
+                    continue
+                if stripped.startswith("`devicectl manage create`"):
+                    continue
 
-    # NO DEVICES WERE FOUND
-    if not device_lines:
-        set_text_widget(
-            device_text,
-            "NO DEVICES WERE FOUND\n\n"
-            "MOST COMMON REASONS:\n"
-            "• Device is not connected via USB\n"
-            "• macOS accessory permission was not allowed\n"
-            "• Device is locked or \"Trust This Computer\" was not accepted\n"
-            "• Xcode is still preparing the device (first connection or after updates)\n\n"
-            "FIX:\n"
-            "1) Connect your iPhone or iPad via USB and unlock it\n"
-            "2) On your Mac, click \"Allow\" if asked to connect the accessory\n"
-            "3) On your device, tap \"Trust This Computer\" if prompted\n"
-            "4) Open Xcode → Window → Devices and Simulators\n"
-            "5) Wait until preparation finishes\n\n"
-            "Then click:\n"
-            "List Devices (Cmd+R)"
-        )
-        device_udid_combo['values'] = []
-        device_udid_var.set("")
-        unpair_button.config(state="disabled")
-        return
+                if stripped.startswith("Name") and "Identifier" in stripped:
+                    continue
+                if set(stripped) <= {"-", " "}:
+                    continue
 
-    set_text_widget(device_text, formatted)
+                content_lines.append(line)
 
-    device_text.name_to_udid = device_ids
-    device_text.device_info = device_info 
+            devices = []
+            device_ids = {}
+            device_info = {}
 
-    if device_ids:
-        udids = list(device_ids.values())
-        device_udid_combo['values'] = udids
-        device_udid_var.set(udids[0])
-    else:
-        device_udid_combo['values'] = []
-        device_udid_var.set("")
+            uuid_like = re.compile(r"^[A-F0-9-]{8,}$", re.I)
 
-    unpair_button.config(state="normal" if device_ids else "disabled")
+            for line in content_lines:
+                parts = re.split(r"\s{2,}", line.strip())
+                if len(parts) < 5:
+                    continue
 
-    refresh_command_history_combo()
+                name = parts[0].strip()
+                identifier = parts[2].strip()
+                state = parts[3].strip()
+                model = parts[4].strip()
 
-    device_text.config(state='normal')
-    lines = device_text.get("1.0", "end-1c").splitlines()
-    if lines:
-        device_text.tag_remove("selected_device", "1.0", tk.END)
-        device_text.tag_add("selected_device", "1.0", "1.end")
-        device_text.mark_set("insert", "1.0")
-        device_text.see("insert")
-        first_name = lines[0].split("  ")[0].strip()
-        if hasattr(device_text, "name_to_udid") and first_name in device_text.name_to_udid:
-            device_udid_combo.set(device_text.name_to_udid[first_name])
-    device_text.config(state='disabled')
+                if not uuid_like.match(identifier):
+                    continue
 
-    device_text.focus_set()
-    device_text.bind("<Up>", lambda e: move_selection(device_text, "up"))
-    device_text.bind("<Down>", lambda e: move_selection(device_text, "down"))
-    device_text.bind("<Return>", lambda e: show_apps())
+                devices.append({
+                    "name": name,
+                    "identifier": identifier,
+                    "state": state,
+                    "model": model
+                })
+
+            def device_sort_key(d):
+                return (
+                    not d["state"].lower().startswith("available"),
+                    d["name"].lower()
+                )
+
+            devices.sort(key=device_sort_key)
+
+            device_ids.clear()
+            device_info.clear()
+
+            for d in devices:
+                device_ids[d["name"]] = d["identifier"]
+                device_info[d["identifier"]] = d["model"]
+
+            def update_ui():
+                global DEVICE_INFO_CACHE
+                DEVICE_INFO_CACHE = device_info.copy()
+
+                device_lines = []
+
+                if devices:
+                    device_lines[:] = [
+                        f"{d['name']:<40}  {d['state']:<40}  {d['model']}"
+                        for d in devices
+                    ]
+                    formatted = "\n".join(device_lines).replace("?", "'")
+                else:
+                    formatted = "No devices found."
+
+                if not device_lines:
+                    set_text_widget(
+                        device_text,
+                        "NO DEVICES WERE FOUND\n\n"
+                        "MOST COMMON REASONS:\n"
+                        "• Device is not connected via USB\n"
+                        "• macOS accessory permission was not allowed\n"
+                        "• Device is locked or \"Trust This Computer\" was not accepted\n"
+                        "• Xcode is still preparing the device (first connection or after updates)\n\n"
+                        "FIX:\n"
+                        "1) Connect your iPhone or iPad via USB and unlock it\n"
+                        "2) On your Mac, click \"Allow\" if asked to connect the accessory\n"
+                        "3) On your device, tap \"Trust This Computer\" if prompted\n"
+                        "4) Open Xcode → Window → Devices and Simulators\n"
+                        "5) Wait until preparation finishes\n\n"
+                        "Then click:\n"
+                        "List Devices (Cmd+R)"
+                    )
+                    device_udid_combo['values'] = []
+                    device_udid_var.set("")
+                    unpair_button.config(state="disabled")
+                else:
+                    set_text_widget(device_text, formatted)
+
+                    device_text.name_to_udid = device_ids
+                    device_text.device_info = device_info
+
+                    udids = list(device_ids.values())
+                    device_udid_combo['values'] = udids
+                    device_udid_var.set(udids[0] if udids else "")
+
+                    unpair_button.config(state="normal" if device_ids else "disabled")
+
+                    refresh_command_history_combo()
+
+                    device_text.config(state='normal')
+                    lines = device_text.get("1.0", "end-1c").splitlines()
+                    if lines:
+                        device_text.tag_remove("selected_device", "1.0", tk.END)
+                        device_text.tag_add("selected_device", "1.0", "1.end")
+                        device_text.mark_set("insert", "1.0")
+                        device_text.see("insert")
+                        first_name = lines[0].split("  ")[0].strip()
+                        if hasattr(device_text, "name_to_udid") and first_name in device_text.name_to_udid:
+                            device_udid_combo.set(device_text.name_to_udid[first_name])
+                    device_text.config(state='disabled')
+
+                    device_text.focus_set()
+                    device_text.bind("<Up>", lambda e: move_selection(device_text, "up"))
+                    device_text.bind("<Down>", lambda e: move_selection(device_text, "down"))
+                    device_text.bind("<Return>", lambda e: show_apps())
+
+            root.after(0, update_ui)
+
+        finally:
+            def finish_ui():
+                device_progress_bar.stop()
+                device_progress_bar.pack_forget()
+                list_devices_button.config(state="normal")
+
+                remaining = status_clear_time - time.time()
+                if remaining > 0:
+                    root.after(int(remaining * 1000), lambda: status_label.config(text=""))
+                else:
+                    status_label.config(text="")
+
+            root.after(0, finish_ui)
+
+    threading.Thread(target=background_task, daemon=True).start()
 
 def unpair_device():
     """Unpair the selected/highlighted device."""
@@ -677,7 +753,17 @@ def refresh_command_history_combo():
         if "command" not in entry:
             continue
 
-        display_str, _ = extract_device_and_app_from_command(entry["command"])
+        full_path = entry.get("app_path", "")
+        if full_path:
+            app_basename = os.path.basename(full_path)
+            app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
+            display_app_name = add_display_name(app_name)
+        else:
+            display_app_name = "Unknown App"
+
+        device_display = entry.get("device_display") or entry.get("udid") or "Unknown Device"
+
+        display_str = f"{device_display} - {display_app_name}"
         display_entries.append(display_str)
         appname_to_command[display_str] = entry
 
@@ -687,6 +773,7 @@ def update_command_history(cmd, udid, app_path):
     entry = {
         "command": cmd,
         "udid": udid,
+        "device_display": get_device_display(udid),  
         "app_path": app_path,
         "hud": {
             "preset": hud_preset_var.get(),
@@ -862,7 +949,7 @@ def process_apps_output(output):
         "Geekbench 6.app", "WeatherViewer.app", "Twitter.app", "narwhal2.app", "OneDrive.app", "To Do.app", "Todoist.app", "CapCut.app", "HelloTalk_Binary.app",
         "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app", "GrokApp.app", "DMSS-GSA.app", "MyDictionary.app",
         "Strava.app", "dictionary-ios.app", "cpkamerasmart.app", "Flo.app", "HikConnect.app", "LegoApp.app", "ReelShort.app", "ReelShort.app", "LegoBuilder.app", "Meesho.app",
-        "Paytm.app",
+        "Paytm.app", "TimeTree.app", 
     ]
 
     unique_apps = {}
@@ -913,7 +1000,10 @@ def process_apps_output(output):
         "narutoNext1": "NARUTO: Ultimate Ninja STORM",
         "Civ6_iOS64_Metal_FinalRelease": "CIV 6",
         "cobalt-tv": "Beach Buggy Racing 2",
-        "OH2-IOS-Shipping": "Oceanhorn 3"
+        "OH2-IOS-Shipping": "Oceanhorn 3",
+        "OH2-TVOS-Shipping": "Oceanhorn 3",
+        "PrinceofPersiaTheLostCrown": "Prince of Persia The Lost Crown",
+        "EasyDeliveryCo.": "Easy Delivery Co."
     }
 
     def add_suffix(app_name: str) -> str:
@@ -1237,7 +1327,6 @@ def launch_app():
 
     send_analytics(device_model, app_name)
 
-    # stop any previous devicectl session
     try:
         if current_launch_process and current_launch_process.poll() is None:
             current_launch_process.terminate()
@@ -1250,7 +1339,6 @@ def launch_app():
 
         show_temporary_status_message("Launching app with Metal HUD…")
 
-        # first launch
         first_proc = subprocess.Popen(
             base_command,
             shell=True,
@@ -1264,7 +1352,6 @@ def launch_app():
 
         show_temporary_status_message("Restarting app with Metal HUD…")
 
-        # killing devicectl kills the app on-device
         try:
             first_proc.terminate()
             first_proc.wait(timeout=5)
@@ -1273,7 +1360,6 @@ def launch_app():
 
         time.sleep(0.3)
 
-        # second launch (HUD sticks)
         second_proc = subprocess.Popen(
             base_command,
             shell=True,
@@ -1432,10 +1518,8 @@ def export_logs_to_desktop():
 
 # === GUI INITIALIZATION ===
 
-# Set the window title
 root.title("Metal HUD Mobile Config")
 
-# Full-screen window size
 root.update_idletasks()
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
@@ -1479,12 +1563,20 @@ ttk.Button(
     command=show_device_checklist
 ).pack(side="right")
 
-# === LIST DEVICES BUTTON ===
-ttk.Button(
-    scrollable_frame,
+# === LIST DEVICES BUTTON + PROGRESS BAR ===
+list_devices_frame = ttk.Frame(scrollable_frame)
+list_devices_frame.pack(anchor="w", fill="x", padx=padx_side)
+
+list_devices_button = ttk.Button(
+    list_devices_frame,
     text="List Devices (Cmd+R)",
     command=list_devices
-).pack(anchor="w", padx=padx_side)
+)
+list_devices_button.pack(anchor="w")
+
+device_progress_bar = ttk.Progressbar(list_devices_frame, mode='indeterminate')
+device_progress_bar.pack(fill=tk.X, pady=(0, 10))
+device_progress_bar.pack_forget()
 
 device_text = scrolledtext.ScrolledText(scrollable_frame, height=10, state='disabled')
 device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
@@ -1559,7 +1651,7 @@ def extract_device_and_app_from_command(cmd):
     udid_match = re.search(r"--device\s+([^\s]+)", cmd)
     udid = udid_match.group(1) if udid_match else None
 
-    device_display = get_device_display(udid)
+    device_display = udid if udid else "Unknown Device"
 
     app_match = re.search(r'"([^"]+)"$', cmd)
     if app_match:
@@ -1871,10 +1963,8 @@ root.bind("<Command-s>", lambda event: show_apps())
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 
-# Restore HUD Advanced Options layout AFTER the UI is fully packed
 root.after(0, lambda: toggle_hud_advanced(force_state=hud_advanced_open.get()))
 
-# Ask once on first launch
 root.after(500, ask_analytics_permission)
 
 # === MAINLOOP ===
