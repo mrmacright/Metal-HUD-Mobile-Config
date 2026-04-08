@@ -46,8 +46,6 @@
 
 If you see **NO DEVICES WERE FOUND**, follow the steps below in order.
 
----
-
 ### STEP 1 — CHECK USB & TRUST 
 
 In most cases, the device is simply not trusted or not fully connected.
@@ -67,8 +65,6 @@ After doing this, quit and relaunch **Metal HUD Mobile Config** and check again.
 
 If the device still does not appear, continue to Step 2.
 
----
-
 ### STEP 2 — FORCE DEVICE PREP USING XCODE 
 
 Sometimes macOS has not finished preparing the device, especially on first connection or after iOS/macOS updates.
@@ -85,8 +81,6 @@ If Xcode shows **Connecting to device** or **Copying shared cache symbols**, wai
 
 Once finished, return to **Metal HUD Mobile Config** — the device should now appear.
 
----
-
 ### STEP 3 - XCODE LICENSE
 
 Normally the Xcode license is accepted automatically on first launch. If it possibly failed, run this once in Terminal:
@@ -95,6 +89,7 @@ Normally the Xcode license is accepted automatically on first launch. If it poss
 sudo xcodebuild -license
 ```
 
+---
 ### NO GAMES DETECTED?
 
 If you see **NO GAMES DETECTED** or **NO USER APPS RUNNING**, this means:
@@ -233,11 +228,12 @@ xcrun devicectl manage unpair --device <DEVICE-UDID>
 and to many others who have helped! Thanks
 
 ## Optional Compatibility Data
-Metal HUD Mobile Config can optionally send anonymous data to help improve the app. This is used to help fix app names and improve compatibility.
-You’ll be asked once on first launch. Data is only sent if you choose Allow. 
+Metal HUD Mobile Config can now optionally send compatibility data to help me improve the app. 
 
-Includes:
-- Device model
+You’ll be asked once on first launch. Data is only sent if you choose “Yes”.
+
+ONLY Includes:
+- Device model (eg - iPhone 17 Pro Max, iPhone18,2)
 - App/game name
 
 Does NOT include:
@@ -245,7 +241,7 @@ Does NOT include:
 - Device identifiers
 - Logs
 
-
+This is to help improve app name detection and compatibility. 
 
 
 
