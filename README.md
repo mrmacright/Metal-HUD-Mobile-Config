@@ -46,8 +46,6 @@
 
 If you see **NO DEVICES WERE FOUND**, follow the steps below in order.
 
----
-
 ### STEP 1 — CHECK USB & TRUST 
 
 In most cases, the device is simply not trusted or not fully connected.
@@ -67,8 +65,6 @@ After doing this, quit and relaunch **Metal HUD Mobile Config** and check again.
 
 If the device still does not appear, continue to Step 2.
 
----
-
 ### STEP 2 — FORCE DEVICE PREP USING XCODE 
 
 Sometimes macOS has not finished preparing the device, especially on first connection or after iOS/macOS updates.
@@ -85,8 +81,6 @@ If Xcode shows **Connecting to device** or **Copying shared cache symbols**, wai
 
 Once finished, return to **Metal HUD Mobile Config** — the device should now appear.
 
----
-
 ### STEP 3 - XCODE LICENSE
 
 Normally the Xcode license is accepted automatically on first launch. If it possibly failed, run this once in Terminal:
@@ -94,6 +88,7 @@ Normally the Xcode license is accepted automatically on first launch. If it poss
 ```bash
 sudo xcodebuild -license
 ```
+
 ---
 ### NO GAMES DETECTED?
 
