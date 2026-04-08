@@ -94,7 +94,7 @@ Normally the Xcode license is accepted automatically on first launch. If it poss
 ```bash
 sudo xcodebuild -license
 ```
-
+---
 ### NO GAMES DETECTED?
 
 If you see **NO GAMES DETECTED** or **NO USER APPS RUNNING**, this means:
