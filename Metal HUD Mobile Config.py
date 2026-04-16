@@ -20,6 +20,7 @@ import signal
 from tkinter.ttk import Progressbar
 import tkinter.font as tkfont
 import webbrowser
+from PIL import Image, ImageTk
 
 process = None
 current_launch_process = None
@@ -56,8 +57,46 @@ check_macos_version()
 os.environ["LC_ALL"] = "en_US.UTF-8"
 os.environ["LANG"] = "en_US.UTF-8"
 
-DEVICE_INFO_CACHE = {}  
+DEVICE_INFO_CACHE = {}
+DEVICE_STATE_CACHE = {}
 APP_DISPLAY_SUFFIX = {}
+
+DEVICE_ICON_ROOT = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "assets",
+    "Devices"
+)
+
+CONNECTION_ICON_ROOT = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "assets",
+    "Connection"
+)
+
+DEVICE_ICON_CACHE = {}
+CONNECTION_ICON_CACHE = {}
+
+DEVICE_NAME_MAX_PX = 170
+DEVICE_STATE_MAX_PX = 180
+
+DEVICE_NAME_TAB_X = 50
+DEVICE_STATE_TAB_X = 230
+DEVICE_STATUS_ICON_TAB_X = 440
+DEVICE_MODEL_TAB_X = 390
+
+DEVICE_ICON_SLOT_WIDTH = 48
+DEVICE_ICON_SLOT_HEIGHT = 34
+
+CONNECTION_ICON_SLOT_WIDTH = 26
+CONNECTION_ICON_SLOT_HEIGHT = 23
+
+STATE_ICON_NAME_MAP = {
+    "available": "available",
+    "available (paired)": "available (paired)",
+    "unavailable": "unavailable",
+    "connected": "connected",
+    "connected (no ddi)": "connected (no DDI)",
+}
 
 OPEN_GAME_WARNING_SHOWN = False
 WARZONE_WARNING_SHOWN = False
@@ -148,7 +187,13 @@ APP_DISPLAY_RENAME = {
     "OH2-IOS-Shipping": "Oceanhorn 3",
     "OH2-TVOS-Shipping": "Oceanhorn 3",
     "PrinceofPersiaTheLostCrown": "Prince of Persia The Lost Crown",
-    "EasyDeliveryCo.": "Easy Delivery Co."
+    "EasyDeliveryCo.": "Easy Delivery Co.",
+    "SubwaySurf": "Subway Surfers",
+    "FortniteClient-IOS-Shipping": "Fortnite",
+    "GenshinImpact": "Genshin Impact",
+    "GRIDLegends": "GRID Legends",
+    "TheDivision": "The Division Resurgence",
+    "HacPro-IOS-Shipping": "Borderlands Mobile"
 }
 
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
@@ -195,13 +240,341 @@ def get_device_display(udid: str) -> str:
             pass
     return DEVICE_INFO_CACHE.get(udid, udid)
 
+def get_device_state(udid: str) -> str:
+    if not udid:
+        return ""
+    return DEVICE_STATE_CACHE.get(udid, "")
+
+def normalize_model_for_icon(model: str) -> str:
+    if not model:
+        return ""
+
+    text = model.replace("?", "'").strip()
+
+    text = re.sub(r"\s+\((?:iPhone|iPad|AppleTV)\d+,\d+\)$", "", text)
+
+    text = text.replace("″", '"').replace("”", '"').replace("“", '"')
+    text = re.sub(r'(\d+(?:\.\d+)?)"', r'\1-inch', text)
+
+    text = re.sub(
+        r"^(iPad Pro) \(([\d\.]+-inch)\) \((.+)\)$",
+        r"\1 \2 (\3)",
+        text
+    )
+
+    if text.startswith("Apple TV"):
+        return "Apple TV"
+
+    return text
+
+def get_device_icon_path(model: str) -> str | None:
+    normalized = normalize_model_for_icon(model)
+    if not normalized:
+        return None
+
+    if normalized.startswith("Apple Vision"):
+        path = os.path.join(DEVICE_ICON_ROOT, "Apple Vision Pro.png")
+        return path if os.path.exists(path) else None
+
+    if normalized.startswith("Apple TV"):
+        path = os.path.join(DEVICE_ICON_ROOT, "Apple TV.png")
+        return path if os.path.exists(path) else None
+
+    if normalized.startswith("Apple Watch"):
+        path = os.path.join(DEVICE_ICON_ROOT, "Apple Watch.png")
+        return path if os.path.exists(path) else None
+
+    if normalized.startswith("iPhone"):
+        exact_path = os.path.join(
+            DEVICE_ICON_ROOT,
+            "iPhone",
+            f"{normalized}.png"
+        )
+        if os.path.exists(exact_path):
+            return exact_path
+
+        generic_path = os.path.join(
+            DEVICE_ICON_ROOT,
+            "iPhone",
+            "Generic iPhone.png"
+        )
+        return generic_path if os.path.exists(generic_path) else None
+
+    if normalized.startswith("iPad"):
+        exact_path = os.path.join(
+            DEVICE_ICON_ROOT,
+            "iPad",
+            f"{normalized}.png"
+        )
+        if os.path.exists(exact_path):
+            return exact_path
+
+        generic_path = os.path.join(
+            DEVICE_ICON_ROOT,
+            "iPad",
+            "Generic iPad.png"
+        )
+        return generic_path if os.path.exists(generic_path) else None
+
+    return None
+
+def get_device_icon(model: str):
+    path = get_device_icon_path(model)
+    if not path:
+        return None
+
+    if path in DEVICE_ICON_CACHE:
+        return DEVICE_ICON_CACHE[path]
+
+    try:
+        image = tk.PhotoImage(file=path)
+
+        if "Apple TV.png" in path:
+            image = image.subsample(7, 7)
+        else:
+            image = image.subsample(8, 8)
+
+        DEVICE_ICON_CACHE[path] = image
+        return image
+    except Exception as e:
+        print(f"Could not load icon from {path}: {e}")
+        return None
+
+def normalize_connection_state_for_icon(state: str) -> str:
+    return (state or "").strip().lower()
+
+def get_connection_icon_path(state: str) -> str | None:
+    normalized = normalize_connection_state_for_icon(state)
+
+    filename = STATE_ICON_NAME_MAP.get(normalized)
+
+    if not filename:
+        if "available (pairing)" in normalized:
+            filename = "available (pairing)"
+        elif normalized == "available":
+            filename = "available"
+        elif "available (paired)" in normalized:
+            filename = "available (paired)"
+        elif normalized.startswith("connected"):
+            filename = "connected"
+        elif normalized.startswith("unavailable"):
+            filename = "unavailable"
+        else:
+            filename = "connected"
+
+    path = os.path.join(CONNECTION_ICON_ROOT, f"{filename}.png")
+    return path if os.path.exists(path) else None
+
+def get_connection_icon(state: str):
+    path = get_connection_icon_path(state)
+    if not path:
+        return None
+
+    if path in CONNECTION_ICON_CACHE:
+        return CONNECTION_ICON_CACHE[path]
+
+    try:
+        img = Image.open(path)
+
+        img = img.resize((20, 14), Image.LANCZOS)
+
+        from PIL import ImageEnhance
+        img = ImageEnhance.Sharpness(img).enhance(1.2)
+
+        image = ImageTk.PhotoImage(img)
+        CONNECTION_ICON_CACHE[path] = image
+        return image
+
+    except Exception as e:
+        print(f"Could not load connection icon from {path}: {e}")
+        return None
+
+def get_display_state_text(state: str) -> str:
+    original_state = (state or "").replace("?", "'")
+    normalized_state = original_state.lower()
+
+    if normalized_state in ("available", "available (pairing)"):
+        return "available (pairing required)"
+
+    if normalized_state == "available (paired)":
+        return "available (paired + wireless)"
+
+    if "no ddi" in normalized_state:
+        return "Connected (Xcode beta required)"
+
+    if normalized_state.startswith("connected"):
+        return "Connected"
+
+    if normalized_state.startswith("unavailable"):
+        return "unavailable (device offline)"
+
+    return original_state
+
+def get_connection_hint(state: str) -> str:
+    normalized_state = (state or "").lower()
+
+    if normalized_state in ("available", "available (pairing)"):
+        return "Complete pairing on the device (check for Trust prompt)"
+
+    if "no ddi" in normalized_state:
+        return "Device requires Xcode beta"
+
+    if normalized_state.startswith("unavailable"):
+        return "Device is likely turned off or not connected to Wi-Fi"
+
+    return ""
+
+def truncate_text_to_px(text: str, max_px: int, font) -> str:
+    text = (text or "").replace("?", "'")
+    ellipsis = "…"
+
+    if font.measure(text) <= max_px:
+        return text
+
+    while text and font.measure(text + ellipsis) > max_px:
+        text = text[:-1]
+
+    return text.rstrip() + ellipsis
+
+def build_device_row_left_text(widget, device: dict) -> str:
+    row_font = tkfont.Font(font=widget.cget("font"))
+
+    name = truncate_text_to_px(device["name"], DEVICE_NAME_MAX_PX, row_font)
+    state = truncate_text_to_px(
+        get_display_state_text(device["state"]),
+        DEVICE_STATE_MAX_PX,
+        row_font
+    )
+
+    return f"\t{name}\t{state}\t"
+
+def build_device_row_right_text(device: dict) -> str:
+    return f"\t{device['model']}".replace("?", "'")
+
+def highlight_device_row(widget, line_num):
+    selected_bg = "#ffcc66"
+    normal_bg = widget.cget("background")
+
+    widget.config(state='normal')
+    widget.tag_remove("selected_device", "1.0", tk.END)
+    widget.tag_add("selected_device", f"{line_num}.0", f"{line_num}.end")
+    widget.config(state='disabled')
+
+    if hasattr(widget, "_device_rows") and 1 <= line_num <= len(widget._device_rows):
+        state = widget._device_rows[line_num - 1]["state"]
+        connection_hint_label.config(text=get_connection_hint(state))
+    else:
+        connection_hint_label.config(text="")
+
+    if hasattr(widget, "_row_icon_slots"):
+        for i, row_slots in enumerate(widget._row_icon_slots, start=1):
+            row_bg = selected_bg if i == line_num else normal_bg
+
+            for slot in row_slots:
+                try:
+                    slot.config(bg=row_bg)
+                except Exception:
+                    pass
+
+                icon_label = getattr(slot, "_icon_label", None)
+                if icon_label is not None:
+                    try:
+                        icon_label.config(bg=row_bg)
+                    except Exception:
+                        pass
+
+def render_devices_with_icons(widget, devices):
+    widget.config(state='normal')
+    widget.delete("1.0", tk.END)
+
+    widget._icon_refs = []
+    widget._row_icon_slots = []
+    widget._device_rows = list(devices)
+
+    bg = widget.cget("background")
+
+    for i, d in enumerate(devices):
+        device_icon = get_device_icon(d["model"])
+        connection_icon = get_connection_icon(d["state"])
+
+        row_slots = []
+
+        # Left device icon
+        device_icon_slot = tk.Frame(
+            widget,
+            width=DEVICE_ICON_SLOT_WIDTH,
+            height=DEVICE_ICON_SLOT_HEIGHT,
+            bg=bg,
+            bd=0,
+            highlightthickness=0
+        )
+        device_icon_slot.pack_propagate(False)
+        device_icon_slot._icon_label = None
+
+        if device_icon:
+            widget._icon_refs.append(device_icon)
+
+            icon_label = tk.Label(
+                device_icon_slot,
+                image=device_icon,
+                bg=bg,
+                bd=0,
+                highlightthickness=0
+            )
+            icon_label.image = device_icon
+            device_icon_slot._icon_label = icon_label
+            icon_label.place(relx=1.0, rely=0.5, x=-4, anchor="e")
+
+        row_slots.append(device_icon_slot)
+        widget.window_create(tk.END, window=device_icon_slot, align="center")
+
+        # Fixed columns: name, state, icon column
+        widget.insert(tk.END, build_device_row_left_text(widget, d))
+
+        connection_icon_slot = tk.Frame(
+            widget,
+            width=CONNECTION_ICON_SLOT_WIDTH,
+            height=CONNECTION_ICON_SLOT_HEIGHT,
+            bg=bg,
+            bd=0,
+            highlightthickness=0
+        )
+        connection_icon_slot.pack_propagate(False)
+        connection_icon_slot._icon_label = None
+
+        if connection_icon:
+            widget._icon_refs.append(connection_icon)
+
+            connection_label = tk.Label(
+                connection_icon_slot,
+                image=connection_icon,
+                bg=bg,
+                bd=0,
+                highlightthickness=0
+            )
+            connection_label.image = connection_icon
+            connection_icon_slot._icon_label = connection_label
+            connection_label.place(relx=0.5, rely=0.5, anchor="center")
+
+        row_slots.append(connection_icon_slot)
+        widget.window_create(tk.END, window=connection_icon_slot, align="center")
+
+        # Fixed model column
+        widget.insert(tk.END, build_device_row_right_text(d))
+
+        widget._row_icon_slots.append(row_slots)
+
+        if i < len(devices) - 1:
+            widget.insert(tk.END, "\n")
+
+    widget.config(state='disabled')
+
 def get_xcode_version():
     try:
         out = subprocess.check_output(
             ["xcodebuild", "-version"],
             text=True
         )
-        # Example: Xcode 26.3
         match = re.search(r"Xcode\s+([0-9]+(?:\.[0-9]+)*)", out)
         if match:
             return match.group(1)
@@ -311,9 +684,21 @@ def ensure_xcode_ready_or_exit():
         check=False
     )
 
-# === GUI root ===
+# === GUI ROOT AND STARTUP CHECKS ===
 root = tk.Tk()
+
+# FORCE LIGHT MODE (temporary fix for icons)
+try:
+    root.tk.call("tk::unsupported::MacWindowStyle", "appearance", root._w, "aqua")
+except Exception:
+    pass
+
 root.withdraw()
+
+default_font = tkfont.nametofont("TkDefaultFont")
+default_font.config(family="SF Pro Text", size=13)
+
+root.option_add("*Font", default_font)
 
 def startup_checks():
     try:
@@ -332,9 +717,10 @@ command_history = []
 hud_settings_saved = {}
 analytics_opt_in = None
 first_device_scan_notice_shown = False
+window_geometry_saved = None
 
 def load_data():
-    global saved_paths, command_history, hud_settings_saved, analytics_opt_in, first_device_scan_notice_shown
+    global saved_paths, command_history, hud_settings_saved, analytics_opt_in, first_device_scan_notice_shown, custom_app_names, window_geometry_saved
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r") as f:
@@ -344,6 +730,7 @@ def load_data():
                 hud_settings_saved = data.get("hud_settings", {})
                 analytics_opt_in = data.get("analytics_opt_in", None)
                 first_device_scan_notice_shown = data.get("first_device_scan_notice_shown", False)
+                window_geometry_saved = data.get("window_geometry", None)
         except Exception as e:
             print("Error loading saved data:", e)
             saved_paths = {}
@@ -379,7 +766,8 @@ def save_data():
         "command_history": command_history,
         "hud_settings": hud_settings,
         "analytics_opt_in": analytics_opt_in,
-        "first_device_scan_notice_shown": first_device_scan_notice_shown
+        "first_device_scan_notice_shown": first_device_scan_notice_shown,
+        "window_geometry": root.geometry(),
     }
     try:
         with open(DATA_FILE, "w") as f:
@@ -389,7 +777,7 @@ def save_data():
     except Exception as e:
         print("Error saving data:", e)
 
-# === GUI UTILITIES AND EVENT HANDLERS ===
+# === GENERAL GUI HELPERS ===
 
 def ask_analytics_permission():
     global analytics_opt_in
@@ -430,17 +818,10 @@ def disable_text_selection(widget):
     widget.configure(takefocus=0)
 
 def show_device_checklist():
-    messagebox.showinfo(
-        "Connection Help",
-        "For setup instructions and troubleshooting,\n"
-        "please see the README on GitHub.\n\n"
-        "For further assistance, you can also contact:\n"
-        "business@mrmacright.com"
-    )
-
     webbrowser.open(
         "https://github.com/mrmacright/Metal-HUD-Mobile-Config#connection-help"
     )
+
 # === COMMAND EXECUTION AND LOGGING ===
 def run_command(command):
     """
@@ -488,6 +869,16 @@ def is_pairing_error(output: str) -> bool:
         "must be paired" in text or
         "remotepairingerror" in text or
         "coredeviceerror error 2" in text
+    )
+
+def is_device_not_discoverable_error(output: str) -> bool:
+    if not output:
+        return False
+
+    text = output.lower()
+    return (
+        "coredeviceservice was unable to locate a device matching the requested device identifier" in text
+        or "coredeviceerror error 1011" in text
     )
 
 def set_text_widget(widget, text):
@@ -553,7 +944,9 @@ def list_devices():
     list_devices_button.config(state="disabled")
     device_progress_bar.pack(fill=tk.X, pady=(0, 10))
     device_progress_bar.start(10)
-    status_label.config(text="Checking for devices… New devices usually need USB first. Wireless works after pairing.")
+    status_label.config(
+        text="Checking for devices…"
+    )
     status_clear_time = time.time() + 2.5
 
     def background_task():
@@ -598,6 +991,7 @@ def list_devices():
             devices = []
             device_ids = {}
             device_info = {}
+            device_states = {}
 
             uuid_like = re.compile(r"^[A-F0-9-]{8,}$", re.I)
 
@@ -622,10 +1016,20 @@ def list_devices():
                 })
 
             def device_sort_key(d):
-                return (
-                    not d["state"].lower().startswith("available"),
-                    d["name"].lower()
-                )
+                state = get_display_state_text(d["state"]).lower()
+
+                if state.startswith("available (paired)"):
+                    priority = 0
+                elif state.startswith("available"):
+                    priority = 1
+                elif state.startswith("connected"):
+                    priority = 2
+                elif state.startswith("unavailable"):
+                    priority = 3
+                else:
+                    priority = 99
+
+                return (priority, d["name"].lower())
 
             devices.sort(key=device_sort_key)
 
@@ -635,10 +1039,12 @@ def list_devices():
             for d in devices:
                 device_ids[d["name"]] = d["identifier"]
                 device_info[d["identifier"]] = d["model"]
+                device_states[d["identifier"]] = d["state"]
 
             def update_ui():
-                global DEVICE_INFO_CACHE
+                global DEVICE_INFO_CACHE, DEVICE_STATE_CACHE
                 DEVICE_INFO_CACHE = device_info.copy()
+                DEVICE_STATE_CACHE = device_states.copy()
 
                 device_lines = []
 
@@ -651,57 +1057,50 @@ def list_devices():
                 else:
                     formatted = "No devices found."
 
-                if not device_lines:
-                    set_text_widget(
-                        device_text,
-                        "NO DEVICES WERE FOUND\n\n"
-                        "MOST COMMON REASONS:\n"
-                        "• Device is not connected via USB\n"
-                        "• macOS accessory permission was not allowed\n"
-                        "• Device is locked or \"Trust This Computer\" was not accepted\n"
-                        "• Xcode is still preparing the device (first connection or after updates)\n\n"
-                        "FIX:\n"
-                        "1) Connect your iPhone or iPad via USB and unlock it\n"
-                        "2) On your Mac, click \"Allow\" if asked to connect the accessory\n"
-                        "3) On your device, tap \"Trust This Computer\" if prompted\n"
-                        "4) Open Xcode → Window → Devices and Simulators\n"
-                        "5) Wait until preparation finishes\n\n"
-                        "Then click:\n"
-                        "List Devices (Cmd+R)"
-                    )
-                    device_udid_combo['values'] = []
-                    device_udid_var.set("")
-                    unpair_button.config(state="disabled")
-                else:
-                    set_text_widget(device_text, formatted)
+            if not devices:
+                set_text_widget(
+                    device_text,
+                    "NO DEVICES WERE FOUND\n\n"
+                    "MOST COMMON REASONS:\n"
+                    "• Device is not connected via USB\n"
+                    "• macOS accessory permission was not allowed\n"
+                    "• Device is locked or \"Trust This Computer\" was not accepted\n"
+                    "• Xcode is still preparing the device (first connection or after updates)\n\n"
+                    "FIX:\n"
+                    "1) Connect your iPhone or iPad via USB and unlock it\n"
+                    "2) On your Mac, click \"Allow\" if asked to connect the accessory\n"
+                    "3) On your device, tap \"Trust This Computer\" if prompted\n"
+                    "4) Open Xcode → Window → Devices and Simulators\n"
+                    "5) Wait until preparation finishes\n\n"
+                    "Then click:\n"
+                    "List Devices (Cmd+R)"
+                )
+                device_udid_combo['values'] = []
+                device_udid_var.set("")
+                unpair_button.config(state="disabled")
+            else:
+                render_devices_with_icons(device_text, devices)
 
-                    device_text.name_to_udid = device_ids
-                    device_text.device_info = device_info
+                device_text.device_info = device_info
 
-                    udids = list(device_ids.values())
-                    device_udid_combo['values'] = udids
-                    device_udid_var.set(udids[0] if udids else "")
+                udids = [d["identifier"] for d in devices]
+                device_udid_combo['values'] = udids
+                device_udid_var.set(udids[0] if udids else "")
 
-                    unpair_button.config(state="normal" if device_ids else "disabled")
+                unpair_button.config(state="normal" if device_ids else "disabled")
 
-                    refresh_command_history_combo()
+                refresh_command_history_combo()
 
-                    device_text.config(state='normal')
-                    lines = device_text.get("1.0", "end-1c").splitlines()
-                    if lines:
-                        device_text.tag_remove("selected_device", "1.0", tk.END)
-                        device_text.tag_add("selected_device", "1.0", "1.end")
-                        device_text.mark_set("insert", "1.0")
-                        device_text.see("insert")
-                        first_name = lines[0].split("  ")[0].strip()
-                        if hasattr(device_text, "name_to_udid") and first_name in device_text.name_to_udid:
-                            device_udid_combo.set(device_text.name_to_udid[first_name])
-                    device_text.config(state='disabled')
+                if devices:
+                    highlight_device_row(device_text, 1)
+                    device_text.mark_set("insert", "1.0")
+                    device_text.see("insert")
+                    device_udid_combo.set(devices[0]["identifier"])
 
-                    device_text.focus_set()
-                    device_text.bind("<Up>", lambda e: move_selection(device_text, "up"))
-                    device_text.bind("<Down>", lambda e: move_selection(device_text, "down"))
-                    device_text.bind("<Return>", lambda e: show_apps())
+                device_text.focus_set()
+                device_text.bind("<Up>", lambda e: move_selection(device_text, "up"))
+                device_text.bind("<Down>", lambda e: move_selection(device_text, "down"))
+                device_text.bind("<Return>", lambda e: show_apps())
 
             root.after(0, update_ui)
 
@@ -799,17 +1198,19 @@ def show_apps():
     if not udid:
         return
 
-    if not OPEN_GAME_WARNING_SHOWN:
-        messagebox.showwarning(
-            "Open Game Reminder",
-            "Make sure your selected game is open and all other apps are closed before clicking Show Running Games"
-        )
-        OPEN_GAME_WARNING_SHOWN = True
+    device_state = get_device_state(udid).lower()
 
-# === Progress bar and threaded process scan ===
+    if device_state == "unavailable":
+        set_text_widget(
+            apps_text,
+            "DEVICE NOT DISCOVERABLE"
+        )
+        return
+
+# Progress bar and threaded process scan
     progress_bar.pack(fill=tk.X, pady=(0, 10))
     progress_bar.start(10)
-    show_temporary_status_message("Searching for games...")
+    games_status_label.config(text="Searching for games...")
 
     def background_task():
         try:
@@ -820,7 +1221,7 @@ def show_apps():
             root.after(0, lambda: (
                 progress_bar.stop(),
                 progress_bar.pack_forget(),
-                status_label.config(text="")
+                games_status_label.config(text="")
             ))
 
     threading.Thread(target=background_task, daemon=True).start()
@@ -949,7 +1350,8 @@ def process_apps_output(output):
         "Geekbench 6.app", "WeatherViewer.app", "Twitter.app", "narwhal2.app", "OneDrive.app", "To Do.app", "Todoist.app", "CapCut.app", "HelloTalk_Binary.app",
         "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app", "GrokApp.app", "DMSS-GSA.app", "MyDictionary.app",
         "Strava.app", "dictionary-ios.app", "cpkamerasmart.app", "Flo.app", "HikConnect.app", "LegoApp.app", "ReelShort.app", "ReelShort.app", "LegoBuilder.app", "Meesho.app",
-        "Paytm.app", "TimeTree.app", 
+        "Paytm.app", "TimeTree.app", "YouTubeMusic.app", "WeatherPlus.app", "Canva.app", "Starbucks WatchKit App.app", "NanoHealthBalance.app", "HeartRate.app.app", "NanoWeather.app"
+        "ActivityMonitorApp.app", "CommBankProd.app",
     ]
 
     unique_apps = {}
@@ -1003,7 +1405,13 @@ def process_apps_output(output):
         "OH2-IOS-Shipping": "Oceanhorn 3",
         "OH2-TVOS-Shipping": "Oceanhorn 3",
         "PrinceofPersiaTheLostCrown": "Prince of Persia The Lost Crown",
-        "EasyDeliveryCo.": "Easy Delivery Co."
+        "EasyDeliveryCo.": "Easy Delivery Co.",
+        "SubwaySurf": "Subway Surfers",
+        "FortniteClient-IOS-Shipping": "Fortnite",
+        "GenshinImpact": "Genshin Impact",
+        "GRIDLegends": "GRID Legends",
+        "TheDivision": "The Division Resurgence",
+        "HacPro-IOS-Shipping": "Borderlands Mobile"
     }
 
     def add_suffix(app_name: str) -> str:
@@ -1108,9 +1516,9 @@ def update_launch_output(output):
             "successfully with Metal HUD active."
         ))
 
-# === THREADING AND BACKGROUND TASKS ===
+# === ANALYTICS, SAVED GAMES, AND HUD CONFIG HELPERS ===
 
-def send_analytics(device_model, app_name):
+def send_analytics(device_model, app_name, connection_state):
     if not analytics_opt_in:
         return
 
@@ -1123,7 +1531,8 @@ def send_analytics(device_model, app_name):
 
             payload = json.dumps({
                 "device_model": device_model,
-                "app_name": app_name
+                "app_name": app_name,
+                "connection_state": connection_state   # ← ADD THIS
             }).encode("utf-8")
 
             req = urllib.request.Request(
@@ -1204,7 +1613,7 @@ def delete_saved_path():
             app_path_combo.set('')
         save_data()  
 
- #save game
+# Restore saved game
 def on_saved_path_select(event):
     global RESTORING_FROM_PROFILE
     RESTORING_FROM_PROFILE = True
@@ -1308,6 +1717,7 @@ def launch_app():
     app_basename = os.path.basename(app_path)
     raw_app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
     app_name = add_display_name(raw_app_name)
+    connection_state = get_display_state_text(get_device_state(udid))
 
     alignment = get_alignment_internal()
     preset = hud_preset_var.get()
@@ -1325,7 +1735,7 @@ def launch_app():
 
     update_command_history(base_command, udid, app_path)
 
-    send_analytics(device_model, app_name)
+    send_analytics(device_model, app_name, connection_state)
 
     try:
         if current_launch_process and current_launch_process.poll() is None:
@@ -1387,28 +1797,24 @@ def on_device_text_click(event):
     device_text.config(state='normal')
 
     index = device_text.index(f"@{event.x},{event.y}")
-    line_num = index.split('.')[0]
-    line_start = f"{line_num}.0"
-    line_end = f"{line_num}.end"
-    line_text = device_text.get(line_start, line_end).strip()
+    line_num = int(index.split('.')[0])
 
-    if not line_text:
+    if not hasattr(device_text, "_device_rows"):
         device_text.config(state='disabled')
         return
 
-    device_text.tag_remove("selected_device", "1.0", tk.END)
-    device_text.tag_add("selected_device", line_start, line_end)
+    if line_num < 1 or line_num > len(device_text._device_rows):
+        device_text.config(state='disabled')
+        return
 
-    name = line_text.split("  ")[0].strip()
-
-    if hasattr(device_text, "name_to_udid") and name in device_text.name_to_udid:
-        device_udid_combo.set(device_text.name_to_udid[name])
+    highlight_device_row(device_text, line_num)
+    device_udid_combo.set(device_text._device_rows[line_num - 1]["identifier"])
 
     device_text.config(state='disabled')
 
     device_text.bind("<Up>", lambda e: move_selection(device_text, "up"))
     device_text.bind("<Down>", lambda e: move_selection(device_text, "down"))
-    device_text.focus_set()  
+    device_text.focus_set()
     device_text.bind("<Return>", lambda e: show_apps())
 
 def device_enter(event):
@@ -1472,18 +1878,22 @@ def move_selection(widget, direction="down"):
         if new_line < 1:
             new_line = 1  
 
-    widget.tag_remove("selected_device" if widget == device_text else "selected_app", "1.0", tk.END)
-
     line_start = f"{new_line}.0"
     line_end = f"{new_line}.end"
-    widget.tag_add("selected_device" if widget == device_text else "selected_app", line_start, line_end)
-    widget.see(line_start) 
+
+    if widget == device_text:
+        highlight_device_row(widget, new_line)
+    else:
+        widget.tag_remove("selected_app", "1.0", tk.END)
+        widget.tag_add("selected_app", line_start, line_end)
+
+    widget.see(line_start)
 
     line_text = widget.get(line_start, line_end).strip()
-    if widget == device_text and hasattr(widget, "name_to_udid"):
-        name = line_text.split("  ")[0].strip()
-        if name in widget.name_to_udid:
-            device_udid_combo.set(widget.name_to_udid[name])
+
+    if widget == device_text and hasattr(widget, "_device_rows"):
+        if 1 <= new_line <= len(widget._device_rows):
+            device_udid_combo.set(widget._device_rows[new_line - 1]["identifier"])
     elif widget == apps_text and hasattr(widget, "full_path_map"):
         app_name = line_text.strip()
         full_path = widget.full_path_map.get(app_name)
@@ -1519,14 +1929,63 @@ def export_logs_to_desktop():
 # === GUI INITIALIZATION ===
 
 root.title("Metal HUD Mobile Config")
+load_data()
 
 root.update_idletasks()
+
+default_width = 1120
+
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
-root.geometry(f"{screen_width}x{screen_height}+0+0")
+
+# Leave space for menu bar + dock
+max_height = screen_height - 120
+default_height = min(1000, max_height)
+
+x = (screen_width - default_width) // 2
+y = max(20, (screen_height - default_height) // 2)
+
+default_geometry = f"{default_width}x{default_height}+{x}+{y}"
+
+root.geometry(window_geometry_saved or default_geometry)
+
+# Allow proper resizing
+root.minsize(1000, 700)
+root.resizable(True, True)
+
+resize_save_job = None
+
+def on_window_resize(event):
+    global resize_save_job
+
+    if event.widget != root:
+        return
+
+    if resize_save_job is not None:
+        root.after_cancel(resize_save_job)
+
+    resize_save_job = root.after(500, save_data)
+
+root.bind("<Configure>", on_window_resize)
 
 padx_side = 30
-load_data()
+
+from PIL import Image, ImageTk
+
+connection_icon_path = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "assets",
+    "Connection.png"
+)
+img = Image.open(connection_icon_path)
+
+base_height = 28
+w, h = img.size
+new_width = int((base_height / h) * w)
+
+img = img.resize((new_width, base_height), Image.LANCZOS)
+
+list_devices_icon = ImageTk.PhotoImage(img)
 
 # === Scrollable Layout ===
 
@@ -1552,36 +2011,80 @@ def on_canvas_configure(event):
 canvas.bind("<Configure>", on_canvas_configure)
 
 # === DEVICES HEADER (label left, help right) ===
-devices_header = ttk.Frame(scrollable_frame)
-devices_header.pack(fill="x", padx=padx_side, pady=(0, 5))
-
-ttk.Label(devices_header, text="Devices").pack(side="left")
-
-ttk.Button(
-    devices_header,
-    text="Connection help",
-    command=show_device_checklist
-).pack(side="right")
 
 # === LIST DEVICES BUTTON + PROGRESS BAR ===
 list_devices_frame = ttk.Frame(scrollable_frame)
-list_devices_frame.pack(anchor="w", fill="x", padx=padx_side)
+list_devices_frame.pack(anchor="w", fill="x", padx=padx_side, pady=(25, 0))
 
-list_devices_button = ttk.Button(
-    list_devices_frame,
+list_devices_top_row = ttk.Frame(list_devices_frame)
+list_devices_top_row.pack(fill="x")
+
+list_devices_button = tk.Button(
+    list_devices_top_row,
     text="List Devices (Cmd+R)",
-    command=list_devices
+    command=list_devices,
+    image=list_devices_icon,
+    compound="left",
+    font=default_font,
+    padx=12,
+    pady=8,
+    bd=1,
+    relief="raised",
+    highlightthickness=0
 )
-list_devices_button.pack(anchor="w")
+list_devices_button.pack(side="left")
+
+ttk.Button(
+    list_devices_top_row,
+    text="Connection help",
+    command=show_device_checklist
+).pack(side="left", padx=(10, 0))
 
 device_progress_bar = ttk.Progressbar(list_devices_frame, mode='indeterminate')
-device_progress_bar.pack(fill=tk.X, pady=(0, 10))
+device_progress_bar.pack(fill=tk.X, pady=(8, 0))
 device_progress_bar.pack_forget()
 
-device_text = scrolledtext.ScrolledText(scrollable_frame, height=10, state='disabled')
+status_label = ttk.Label(list_devices_frame, text="", foreground="red")
+status_label.pack(anchor="w", pady=(5, 0))
+
+device_text = scrolledtext.ScrolledText(
+    scrollable_frame,
+    height=10,
+    state='disabled',
+    padx=2,
+    pady=4,
+    font=default_font,
+    spacing1=2,
+    spacing2=2,
+    spacing3=2
+)
+device_text.configure(
+    tabs=(
+        DEVICE_NAME_TAB_X,
+        DEVICE_STATE_TAB_X,
+        DEVICE_STATUS_ICON_TAB_X,
+        DEVICE_MODEL_TAB_X
+    )
+)
 device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
+device_text.tag_configure("device_row", spacing1=1, spacing3=3)
 device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
 device_text.bind("<Button-1>", on_device_text_click)
+
+connection_hint_label = ttk.Label(
+    scrollable_frame,
+    text="",
+    foreground="red",
+    anchor="w",
+    justify="left",
+    wraplength=800
+)
+connection_hint_label.pack(anchor="w", fill="x", padx=padx_side, pady=(0, 8))
+
+def update_wrap(event):
+    connection_hint_label.config(wraplength=event.width - 60)
+
+scrollable_frame.bind("<Configure>", update_wrap)
 
 disable_text_selection(device_text)
 
@@ -1594,14 +2097,11 @@ device_udid_combo = ttk.Combobox(
     state="readonly"
 )
 
-status_label = ttk.Label(scrollable_frame, text="", foreground="red")
-status_label.pack(anchor="w", padx=padx_side, pady=(5, 5))
-
 unpair_button = ttk.Button(scrollable_frame, text="Unpair", command=unpair_device)
 unpair_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
 unpair_button.config(state="disabled")
 
-# === SHOW RUNNING GAMES SECTION (button + progress bar) ===
+# === SHOW RUNNING GAMES UI ===
 show_games_frame = ttk.Frame(scrollable_frame)
 show_games_frame.pack(anchor="w", fill="x", padx=padx_side, pady=(0, 2))
 
@@ -1616,7 +2116,10 @@ progress_bar = ttk.Progressbar(show_games_frame, mode='indeterminate')
 progress_bar.pack(fill=tk.X, pady=(0, 10))
 progress_bar.pack_forget()
 
-# === APPS LIST ===
+games_status_label = ttk.Label(show_games_frame, text="", foreground="red")
+games_status_label.pack(anchor="w", pady=(5, 0))
+
+# === RUNNING GAMES LIST UI ===
 apps_text = scrolledtext.ScrolledText(scrollable_frame, height=7, state='disabled')
 apps_text.tag_configure("selected_app", background="#ffcc66", foreground="black")
 apps_text.pack(fill=tk.BOTH, padx=padx_side, pady=15, expand=True)
@@ -1637,8 +2140,6 @@ def on_app_path_select(event):
         update_launch_button_text(None)  
 
 app_path_combo.bind("<<ComboboxSelected>>", on_app_path_select)
-
-ttk.Button(scrollable_frame, text="Save Game", command=save_app_path).pack(anchor="w", padx=padx_side, pady=(0, 5))
 
 ttk.Label(scrollable_frame, text="Saved Games").pack(anchor="w", padx=padx_side)
 saved_paths_combo = ttk.Combobox(scrollable_frame, values=sorted(saved_paths.keys()))
@@ -1722,7 +2223,7 @@ hud_advanced_header.pack(fill="x", padx=padx_side, pady=(10, 5))
 
 hud_arrow_label = ttk.Label(
     hud_advanced_header,
-    text="▾",
+    text="▸",
     font=hud_arrow_font
 )
 hud_arrow_label.pack(side="left")
@@ -1732,7 +2233,7 @@ hud_advanced_title.pack(side="left", padx=(5, 0))
 
 hud_advanced_frame = ttk.Frame(scrollable_frame)
 
-def toggle_hud_advanced(force_state=None):
+def toggle_hud_advanced(force_state=None, save=True):
     if force_state is None:
         new_state = not hud_advanced_open.get()
     else:
@@ -1749,6 +2250,9 @@ def toggle_hud_advanced(force_state=None):
 
     root.update_idletasks()
     canvas.configure(scrollregion=canvas.bbox("all"))
+
+    if save:
+        save_data()
 
 hud_advanced_header.bind("<Button-1>", lambda e: toggle_hud_advanced())
 hud_arrow_label.bind("<Button-1>", lambda e: toggle_hud_advanced())
@@ -1904,14 +2408,6 @@ for key, var in hud_elements_vars.items():
     if key in saved_custom:
         var.set(saved_custom[key])
 
-if hud_settings_saved:
-    saved_preset = hud_settings_saved.get("preset", "Default")
-    hud_preset_var.set(saved_preset)
-    try:
-        on_preset_change()
-    except Exception:
-        pass
-
     saved_open = hud_settings_saved.get("advanced_open", False)
     hud_advanced_open.set(saved_open)
     hud_arrow_label.config(text="▾" if saved_open else "▸")
@@ -1941,7 +2437,7 @@ def update_launch_button_text(app_name):
     else:
         launch_button.config(text="Launch App with Metal Performance HUD")
 
-# === GUI UTILITIES AND EVENT HANDLERS ===
+# === LOG PANEL CONTROLS ===
 def toggle_logs():
     if launch_output_text.winfo_ismapped():
         launch_output_text.pack_forget()
@@ -1963,7 +2459,10 @@ root.bind("<Command-s>", lambda event: show_apps())
 
 root.protocol("WM_DELETE_WINDOW", on_close)
 
-root.after(0, lambda: toggle_hud_advanced(force_state=hud_advanced_open.get()))
+root.after(0, lambda: toggle_hud_advanced(
+    force_state=hud_settings_saved.get("advanced_open", False),
+    save=False
+))
 
 root.after(500, ask_analytics_permission)
 

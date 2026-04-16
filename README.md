@@ -3,8 +3,8 @@
 <p float="left">
   <img src="https://github.com/user-attachments/assets/9e0892f7-8833-4643-94fd-389cb9a1ab5e" width="700" height="700" />
 
-- Lists connected devices & shows only running games (hides system apps)
 - Instantly launch Metal HUD for selected games
+- Lists connected devices & shows only running games (hides system apps)
 - Choose HUD presets, locations, & scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
 - Save & quickly relaunch your favorite games with Metal HUD
 - View logs directly from the interface for better debugging and tracking
@@ -21,26 +21,26 @@
 
 ✅ Apple TV HD (2015) or later
 
-## LIMITATIONS
-
-❌ Windows support is impossible — Xcode is required & only runs on macOS
-
-❌ System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS & tvOS
-
-❌ Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which can’t run on iOS
-
-❌ iOS 16 isn’t supported (devicectl is not available)
-
-## LAUNCHING THE APP 
-<img width="561" height="471" alt="UI_Screenshot" src="https://github.com/user-attachments/assets/fd18de6e-efa2-4687-bc83-464adc442368" />
-
-1. Click List Devices (wireless operation after pairing)
-2. Open the game on your device before pressing "Show Running Games" 
-3. Click "Show Running Games" to see games running on your device. 
-4. Click the game you want HUD enabled for and then click Launch App with Metal HUD
-- Try HUD Presets, HUD Locations, and HUD Scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
+> [!IMPORTANT]
+> ❌ Windows support is not supported — Xcode is required and only runs on macOS  
+> ❌ System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS, and tvOS  
+> ❌ Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which cannot run on iOS  
+> ❌ iOS 16 is not supported — `devicectl` is unavailable
 
 ## CONNECTION HELP
+
+### NO GAMES DETECTED?
+
+If you see **NO GAMES DETECTED**, **NO USER APPS RUNNING**, or the game you want to test isn’t appearing, it could mean:
+
+- No user games are currently running. Apps are not discoverable unless they are already open.
+
+**Fix:**
+1. Launch a game on the device
+2. Ensure the game is in the foreground
+3. Click **Show Running Games** again
+
+---
 
 ### DEVICE NOT APPEARING?
 
@@ -88,19 +88,6 @@ Normally the Xcode license is accepted automatically on first launch. If it poss
 ```bash
 sudo xcodebuild -license
 ```
-
----
-### NO GAMES DETECTED?
-
-If you see **NO GAMES DETECTED** or **NO USER APPS RUNNING**, this means:
-
-- The device is connected and responding correctly
-- No user games are currently running
-
-**Fix:**
-1. Launch a game on the device
-2. Ensure the game is in the foreground
-3. Click **Show Running Games** again
    
 ---
 
@@ -242,6 +229,3 @@ Does NOT include:
 - Logs
 
 This is to help improve app name detection and compatibility. 
-
-
-
