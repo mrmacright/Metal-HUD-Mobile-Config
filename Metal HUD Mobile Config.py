@@ -21,6 +21,7 @@ from tkinter.ttk import Progressbar
 import tkinter.font as tkfont
 import webbrowser
 from PIL import Image, ImageTk
+import glob
 
 process = None
 current_launch_process = None
@@ -77,11 +78,11 @@ DEVICE_ICON_CACHE = {}
 CONNECTION_ICON_CACHE = {}
 
 DEVICE_NAME_MAX_PX = 170
-DEVICE_STATE_MAX_PX = 180
+DEVICE_STATE_MAX_PX = 260
 
 DEVICE_NAME_TAB_X = 50
 DEVICE_STATE_TAB_X = 230
-DEVICE_STATUS_ICON_TAB_X = 440
+DEVICE_STATUS_ICON_TAB_X = 454
 DEVICE_MODEL_TAB_X = 390
 
 DEVICE_ICON_SLOT_WIDTH = 48
@@ -107,6 +108,15 @@ OPENGL_WARNING_SHOWN = False
 WUTHERING_WAVES_WARNING_SHOWN = False
 XCODE_VERSION_WARNING_SHOWN = False
 FIRST_DEVICE_SCAN_WARNING_SHOWN = False
+PAIRING_ATTEMPTS = 0
+
+REQUIRED_XCODE_VERSION = "26.4.1"
+
+xcode_overlay = None
+xcode_overlay_icon = None
+xcode_poll_job = None
+xcode_status_var = None
+startup_finished = False
 
 # === LOG AND DEVICE DETECTION HELPERS ===
 WARZONE_LOG_INDICATORS = [
@@ -400,7 +410,7 @@ def get_display_state_text(state: str) -> str:
         return "available (paired + wireless)"
 
     if "no ddi" in normalized_state:
-        return "Connected (Xcode beta required)"
+        return "Connected (limited support)"
 
     if normalized_state.startswith("connected"):
         return "Connected"
@@ -417,7 +427,7 @@ def get_connection_hint(state: str) -> str:
         return "Complete pairing on the device (check for Trust prompt)"
 
     if "no ddi" in normalized_state:
-        return "Device requires Xcode beta"
+        return "Xcode may need an update or beta for better support"
 
     if normalized_state.startswith("unavailable"):
         return "Device is likely turned off or not connected to Wi-Fi"
@@ -570,58 +580,259 @@ def render_devices_with_icons(widget, devices):
     widget.config(state='disabled')
 
 def get_xcode_version():
+    xcode_app = find_xcode_app()
+    if not xcode_app:
+        return None
+
+    xcodebuild_path = os.path.join(
+        xcode_app,
+        "Contents",
+        "Developer",
+        "usr",
+        "bin",
+        "xcodebuild"
+    )
+
+    if not os.path.exists(xcodebuild_path):
+        return None
+
     try:
         out = subprocess.check_output(
-            ["xcodebuild", "-version"],
-            text=True
+            [xcodebuild_path, "-version"],
+            text=True,
+            stderr=subprocess.DEVNULL
         )
         match = re.search(r"Xcode\s+([0-9]+(?:\.[0-9]+)*)", out)
         if match:
             return match.group(1)
     except Exception:
         pass
-    return None
 
+    return None
 
 def version_tuple(v):
     return tuple(int(x) for x in v.split("."))
 
 
-def check_xcode_version_or_exit(min_version="26.4"):
+def check_xcode_version_or_exit():
+    xcode_app = find_xcode_app()
+    if not xcode_app:
+        show_xcode_overlay(
+            title="Xcode Required",
+            message=(
+                f"This app requires Xcode {REQUIRED_XCODE_VERSION} or later.\n\n"
+                "Please install Xcode from the App Store."
+            ),
+            button_text="Open App Store",
+            status_text="Please install Xcode to continue."
+        )
+        return False
+
     current = get_xcode_version()
 
     if not current:
-        messagebox.showerror(
-            "Xcode Version Unknown",
-            "Could not determine the installed Xcode version.\n\n"
-            "This app requires Xcode "
-            + min_version +
-            " or later.\n"
-            "Please install/update Xcode and try again."
+        show_xcode_overlay(
+            title="Xcode Version Unknown",
+            message=(
+                "Could not determine the installed Xcode version.\n\n"
+                f"This app requires Xcode {REQUIRED_XCODE_VERSION} or later."
+            ),
+            button_text="Open App Store",
+            status_text="Please install or update Xcode to continue."
         )
-        sys.exit(1)
+        return False
 
     try:
         current_tuple = version_tuple(current)
-        min_tuple = version_tuple(min_version)
+        min_tuple = version_tuple(REQUIRED_XCODE_VERSION)
     except Exception:
-        messagebox.showerror(
-            "Xcode Version Error",
-            f"Could not parse Xcode version: {current}\n\n"
-            f"This app requires Xcode {min_version} or later."
+        show_xcode_overlay(
+            title="Xcode Version Error",
+            message=(
+                f"Could not parse Xcode version: {current}\n\n"
+                f"This app requires Xcode {REQUIRED_XCODE_VERSION} or later."
+            ),
+            button_text="Open App Store",
+            status_text="Please install or update Xcode to continue."
         )
-        sys.exit(1)
+        return False
 
     if current_tuple < min_tuple:
-        messagebox.showerror(
-            "Xcode Required",
-            f"Detected: Xcode {current}\n\n"
-            f"This app requires Xcode {min_version} or later.\n"
-            "Please update Xcode, then relaunch Metal HUD Mobile Config."
+        show_xcode_overlay(
+            title=f"Detected: Xcode {current}",
+            message=(
+                f"This app requires Xcode {REQUIRED_XCODE_VERSION} or later.\n\n"
+                "Please update Xcode from the App Store."
+            ),
+            button_text="Update Xcode",
+            status_text="Waiting for Xcode to be updated…"
         )
-        sys.exit(1)
+        return False
+
+    return True
 
 locale.setlocale( locale.LC_ALL, 'en_US.UTF-8' )
+
+def resource_path(*parts):
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), *parts)
+
+
+def find_xcode_app():
+    for app_path in sorted(glob.glob("/Applications/Xcode*.app")):
+        xcodebuild_path = os.path.join(
+            app_path,
+            "Contents",
+            "Developer",
+            "usr",
+            "bin",
+            "xcodebuild"
+        )
+        if os.path.exists(xcodebuild_path):
+            return app_path
+    return None
+
+
+def is_xcode_installed():
+    return find_xcode_app() is not None
+
+def open_xcode_app_store():
+    global xcode_poll_job
+
+    subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
+
+    if xcode_status_var is not None:
+        xcode_status_var.set("Waiting for Xcode to be installed or updated...")
+
+    if xcode_poll_job is None:
+        start_xcode_install_poll()
+
+def show_xcode_overlay(
+    title="This app requires Xcode.",
+    message="Please download it from the App Store.",
+    button_text="Download Xcode",
+    status_text="This screen will close automatically once Xcode is installed."
+):
+    global xcode_overlay, xcode_overlay_icon, xcode_status_var
+
+    if xcode_overlay and xcode_overlay.winfo_exists():
+        xcode_overlay.destroy()
+
+    xcode_overlay = tk.Frame(root, bg="#F5F5F7")
+    xcode_overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+    xcode_overlay.lift()
+
+    panel = tk.Frame(
+        xcode_overlay,
+        bg="#E5E5E7",
+        bd=0,
+        highlightthickness=0
+    )
+    panel.place(relx=0.5, rely=0.5, anchor="center", width=700, height=360)
+
+    icon_path = resource_path("assets", "Xcode.png")
+    if os.path.exists(icon_path):
+        img = Image.open(icon_path).convert("RGBA")
+        img.thumbnail((120, 120), Image.LANCZOS)
+        xcode_overlay_icon = ImageTk.PhotoImage(img)
+
+        tk.Label(
+            panel,
+            image=xcode_overlay_icon,
+            bg="#E5E5E7"
+        ).pack(pady=(35, 16))
+
+    tk.Label(
+        panel,
+        text=title,
+        bg="#E5E5E7",
+        fg="#1C1C1E",
+        justify="center",
+        font=("SF Pro Display", 22, "bold")
+    ).pack(pady=(0, 10))
+
+    tk.Label(
+        panel,
+        text=message,
+        bg="#E5E5E7",
+        fg="#3A3A3C",
+        justify="center",
+        wraplength=560,
+        font=("SF Pro Text", 14)
+    ).pack(pady=(0, 12))
+
+    xcode_status_var = tk.StringVar(value=status_text)
+
+    tk.Label(
+        panel,
+        textvariable=xcode_status_var,
+        bg="#E5E5E7",
+        fg="#636366",
+        justify="center",
+        wraplength=560,
+        font=("SF Pro Text", 12)
+    ).pack(pady=(0, 18))
+
+    tk.Button(
+        panel,
+        text=button_text,
+        command=open_xcode_app_store,
+        font=("SF Pro Text", 13, "bold"),
+        cursor="hand2",
+        bd=0,
+        padx=18,
+        pady=10
+    ).pack()
+
+    start_xcode_install_poll()
+
+def hide_xcode_overlay():
+    global xcode_overlay, xcode_poll_job
+
+    if xcode_poll_job is not None:
+        root.after_cancel(xcode_poll_job)
+        xcode_poll_job = None
+
+    if xcode_overlay and xcode_overlay.winfo_exists():
+        xcode_overlay.destroy()
+
+    xcode_overlay = None
+
+def start_xcode_install_poll():
+    poll_for_xcode_install()
+
+def poll_for_xcode_install():
+    global xcode_poll_job
+
+    if is_xcode_installed():
+        current = get_xcode_version()
+        if current:
+            try:
+                if version_tuple(current) >= version_tuple(REQUIRED_XCODE_VERSION):
+                    hide_xcode_overlay()
+                    finish_startup_after_xcode()
+                    return
+                else:
+                    if xcode_status_var is not None:
+                        xcode_status_var.set(
+                            f"Detected Xcode {current}. Waiting for Xcode {REQUIRED_XCODE_VERSION} or later..."
+                        )
+            except Exception:
+                pass
+
+    xcode_poll_job = root.after(3000, poll_for_xcode_install)
+
+def finish_startup_after_xcode():
+    global startup_finished
+
+    if startup_finished:
+        return
+
+    ensure_xcode_ready_or_exit()
+
+    if not check_xcode_version_or_exit():
+        return
+
+    startup_finished = True
 
 # === XCODE AND COMMAND LINE TOOL SETUP ===
 def is_using_command_line_tools_only() -> bool:
@@ -632,57 +843,53 @@ def is_using_command_line_tools_only() -> bool:
         return False
 
 def ensure_xcode_ready_or_exit():
-    if not os.path.exists("/Applications/Xcode.app"):
-        messagebox.showwarning(
-            "Xcode Missing",
-            "Xcode not found in Applications.\nPlease install it from the App Store."
-        )
-        subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
-        sys.exit(1)
+    xcode_app = find_xcode_app()
+    if not xcode_app:
+        return
+
+    developer_dir = os.path.join(xcode_app, "Contents", "Developer")
 
     try:
-        current = subprocess.check_output(["xcode-select", "-p"], text=True).strip()
+        result = subprocess.run(
+            ["xcode-select", "-p"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True
+        )
+        current = result.stdout.strip() if result.returncode == 0 else ""
     except Exception:
         current = ""
 
-    if "CommandLineTools" in current or not current:
-        subprocess.run(
-            [
-                "osascript", "-e",
-                'do shell script "xcode-select -s /Applications/Xcode.app/Contents/Developer" '
-                'with administrator privileges'
-            ],
-            check=True
-        )
+    if os.path.exists(developer_dir):
+        try:
+            subprocess.run(
+                ["xcode-select", "-s", developer_dir],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=True
+            )
+        except Exception:
+            pass
 
-    license_ok = False
     try:
         subprocess.run(
-            ["xcodebuild", "-checkFirstLaunchStatus"],
+            [os.path.join(developer_dir, "usr", "bin", "xcodebuild"), "-checkFirstLaunchStatus"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
             check=True
         )
-        license_ok = True
-    except subprocess.CalledProcessError:
-        license_ok = False
+    except Exception:
+        pass
 
-    if not license_ok:
+    try:
         subprocess.run(
-            [
-                "osascript", "-e",
-                'do shell script "xcodebuild -license accept" '
-                'with administrator privileges'
-            ],
-            check=True
+            [os.path.join(developer_dir, "usr", "bin", "xcrun"), "--find", "devicectl"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False
         )
-
-    subprocess.run(
-        ["xcrun", "--find", "devicectl"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        check=False
-    )
+    except Exception:
+        pass
 
 # === GUI ROOT AND STARTUP CHECKS ===
 root = tk.Tk()
@@ -693,21 +900,10 @@ try:
 except Exception:
     pass
 
-root.withdraw()
-
 default_font = tkfont.nametofont("TkDefaultFont")
 default_font.config(family="SF Pro Text", size=13)
 
 root.option_add("*Font", default_font)
-
-def startup_checks():
-    try:
-        ensure_xcode_ready_or_exit()
-        check_xcode_version_or_exit("26.4")
-    finally:
-        root.deiconify()
-
-root.after(100, startup_checks)
 
 # === DATA LOADING AND SAVING ===
 DATA_FILE = os.path.expanduser("~/ios_device_controller_data.json")
@@ -716,11 +912,12 @@ saved_paths = {}
 command_history = []
 hud_settings_saved = {}
 analytics_opt_in = None
+analytics_prompt_launch_count = 0
 first_device_scan_notice_shown = False
 window_geometry_saved = None
 
 def load_data():
-    global saved_paths, command_history, hud_settings_saved, analytics_opt_in, first_device_scan_notice_shown, custom_app_names, window_geometry_saved
+    global saved_paths, command_history, hud_settings_saved, analytics_opt_in, analytics_prompt_launch_count, first_device_scan_notice_shown, custom_app_names, window_geometry_saved
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r") as f:
@@ -729,6 +926,7 @@ def load_data():
                 command_history = data.get("command_history", [])
                 hud_settings_saved = data.get("hud_settings", {})
                 analytics_opt_in = data.get("analytics_opt_in", None)
+                analytics_prompt_launch_count = data.get("analytics_prompt_launch_count", 0)
                 first_device_scan_notice_shown = data.get("first_device_scan_notice_shown", False)
                 window_geometry_saved = data.get("window_geometry", None)
         except Exception as e:
@@ -737,12 +935,15 @@ def load_data():
             command_history = []
             hud_settings_saved = {}
             analytics_opt_in = None
+            analytics_prompt_launch_count = 0
             first_device_scan_notice_shown = False
+
     else:
         saved_paths = {}
         command_history = []
         hud_settings_saved = {}
         analytics_opt_in = None
+        analytics_prompt_launch_count = 0
         first_device_scan_notice_shown = False
 
 def save_data():
@@ -766,6 +967,7 @@ def save_data():
         "command_history": command_history,
         "hud_settings": hud_settings,
         "analytics_opt_in": analytics_opt_in,
+        "analytics_prompt_launch_count": analytics_prompt_launch_count,
         "first_device_scan_notice_shown": first_device_scan_notice_shown,
         "window_geometry": root.geometry(),
     }
@@ -779,10 +981,13 @@ def save_data():
 
 # === GENERAL GUI HELPERS ===
 
-def ask_analytics_permission():
+def ask_analytics_permission(force=False):
     global analytics_opt_in
 
     if analytics_opt_in is not None:
+        return
+
+    if not force and analytics_prompt_launch_count < 3:
         return
 
     result = messagebox.askyesno(
@@ -796,6 +1001,30 @@ def ask_analytics_permission():
 
     analytics_opt_in = result
     save_data()
+
+def maybe_prompt_analytics_after_launch():
+    global analytics_prompt_launch_count, analytics_opt_in
+
+    if analytics_opt_in is not None:
+        return
+
+    analytics_prompt_launch_count += 1
+    save_data()
+
+    if analytics_prompt_launch_count >= 3:
+        root.after(800, ask_analytics_permission)
+
+def maybe_prompt_analytics_after_launch():
+    global analytics_prompt_launch_count, analytics_opt_in
+
+    if analytics_opt_in is not None:
+        return
+
+    analytics_prompt_launch_count += 1
+    save_data()
+
+    if analytics_prompt_launch_count >= 3:
+        root.after(800, ask_analytics_permission)
 
 def on_close():
     print("on_close called")
@@ -867,7 +1096,6 @@ def is_pairing_error(output: str) -> bool:
     text = output.lower()
     return (
         "must be paired" in text or
-        "remotepairingerror" in text or
         "coredeviceerror error 2" in text
     )
 
@@ -1273,26 +1501,56 @@ def on_apps_keypress(event):
     jump_to_app_starting_with(event.char)
 
 # === FILTER AND UPDATE RUNNING APP LIST ===
+
+def detect_device_locked_issue(output: str) -> bool:
+    if not output:
+        return False
+
+    text = output.lower()
+
+    return (
+        "device is locked" in text or
+        "devicelocked" in text or
+        "kamdmobileimagemounterdevicelocked" in text
+    )
+
 def process_apps_output(output):
     global DEVICE_PREPARING_WARNING_SHOWN
 
-    # 1) Pairing error (DEVICE NOT PAIRED)
-    if is_pairing_error(output):
+    # DEVICE LOCKED
+    if detect_device_locked_issue(output):
         set_text_widget(
             apps_text,
-            "DEVICE NOT PAIRED\n\n"
-            "This device is visible but not paired.\n\n"
-            "FIX:\n"
-            "• Unlock the device\n"
-            "• Unplug the USB cable\n"
-            "• Reconnect the USB cable\n"
-            "• Tap “Trust This Computer” if prompted\n\n"
+            "DEVICE LOCKED\n\n"
+            "Unlock the device and try again.\n\n"
             "Then click:\n"
             "Show Running Games"
         )
         return
 
-    # 2) No processes returned yet (Xcode preparing)
+    # Pairing error (DEVICE NOT PAIRED / STILL CONNECTING)
+    global PAIRING_ATTEMPTS
+
+    if is_pairing_error(output):
+        PAIRING_ATTEMPTS += 1
+
+        if PAIRING_ATTEMPTS >= 3:
+            message = (
+                "STILL CONNECTING\n\n"
+                "Unlock → Trust → replug (may take a few tries)\n\n"
+                "Then: Show Running Games"
+            )
+        else:
+            message = (
+                "DEVICE NOT PAIRED\n\n"
+                "Unlock → Trust → replug\n\n"
+                "Then: Show Running Games"
+            )
+
+        set_text_widget(apps_text, message)
+        return
+
+    # No processes returned yet (Xcode preparing)
     if not output or not output.strip():
         set_text_widget(
             apps_text,
@@ -1309,22 +1567,22 @@ def process_apps_output(output):
         )
         return
     
-    # 3) Device is ready but no obvious user apps are running
+    # Device is ready but no obvious user apps are running
     has_user_app = (
         "Bundle/Application" in output or
         ".app" in output
     )
 
+    # reset after successful communication
+    PAIRING_ATTEMPTS = 0
+
     if not has_user_app:
         set_text_widget(
             apps_text,
             "NO GAMES DETECTED\n\n"
-            "The device is connected and responding,\n"
-            "but no user games are currently running.\n\n"
-            "FIX:\n"
-            "• Launch a game on the device\n"
-            "• Ensure it is in the foreground\n"
-            "• Click: Show Running Games"
+            "Launch a game and try again.\n\n"
+            "Then click:\n"
+            "Show Running Games"
         )
         return
 
@@ -1349,8 +1607,8 @@ def process_apps_output(output):
         "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app", "GooglePhotos.app",
         "Geekbench 6.app", "WeatherViewer.app", "Twitter.app", "narwhal2.app", "OneDrive.app", "To Do.app", "Todoist.app", "CapCut.app", "HelloTalk_Binary.app",
         "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app", "GrokApp.app", "DMSS-GSA.app", "MyDictionary.app",
-        "Strava.app", "dictionary-ios.app", "cpkamerasmart.app", "Flo.app", "HikConnect.app", "LegoApp.app", "ReelShort.app", "ReelShort.app", "LegoBuilder.app", "Meesho.app",
-        "Paytm.app", "TimeTree.app", "YouTubeMusic.app", "WeatherPlus.app", "Canva.app", "Starbucks WatchKit App.app", "NanoHealthBalance.app", "HeartRate.app.app", "NanoWeather.app"
+        "Strava.app", "dictionary-ios.app", "cpkamerasmart.app", "Flo.app", "HikConnect.app", "LegoApp.app", "ReelShort.app", "LegoBuilder.app", "Meesho.app",
+        "Paytm.app", "TimeTree.app", "YouTubeMusic.app", "WeatherPlus.app", "Canva.app", "Starbucks WatchKit App.app", "NanoHealthBalance.app", "HeartRate.app", "NanoWeather.app",
         "ActivityMonitorApp.app", "CommBankProd.app",
     ]
 
@@ -1374,12 +1632,9 @@ def process_apps_output(output):
         set_text_widget(
             apps_text,
             "NO GAMES DETECTED\n\n"
-            "The device is connected and responding,\n"
-            "but no user games are currently running.\n\n"
-            "FIX:\n"
-            "• Launch a game on the device\n"
-            "• Ensure it is in the foreground\n"
-            "• Click: Show Running Games"
+            "Launch a game and try again.\n\n"
+            "Then click:\n"
+            "Show Running Games"
         )
         return
 
@@ -1387,32 +1642,6 @@ def process_apps_output(output):
         DEVICE_PREPARING_WARNING_SHOWN = False
 
     sorted_apps = sorted(unique_apps.items(), key=lambda x: x[1].lower())
-
-    APP_DISPLAY_RENAME = {
-        "ShadowTrackerExtra": "PUBG MOBILE",
-        "scimitar": "Assassin's Creed Mirage",
-        "SolarlandClient": "Farlight 84",
-        "hkrpg": "Honkai: Star Rail",
-        "bh3oversea": "Honkai Impact 3",
-        "X6Game": "Infinity Nikki",
-        "ExtremeGame": "PUBG: New State",
-        "librdr_1.50.60293175_ios-netflix_ww": "Red Dead Redemption Netflix",
-        "librdr_1.50.60293175_ios_ww": "Red Dead Redemption",
-        "WWE2K_Apple": "WWE 2K25: Netflix Edition",
-        "narutoNext1": "NARUTO: Ultimate Ninja STORM",
-        "Civ6_iOS64_Metal_FinalRelease": "CIV 6",
-        "cobalt-tv": "Beach Buggy Racing 2",
-        "OH2-IOS-Shipping": "Oceanhorn 3",
-        "OH2-TVOS-Shipping": "Oceanhorn 3",
-        "PrinceofPersiaTheLostCrown": "Prince of Persia The Lost Crown",
-        "EasyDeliveryCo.": "Easy Delivery Co.",
-        "SubwaySurf": "Subway Surfers",
-        "FortniteClient-IOS-Shipping": "Fortnite",
-        "GenshinImpact": "Genshin Impact",
-        "GRIDLegends": "GRID Legends",
-        "TheDivision": "The Division Resurgence",
-        "HacPro-IOS-Shipping": "Borderlands Mobile"
-    }
 
     def add_suffix(app_name: str) -> str:
         return f"{app_name}{APP_DISPLAY_SUFFIX[app_name]}" if app_name in APP_DISPLAY_SUFFIX else app_name
@@ -1717,7 +1946,7 @@ def launch_app():
     app_basename = os.path.basename(app_path)
     raw_app_name = app_basename[:-4] if app_basename.endswith(".app") else app_basename
     app_name = add_display_name(raw_app_name)
-    connection_state = get_display_state_text(get_device_state(udid))
+    connection_state = get_device_state(udid)
 
     alignment = get_alignment_internal()
     preset = hud_preset_var.get()
@@ -1788,6 +2017,10 @@ def launch_app():
             pass
 
         second_proc.wait()
+
+        if second_proc.returncode == 0:
+            root.after(0, maybe_prompt_analytics_after_launch)
+
         show_temporary_status_message("App relaunched with Metal HUD.")
 
     threading.Thread(target=launch_close_relaunch, daemon=True).start()
@@ -1969,8 +2202,6 @@ def on_window_resize(event):
 root.bind("<Configure>", on_window_resize)
 
 padx_side = 30
-
-from PIL import Image, ImageTk
 
 connection_icon_path = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
@@ -2448,6 +2679,7 @@ def toggle_logs():
 
 toggle_log_button = ttk.Button(scrollable_frame, text="Show Logs", command=toggle_logs)
 toggle_log_button.pack(anchor="w", padx=padx_side, pady=(0, 5))
+
 export_logs_button = ttk.Button(scrollable_frame, text="Export Logs", command=export_logs_to_desktop)
 export_logs_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
@@ -2457,14 +2689,18 @@ launch_output_text.pack_forget()
 root.bind("<Command-r>", lambda event: list_devices())
 root.bind("<Command-s>", lambda event: show_apps())
 
+if is_xcode_installed():
+    finish_startup_after_xcode()
+else:
+    show_xcode_overlay()
+
 root.protocol("WM_DELETE_WINDOW", on_close)
+root.after(100, check_xcode_version_or_exit)
 
 root.after(0, lambda: toggle_hud_advanced(
     force_state=hud_settings_saved.get("advanced_open", False),
     save=False
 ))
-
-root.after(500, ask_analytics_permission)
 
 # === MAINLOOP ===
 root.mainloop()
