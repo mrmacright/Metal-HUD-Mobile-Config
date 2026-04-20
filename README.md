@@ -1,7 +1,8 @@
 # Easily enable Metal HUD on iPhone, iPad & Apple TV!
 
 <p float="left">
-  <img src="https://github.com/user-attachments/assets/9e0892f7-8833-4643-94fd-389cb9a1ab5e" width="700" height="700" />
+  <img src="https://github.com/user-attachments/assets/9e0892f7-8833-4643-94fd-389cb9a1ab5e" style="width:700px; height:auto;" />
+</p>
 
 - Instantly launch Metal HUD for selected games
 - Lists connected devices & shows only running games (hides system apps)
@@ -27,6 +28,14 @@
 > - Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which cannot run on iOS  
 > - iOS 16 is not supported — `devicectl` is unavailable
 
+### How to connect to Apple TV
+1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
+2. Download Xcode
+3. Open Xcode → Window → Devices and Simulators → Discovered
+4. Pair Apple TV → enter verification code → Connect
+5. Open Metal HUD Mobile Config → List Devices
+- You might need to re-pair after tvOS/macOS updates
+
 ## CONNECTION HELP
 
 ### NO GAMES DETECTED?
@@ -40,15 +49,9 @@ If you see **NO GAMES DETECTED**, **NO USER APPS RUNNING**, or the game you want
 2. Ensure the game is in the foreground
 3. Click **Show Running Games** again
 
----
+### DEVICE NOT CONNECTING?
 
-### DEVICE NOT APPEARING?
-
-If you see **NO DEVICES WERE FOUND**, follow the steps below in order.
-
-### STEP 1 — CHECK USB & TRUST 
-
-In most cases, the device is simply not trusted or not fully connected.
+If you can't connect to a device, it's likely not paired correctly.
 
 Do the following:
 
@@ -63,9 +66,7 @@ Settings → General → Transfer or Reset iPhone → Reset → Reset Location &
 
 After doing this, quit and relaunch **Metal HUD Mobile Config** and check again.
 
-If the device still does not appear, continue to Step 2.
-
-### STEP 2 — FORCE DEVICE PREP USING XCODE 
+### CHECK CONNECTION IN XCODE 
 
 Sometimes macOS has not finished preparing the device, especially on first connection or after iOS/macOS updates.
 
@@ -79,9 +80,9 @@ If Xcode shows **Connecting to device** or **Copying shared cache symbols**, wai
 <img src="https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c" width="600" />
 <img src="https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286" width="600" />
 
-Once finished, return to **Metal HUD Mobile Config** — the device should now appear.
+Once finished, return to **Metal HUD Mobile Config** — you should be able to connect to the device.
 
-### STEP 3 - XCODE LICENSE
+### XCODE LICENSE
 
 Normally the Xcode license is accepted automatically on first launch. If it possibly failed, run this once in Terminal:
 
@@ -89,28 +90,6 @@ Normally the Xcode license is accepted automatically on first launch. If it poss
 sudo xcodebuild -license
 ```
    
----
-
-### DEVICE VISIBLE BUT NOT PAIRED?
-
-If you see **DEVICE NOT PAIRED**, try the following:
-
-- Unlock the device
-- Unplug and reconnect the USB cable
-- Tap **Trust This Computer** if prompted
-- Click **Show Running Games** again
-
----
-
-### How to connect to Apple TV
-
-1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
-2. Download Xcode
-3. Open Xcode → Window → Devices and Simulators → Discovered
-4. Pair Apple TV → enter verification code → Connect
-5. Open Metal HUD Mobile Config → List Devices
-- You might need to re-pair after tvOS/macOS updates
-
 ---
 
 ### New iPhone or iPad isn't connecting?
