@@ -23,7 +23,7 @@
 ✅ Apple TV HD (2015) or later
 
 > [!IMPORTANT]
-> - Windows support is not supported — Xcode is required and only runs on macOS  
+> - Windows is not supported — Xcode is required and only runs on macOS  
 > - System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS, and tvOS  
 > - Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which cannot run on iOS  
 > - iOS 16 is not supported — `devicectl` is unavailable
