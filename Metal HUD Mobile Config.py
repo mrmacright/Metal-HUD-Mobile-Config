@@ -203,12 +203,32 @@ APP_DISPLAY_RENAME = {
     "GenshinImpact": "Genshin Impact",
     "GRIDLegends": "GRID Legends",
     "TheDivision": "The Division Resurgence",
-    "HacPro-IOS-Shipping": "Borderlands Mobile"
+    "HacPro-IOS-Shipping": "Borderlands Mobile",
+    "cod": "Call of Duty: Mobile",
+    "RainbowSixMobile": "Rainbow Six Mobile",
+    "Endfield": "Arknights: Endfield"
+    
 }
 
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
 def add_display_name(app_name: str) -> str:
     return APP_DISPLAY_RENAME.get(app_name, app_name)
+
+def make_unique_app_names(app_list):
+    counts = {}
+    display_list = []
+    internal_map = {}
+
+    for i, app in enumerate(app_list):
+        display = add_display_name(app)
+
+        counts[display] = counts.get(display, 0) + 1
+        unique_display = display + ("\u200B" * counts[display])
+
+        display_list.append(display)  
+        internal_map[display] = app  
+
+    return display_list, app_list
 
 def strip_suffix(display_name: str) -> str:
     """
@@ -1487,7 +1507,8 @@ def jump_to_app_starting_with(letter):
     apps_text.tag_add("selected_app", start, end)
     apps_text.see(start)
 
-    full_path = apps_text.full_path_map.get(target_line_text)
+    index = target_line_num - 1
+    full_path = apps_text.full_path_map[index]
     if full_path:
         app_path_combo.set(target_line_text)
         app_path_combo.full_path = full_path
@@ -1649,23 +1670,28 @@ def process_apps_output(output):
     display_names = []
     app_name_to_full_path = {}
 
+    display_names = []
+    app_name_to_full_path = {}
+    app_index_map = []
+
     for full_path, app_name in sorted_apps:
         base_name = app_name[:-4] if app_name.endswith(".app") else app_name
         display_name = add_display_name(base_name)
-        if display_name not in app_name_to_full_path:  
-            app_name_to_full_path[display_name] = full_path
-            display_names.append(display_name)
+
+        display_names.append(display_name)
+        app_index_map.append(full_path)
 
     set_text_widget(apps_text, "\n".join(display_names))
 
-    apps_text.full_path_map = app_name_to_full_path
+    apps_text.full_path_map = app_index_map
+    apps_text.display_list = display_names
 
-    app_names = sorted(app_name_to_full_path.keys())
+    app_names = display_names
     app_path_combo['values'] = app_names
 
     if app_names:
         app_path_combo.set(app_names[0])
-        app_path_combo.full_path = app_name_to_full_path[app_names[0]]
+        app_path_combo.full_path = app_index_map[0]
     else:
         app_path_combo.set('')
         app_path_combo.full_path = None
@@ -1681,10 +1707,10 @@ def process_apps_output(output):
         apps_text.mark_set("insert", "1.0")
         apps_text.see("insert")
         first_app = lines[0].strip()
-        if first_app in app_name_to_full_path:
-            app_path_combo.set(first_app)
-            app_path_combo.full_path = app_name_to_full_path[first_app]
-            update_launch_button_text(first_app)
+        first_index = 0
+        app_path_combo.set(first_app)
+        app_path_combo.full_path = app_index_map[first_index]
+        update_launch_button_text(first_app)
     apps_text.config(state='disabled')
 
     apps_text.focus_set()
@@ -2069,10 +2095,12 @@ def on_apps_text_click(event):
         apps_text.config(state='disabled')
         return
 
+    index = int(line_num) - 1
+    full_path = apps_text.full_path_map[index]
+
     apps_text.tag_remove("selected_app", "1.0", tk.END)
     apps_text.tag_add("selected_app", line_start, line_end)
 
-    full_path = apps_text.full_path_map.get(app_name)
     if full_path:
         app_path_combo.set(app_name)
         app_path_combo.full_path = full_path
@@ -2129,7 +2157,8 @@ def move_selection(widget, direction="down"):
             device_udid_combo.set(widget._device_rows[new_line - 1]["identifier"])
     elif widget == apps_text and hasattr(widget, "full_path_map"):
         app_name = line_text.strip()
-        full_path = widget.full_path_map.get(app_name)
+        index = new_line - 1
+        full_path = widget.full_path_map[index]
         if full_path:
             app_path_combo.set(app_name)
             app_path_combo.full_path = full_path
