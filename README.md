@@ -194,9 +194,9 @@ xcrun devicectl manage unpair --device <DEVICE-UDID>
 and to many others who have helped! Thanks
 
 ## Optional Compatibility Data
-Metal HUD Mobile Config can now optionally send compatibility data to help me improve the app. 
+Metal HUD Mobile Config can optionally send compatibility data to help me improve the app. 
 
-You’ll be asked once on first launch. Data is only sent if you choose “Yes”.
+You’ll be asked once and data is only sent if you choose “Yes”.
 
 ONLY Includes:
 - Device model (eg - iPhone 17 Pro Max, iPhone18,2)
