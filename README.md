@@ -12,7 +12,7 @@
 
 ## PLATFORM SUPPORT 
 
-✅ Mac [(macOS Tahoe 26.2 or later)](https://support.apple.com/en-au/122867) | 20-30 GB free space recommended
+✅ Requires macOS Tahoe 26.2 or later and a Mac with Apple M1 chip or later | 20-30 GB free space recommended
 
 ### SUPPORTED DEVICES FOR METAL HUD
 
