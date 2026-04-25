@@ -17,7 +17,8 @@
 - Windows is not supported — Xcode only runs on macOS
 
 > [!NOTE]
-> **20–30 GB free space recommended (Xcode is required)**  
+> - 20–30 GB free space recommended (Xcode is required)
+> - [Version 2.9.2](https://github.com/mrmacright/Metal-HUD-Mobile-Config/releases/tag/2.9.2) and earlier supports Intel Macs, but future compatibility is not guaranteed
 
 ## SUPPORTED PLATFORMS FOR METAL HUD
 
