@@ -77,7 +77,7 @@ CONNECTION_ICON_ROOT = os.path.join(
 DEVICE_ICON_CACHE = {}
 CONNECTION_ICON_CACHE = {}
 
-DEVICE_NAME_MAX_PX = 170
+DEVICE_NAME_MAX_PX = 150
 DEVICE_STATE_MAX_PX = 260
 
 DEVICE_NAME_TAB_X = 50
@@ -292,8 +292,14 @@ def normalize_model_for_icon(model: str) -> str:
         text
     )
 
+    if text.startswith("Apple Vision"):
+        return "Apple Vision"
+
     if text.startswith("Apple TV"):
         return "Apple TV"
+
+    if text.startswith("Watch"):
+        return "Apple Watch"
 
     return text
 
@@ -447,7 +453,7 @@ def get_connection_hint(state: str) -> str:
         return "Complete pairing on the device (check for Trust prompt)"
 
     if "no ddi" in normalized_state:
-        return "Xcode may need an update or beta for better support"
+        return "Limited support — Xcode may still be preparing the device"
 
     if normalized_state.startswith("unavailable"):
         return "Device is likely turned off or not connected to Wi-Fi"
@@ -491,8 +497,20 @@ def highlight_device_row(widget, line_num):
     widget.config(state='disabled')
 
     if hasattr(widget, "_device_rows") and 1 <= line_num <= len(widget._device_rows):
-        state = widget._device_rows[line_num - 1]["state"]
-        connection_hint_label.config(text=get_connection_hint(state))
+        device = widget._device_rows[line_num - 1]
+        state = device["state"]
+        model = device["model"]
+
+        if "watch" in model.lower():
+            connection_hint_label.config(
+                text="Metal HUD may not work on Apple Watch.",
+                foreground="red"
+            )
+        else:
+            connection_hint_label.config(
+                text=get_connection_hint(state),
+                foreground="red"
+            )
     else:
         connection_hint_label.config(text="")
 
@@ -986,7 +1004,7 @@ def save_data():
         "saved_paths": saved_paths,
         "command_history": command_history,
         "hud_settings": hud_settings,
-        "analytics_opt_in": analytics_opt_in,
+        "analytics_opt_in": analytics_opt_in_var.get() if "analytics_opt_in_var" in globals() else analytics_opt_in,
         "analytics_prompt_launch_count": analytics_prompt_launch_count,
         "first_device_scan_notice_shown": first_device_scan_notice_shown,
         "window_geometry": root.geometry(),
@@ -1084,13 +1102,6 @@ def run_command(command):
 
     print(f"Command Output:\n{output}")
     root.after(0, lambda: update_launch_output(output))  
-
-    if output and "Developer Mode is disabled" in output:
-        root.after(0, lambda: messagebox.showwarning(
-            "Developer Mode Disabled",
-            "Operation failed because Developer Mode is disabled on your iPhone or iPad.\n\n"
-            "Go to Settings > Privacy & Security > Developer Mode on your device to enable it."
-        ))
 
     return output.strip()
 
@@ -1538,6 +1549,16 @@ def detect_device_locked_issue(output: str) -> bool:
 def process_apps_output(output):
     global DEVICE_PREPARING_WARNING_SHOWN
 
+        # DEVELOPER MODE DISABLED
+    if output and "Developer Mode is disabled" in output:
+        set_text_widget(
+            apps_text,
+            "DEVELOPER MODE DISABLED\n\n"
+            "Enable it on your device:\n"
+            "Settings → Privacy & Security → Developer Mode"
+        )
+        return
+
     # DEVICE LOCKED
     if detect_device_locked_issue(output):
         set_text_widget(
@@ -1629,8 +1650,17 @@ def process_apps_output(output):
         "Geekbench 6.app", "WeatherViewer.app", "Twitter.app", "narwhal2.app", "OneDrive.app", "To Do.app", "Todoist.app", "CapCut.app", "HelloTalk_Binary.app",
         "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app", "GrokApp.app", "DMSS-GSA.app", "MyDictionary.app",
         "Strava.app", "dictionary-ios.app", "cpkamerasmart.app", "Flo.app", "HikConnect.app", "LegoApp.app", "ReelShort.app", "LegoBuilder.app", "Meesho.app",
-        "Paytm.app", "TimeTree.app", "YouTubeMusic.app", "WeatherPlus.app", "Canva.app", "Starbucks WatchKit App.app", "NanoHealthBalance.app", "HeartRate.app", "NanoWeather.app",
-        "ActivityMonitorApp.app", "CommBankProd.app",
+        "Paytm.app", "TimeTree.app", "YouTubeMusic.app", "WeatherPlus.app", "Canva.app", "ActivityMonitorApp.app", "CommBankProd.app", "VLC for iOS.app", "Xero.app",
+        "ActivityMonitorApp.app", "CommBankProd.app", "2048.app", "Cellopark.app", "Kubofit GLH Release.app", "myID.iOS.app", "TeamTrack.app",
+    ]
+
+    filter_out_watch = [
+        "NanoMedications.app", "NanoMail.app", "NanoTimer.app", "NanoCalendar.app", "FindDevices.app", "NanoWorldClock.app", "SessionTrackerApp.app",
+        "Urchin.app", "Starbucks WatchKit App.app", "NanoHealthBalance.app", "FindItems.app", "HeartRate.app", "NanoWeather.app",
+        "Dose.app", "Memoji.app", "Mind.app", "NanoAlarm.app", "NanoCalculator.app", "NanoCamera.app", "NanoHeartRhythm.app",
+        "NanoMaps.app", "NanoMenstrualCycles.app", "NanoMusicRecognition.app", "NanoNowPlaying.app", "NanoOxygenSaturation.app", "NanoPassbook.app", "NanoReminders.app",
+        "NanoSleep.app", "NanoStopwatch.app", "NanoTranslate.app", "NanoTVRemote.app", "StarWarp WatchKit App.app", "TinCan.app", "WatchApp.app",
+        "WatchApp.app", "WatchApp.app", "WhatsAppWatchApp.app",
     ]
 
     unique_apps = {}
@@ -1641,7 +1671,7 @@ def process_apps_output(output):
             if match:
                 full_path = match.group(1)
                 app_name = os.path.basename(full_path)
-                if app_name in filter_out:
+                if app_name in filter_out or app_name in filter_out_watch:
                     continue
                 if full_path not in unique_apps:
                     unique_apps[full_path] = app_name
@@ -1774,8 +1804,12 @@ def update_launch_output(output):
 # === ANALYTICS, SAVED GAMES, AND HUD CONFIG HELPERS ===
 
 def send_analytics(device_model, app_name, connection_state):
-    if not analytics_opt_in:
-        return
+    if "analytics_opt_in_var" in globals():
+        if not analytics_opt_in_var.get():
+            return
+    else:
+        if not analytics_opt_in:
+            return
 
     def worker():
         try:
@@ -2309,8 +2343,10 @@ status_label.pack(anchor="w", pady=(5, 0))
 
 device_text = scrolledtext.ScrolledText(
     scrollable_frame,
+    width=120,
     height=10,
     state='disabled',
+    wrap='none',
     padx=2,
     pady=4,
     font=default_font,
@@ -2328,7 +2364,7 @@ device_text.configure(
 )
 device_text.tag_configure("selected_device", background="#ffcc66", foreground="black")
 device_text.tag_configure("device_row", spacing1=1, spacing3=3)
-device_text.pack(fill=tk.BOTH, padx=padx_side, pady=5, expand=True)
+device_text.pack(fill=tk.X, padx=padx_side, pady=5)
 device_text.bind("<Button-1>", on_device_text_click)
 
 connection_hint_label = ttk.Label(
@@ -2472,6 +2508,8 @@ command_history_combo.bind("<<ComboboxSelected>>", on_command_history_select)
 # === HUD STATE VARIABLES (MUST EXIST BEFORE UI) ===
 hud_preset_var = tk.StringVar(value="Default")
 
+analytics_opt_in_var = tk.BooleanVar(value=bool(analytics_opt_in))
+
 # === HUD ADVANCED OPTIONS (COLLAPSIBLE) ===
 
 hud_arrow_font = tkfont.Font(size=18, weight="bold")
@@ -2488,7 +2526,7 @@ hud_arrow_label = ttk.Label(
 )
 hud_arrow_label.pack(side="left")
 
-hud_advanced_title = ttk.Label(hud_advanced_header, text="HUD Advanced Options")
+hud_advanced_title = ttk.Label(hud_advanced_header, text="Advanced Options")
 hud_advanced_title.pack(side="left", padx=(5, 0))
 
 hud_advanced_frame = ttk.Frame(scrollable_frame)
@@ -2601,6 +2639,9 @@ def on_preset_change(*args):
         custom_elements_frame.pack_forget()
         clear_button.pack_forget()
 
+    root.update_idletasks()
+    canvas.configure(scrollregion=canvas.bbox("all"))
+
 hud_preset_var.trace_add("write", on_preset_change)
 on_preset_change()  
 
@@ -2628,7 +2669,8 @@ hud_alignment_combo = ttk.Combobox(
     hud_advanced_frame,
     textvariable=hud_alignment_var,
     values=list(hud_alignment_display_map.keys()),
-    state="readonly"
+    state="readonly",
+    height=5
 )
 hud_alignment_combo.pack(fill=tk.X, pady=(0, 10))
 
@@ -2684,8 +2726,12 @@ for key, var in hud_elements_vars.items():
 
 # === LAUNCH METAL HUD ===
 
-launch_button = ttk.Button(scrollable_frame, text="Launch App with Metal Performance HUD", command=launch_app)
-launch_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
+launch_button = ttk.Button(
+    scrollable_frame,
+    text="Launch App with Metal Performance HUD",
+    command=launch_app
+)
+launch_button.pack(anchor="w", padx=padx_side, pady=(10, 10))
 
 def update_launch_button_text(app_name):
     """
@@ -2698,22 +2744,56 @@ def update_launch_button_text(app_name):
         launch_button.config(text="Launch App with Metal Performance HUD")
 
 # === LOG PANEL CONTROLS ===
+
+launch_output_text = scrolledtext.ScrolledText(
+    hud_advanced_frame,
+    height=10,
+    state='disabled',
+    wrap='none'
+)
+launch_output_text.pack_forget()
+
 def toggle_logs():
     if launch_output_text.winfo_ismapped():
         launch_output_text.pack_forget()
         toggle_log_button.config(text="Show Logs")
     else:
-        launch_output_text.pack(fill=tk.BOTH, padx=padx_side, pady=10, expand=True)
+        launch_output_text.pack(fill=tk.X, pady=(5, 10))
         toggle_log_button.config(text="Hide Logs")
 
-toggle_log_button = ttk.Button(scrollable_frame, text="Show Logs", command=toggle_logs)
-toggle_log_button.pack(anchor="w", padx=padx_side, pady=(0, 5))
+        root.update_idletasks()
+        canvas.configure(scrollregion=canvas.bbox("all"))
+        canvas.yview_moveto(1.0)
 
-export_logs_button = ttk.Button(scrollable_frame, text="Export Logs", command=export_logs_to_desktop)
-export_logs_button.pack(anchor="w", padx=padx_side, pady=(0, 10))
+        launch_output_text.see(tk.END)
 
-launch_output_text = scrolledtext.ScrolledText(scrollable_frame, height=12, state='disabled')
-launch_output_text.pack_forget()
+analytics_checkbox = ttk.Checkbutton(
+    scrollable_frame,
+    text="Share anonymous compatibility data",
+    variable=analytics_opt_in_var,
+    command=lambda: save_data()
+)
+analytics_checkbox.pack(anchor="w", padx=padx_side, pady=(0, 5))
+
+analytics_note = ttk.Label(
+    scrollable_frame,
+    text="Includes device model, app name and connection state only"
+)
+analytics_note.pack(anchor="w", padx=padx_side, pady=(0, 10))
+
+toggle_log_button = ttk.Button(
+    hud_advanced_frame,
+    text="Show Logs",
+    command=toggle_logs
+)
+toggle_log_button.pack(anchor="w", pady=(0, 5))
+
+export_logs_button = ttk.Button(
+    hud_advanced_frame,
+    text="Export Logs",
+    command=export_logs_to_desktop
+)
+export_logs_button.pack(anchor="w", pady=(0, 10))
 
 root.bind("<Command-r>", lambda event: list_devices())
 root.bind("<Command-s>", lambda event: show_apps())
