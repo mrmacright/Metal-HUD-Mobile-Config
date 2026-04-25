@@ -12,11 +12,11 @@ OPTIONS = {
         "assets"
     ],
     "semi_standalone": False,
-    "arch": "universal2",
+    "arch": "arm64",
     "plist": {
         "CFBundleName": "Metal HUD Mobile Config",
-        "CFBundleShortVersionString": "3.0.2",
-        "CFBundleVersion": "3.0.2",
+        "CFBundleShortVersionString": "3.0.3",
+        "CFBundleVersion": "3.0.3",
         "CFBundleIdentifier": "com.stewie.metalhud",
         "LSMinimumSystemVersion": "15.6",
     },

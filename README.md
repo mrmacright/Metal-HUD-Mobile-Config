@@ -12,7 +12,7 @@
 
 ## PLATFORM SUPPORT 
 
-✅ Mac [(macOS Tahoe 26.2 or later)](https://support.apple.com/en-au/122867) | 20-30 GB free space recommended
+✅ Requires macOS Tahoe 26.2 or later and a Mac with Apple M1 chip or later | 20-30 GB free space recommended
 
 ### SUPPORTED DEVICES FOR METAL HUD
 
@@ -194,9 +194,9 @@ xcrun devicectl manage unpair --device <DEVICE-UDID>
 and to many others who have helped! Thanks
 
 ## Optional Compatibility Data
-Metal HUD Mobile Config can now optionally send compatibility data to help me improve the app. 
+Metal HUD Mobile Config can optionally send compatibility data to help me improve the app. 
 
-You’ll be asked once on first launch. Data is only sent if you choose “Yes”.
+You’ll be asked once and data is only sent if you choose “Yes”.
 
 ONLY Includes:
 - Device model (eg - iPhone 17 Pro Max, iPhone18,2)

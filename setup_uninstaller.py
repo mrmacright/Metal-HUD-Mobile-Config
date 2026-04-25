@@ -7,6 +7,7 @@ OPTIONS = {
     "packages": ["tkinter"],
     "resources": ["MyIcon Uninstall.icns"],
     "semi_standalone": False,
+    "arch": "arm64",
     "plist": {
         "CFBundleName": "Uninstaller Metal HUD Mobile Config",
         "CFBundleIdentifier": "com.stewie.metalhud.uninstaller",
