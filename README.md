@@ -34,15 +34,14 @@
 
 ### How to connect to Apple TV
 1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
-2. Download Xcode
-3. Open Xcode → Window → Devices and Simulators → Discovered
-4. Pair Apple TV → enter verification code → Connect
-5. Open Metal HUD Mobile Config → List Devices
+2. Open Xcode → Window → Devices and Simulators → Discovered
+3. Pair Apple TV → enter verification code → Connect
+4. Open Metal HUD Mobile Config → List Devices
 - You might need to re-pair after tvOS/macOS updates
 
 ## CONNECTION HELP
 
-### NO GAMES DETECTED?
+### No games detected?
 
 If you see **NO GAMES DETECTED**, **NO USER APPS RUNNING**, or the game you want to test isn’t appearing, it could mean:
 
@@ -53,7 +52,7 @@ If you see **NO GAMES DETECTED**, **NO USER APPS RUNNING**, or the game you want
 2. Ensure the game is in the foreground
 3. Click **Show Running Games** again
 
-### DEVICE NOT CONNECTING?
+### Device not connecting?
 
 If you can't connect to a device, it's likely not paired correctly.
 
@@ -70,7 +69,7 @@ Settings → General → Transfer or Reset iPhone → Reset → Reset Location &
 
 After doing this, quit and relaunch **Metal HUD Mobile Config** and check again.
 
-### CHECK CONNECTION IN XCODE 
+### Check connection In Xcode 
 
 Sometimes macOS has not finished preparing the device, especially on first connection or after iOS/macOS updates.
 
@@ -86,15 +85,13 @@ If Xcode shows **Connecting to device** or **Copying shared cache symbols**, wai
 
 Once finished, return to **Metal HUD Mobile Config** — you should be able to connect to the device.
 
-### XCODE LICENSE
+### Xcode Llicense
 
 Normally the Xcode license is accepted automatically on first launch. If it possibly failed, run this once in Terminal:
 
 ```bash
 sudo xcodebuild -license
 ```
-   
----
 
 ### New iPhone or iPad isn't connecting?
 
@@ -113,7 +110,7 @@ xcodebuild -version
 ```
 You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.x (or newer)`
 
-## Known Issues
+## Known issues
 
 - Game names may differ from App Store names
 
@@ -144,7 +141,7 @@ xcrun devicectl device process launch \
   "/private/var/containers/Bundle/Application/UUID/AppName.app/"
 ```
 
-**Custom HUD Location**: 
+**Custom HUD location**: 
 
 Available options are:
 `topleft`, `topcenter`, `topright`, `centerleft`, `centered`, `centerright`, `bottomright`, `bottomcenter`, `bottomleft`
@@ -156,7 +153,7 @@ xcrun devicectl device process launch \
     "/private/var/containers/Bundle/Application/UUID/AppName.app/
 ```
 
-**Custom HUD Scale**:
+**Custom HUD scale**:
 
 0.0–1.0. Default: 0.2
 ```
