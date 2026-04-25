@@ -10,12 +10,14 @@
 - Save & quickly relaunch your favorite games with Metal HUD
 - View logs directly from the interface for better debugging and tracking
 
-## PLATFORM SUPPORT 
+## PLATFORM SUPPORT
 
-- Requires macOS Tahoe 26.2 or later and a Mac with [Apple M1 chip or later](https://support.apple.com/en-au/116943)
+- macOS Tahoe 26.2 or later  
+- [Apple silicon (M1 or newer) ](https://support.apple.com/en-au/116943) 
+- Windows is not supported as Xcode is required 
 
 > [!NOTE]
-> **20–30 GB free space recommended (Xcode required)**
+> **20–30 GB free space recommended (Xcode is required)**  
 
 ## SUPPORTED PLATFORMS FOR METAL HUD
 
@@ -26,7 +28,6 @@
 - Apple TV HD (2015) or later
 
 > [!IMPORTANT]
-> - Windows is not supported — Xcode is required and only runs on macOS  
 > - System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS, & tvOS  
 > - Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which cannot run on iOS  
 > - iOS 16 is not supported — `devicectl` is unavailable
