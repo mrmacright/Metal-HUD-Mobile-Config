@@ -14,7 +14,7 @@
 
 - macOS Tahoe 26.2 or later  
 - [Apple silicon (M1 or newer) ](https://support.apple.com/en-au/116943) 
-- Windows is not supported as Xcode is required 
+- Windows is not supported — Xcode only runs on macOS
 
 > [!NOTE]
 > **20–30 GB free space recommended (Xcode is required)**  
