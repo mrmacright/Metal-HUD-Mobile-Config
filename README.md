@@ -12,15 +12,18 @@
 
 ## PLATFORM SUPPORT 
 
-✅ Requires macOS Tahoe 26.2 or later and a Mac with Apple M1 chip or later | 20-30 GB free space recommended
+- Requires macOS Tahoe 26.2 or later and a Mac with [Apple M1 chip or later](https://support.apple.com/en-au/116943)
 
-### SUPPORTED DEVICES FOR METAL HUD
+> [!NOTE]
+> **20–30 GB free space recommended (Xcode required)**
 
-✅ iOS 17+ — [Supported devices](https://support.apple.com/en-au/guide/iphone/iphe3fa5df43/17.0/ios/17.0)
+## SUPPORTED PLATFORMS FOR METAL HUD
 
-✅ iPadOS 17+ — [Supported devices](https://support.apple.com/en-au/guide/ipad/ipad213a25b2/17.0/ipados/17.0)
+- iOS 17+ — [Supported devices](https://support.apple.com/en-au/guide/iphone/iphe3fa5df43/17.0/ios/17.0)
 
-✅ Apple TV HD (2015) or later
+- iPadOS 17+ — [Supported devices](https://support.apple.com/en-au/guide/ipad/ipad213a25b2/17.0/ipados/17.0)
+
+- Apple TV HD (2015) or later
 
 > [!IMPORTANT]
 > - Windows is not supported — Xcode is required and only runs on macOS  
