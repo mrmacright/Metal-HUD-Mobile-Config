@@ -1,23 +1,8 @@
 # Enable Metal HUD on iPhone, iPad & Apple TV!
 
-<table border="0" cellspacing="0" cellpadding="0">
-<tr>
-<td width="65%" style="border:none;">
+Launch Metal HUD instantly for games, view connected devices, customize HUD presets
 
-- Launch Metal HUD instantly for supported games  
-- View connected devices and running games  
-- Customize HUD presets, position, and scale  
-- Save and relaunch games with HUD  
-- View logs directly in the app  
-
-</td>
-<td width="35%" align="right" style="border:none;">
-
-<img width="260" src="https://github.com/user-attachments/assets/327aff18-a173-4e56-93d1-220229cfde74" />
-
-</td>
-</tr>
-</table>
+<img width="300" alt="MetalHUDVideo" src="https://github.com/user-attachments/assets/affeb269-0c07-4c13-90bd-3e12c754ed25" />
 
 ## Requirements 
 
