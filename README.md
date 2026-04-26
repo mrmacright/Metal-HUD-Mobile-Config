@@ -192,4 +192,4 @@ xcrun devicectl manage unpair --device <DEVICE-UDID>
 and to many others who have helped! Thanks
 
 ## ChatGPT
-This app has been built with ChatGPT 
+Built with the help of ChatGPT
