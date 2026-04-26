@@ -1,92 +1,86 @@
-# Easily enable Metal HUD on iPhone, iPad & Apple TV!
-
 <p float="left">
   <img src="https://github.com/user-attachments/assets/9e0892f7-8833-4643-94fd-389cb9a1ab5e" style="width:700px; height:auto;" />
 </p>
 
-- Instantly launch Metal HUD for selected games
-- Lists connected devices & shows only running games (hides system apps)
-- Choose HUD presets, locations, & scale **(Requires iOS 26 / iPadOS 26 / tvOS 26)**
-- Save & quickly relaunch your favorite games with Metal HUD
-- View logs directly from the interface for better debugging and tracking
+# Enable Metal HUD on iPhone, iPad & Apple TV!
 
-## PLATFORM SUPPORT
+- Launch Metal HUD instantly  
+- View connected devices and running games  
+- Customize HUD presets, position, and scale  
+- Save and relaunch games with HUD  
+- Built-in logs for debugging  
 
-- macOS Tahoe 26.2 or later  
-- [Apple silicon (M1 or newer) ](https://support.apple.com/en-au/116943) 
-- Windows is not supported — Xcode only runs on macOS
+## Requirements 
+
+▶ macOS Tahoe 26.2 or later and [M1 or later](https://support.apple.com/en-au/116943)
+
+▶ Xcode 26.4.1 (20–30 GB free space recommended)
+
+▶ [Version 2.9.2](https://github.com/mrmacright/Metal-HUD-Mobile-Config/releases/tag/2.9.2) and earlier supports Intel Macs, but future compatibility is not guaranteed
 
 > [!NOTE]
-> - 20–30 GB free space recommended (Xcode is required)
-> - [Version 2.9.2](https://github.com/mrmacright/Metal-HUD-Mobile-Config/releases/tag/2.9.2) and earlier supports Intel Macs, but future compatibility is not guaranteed
+> **Windows is not supported — This app requires Xcode and Terminal and they only run on macOS**
 
-## SUPPORTED PLATFORMS FOR METAL HUD
+## Supported platforms for Metal HUD
 
-- iOS 17+ — [Supported devices](https://support.apple.com/en-au/guide/iphone/iphe3fa5df43/17.0/ios/17.0)
+▶ [iOS 17 or later](https://support.apple.com/en-au/guide/iphone/iphe3fa5df43/17.0/ios/17.0)
 
-- iPadOS 17+ — [Supported devices](https://support.apple.com/en-au/guide/ipad/ipad213a25b2/17.0/ipados/17.0)
+▶ [iPadOS 17 or later](https://support.apple.com/en-au/guide/ipad/ipad213a25b2/17.0/ipados/17.0)
 
-- Apple TV HD (2015) or later
+▶ Apple TV HD (2015) or later
 
 > [!IMPORTANT]
 > - System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS, & tvOS  
 > - Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which cannot run on iOS  
-> - iOS 16 is not supported — `devicectl` is unavailable
+> - iOS 16 or earlier is not supported as `devicectl` is unavailable
 
 ### How to connect to Apple TV
 1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
 2. Open Xcode → Window → Devices and Simulators → Discovered
 3. Pair Apple TV → enter verification code → Connect
 4. Open Metal HUD Mobile Config → List Devices
-- You might need to re-pair after tvOS/macOS updates
+
+> [!IMPORTANT]
+> You might need to re-pair after tvOS/macOS updates
 
 ## CONNECTION HELP
 
 ### No games detected?
-
-If you see **NO GAMES DETECTED**, **NO USER APPS RUNNING**, or the game you want to test isn’t appearing, it could mean:
-
-- No user games are currently running. Apps are not discoverable unless they are already open.
-
-**Fix:**
-1. Launch a game on the device
-2. Ensure the game is in the foreground
-3. Click **Show Running Games** again
+Apps are only detectable when already open and in the foreground: 
+1. Launch the game on your device  
+2. Keep it open in the foreground  
+3. Click **Show Running Games** again  
 
 ### Device not connecting?
 
-If you can't connect to a device, it's likely not paired correctly.
+If you can't connect to a device, it's likely not paired correctly. Try the following steps:
 
-Do the following:
+1. Connect your iPhone or iPad via USB  
+2. Unlock the device  
+3. On the device, tap **Trust This Computer** if prompted  
+4. On the Mac, click **Allow** if asked to connect the accessory  
 
-- Connect your iPhone or iPad via USB  
-- Unlock the device  
-- On the device, tap **Trust This Computer** if prompted  
-- On the Mac, click **Allow** if asked to connect the accessory  
+> [!IMPORTANT]
+> If you previously dismissed the trust prompt, reset it on the device and try again:
+> - Settings → General → Transfer or Reset iPhone → Reset → Reset Location & Privacy
 
-If you previously dismissed the trust prompt, reset it on the device:
-
-Settings → General → Transfer or Reset iPhone → Reset → Reset Location & Privacy
-
-After doing this, quit and relaunch **Metal HUD Mobile Config** and check again.
-
-### Check connection In Xcode 
+### Check connection in Xcode
 
 Sometimes macOS has not finished preparing the device, especially on first connection or after iOS/macOS updates.
 
-1. Open **Xcode → Window → Devices and Simulators**  
-2. Confirm your device appears as connected  
+1. Open Xcode → Window → Devices and Simulators
+
+2. Wait for Xcode to finish preparing the device
+
+<img src="https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c" width="600" />
+
+<img src="https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286" width="600" />
+
+3. Confirm your device is connected, then return to Metal HUD Mobile Config
 
 <img src="https://github.com/user-attachments/assets/d02a60b0-dec7-4852-94e4-aeb9b9989004" width="350" />
 
-If Xcode shows **Connecting to device** or **Copying shared cache symbols**, wait until this process completes.
-
-<img src="https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c" width="600" />
-<img src="https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286" width="600" />
-
-Once finished, return to **Metal HUD Mobile Config** — you should be able to connect to the device.
-
-### Xcode Llicense
+### Xcode license
 
 Normally the Xcode license is accepted automatically on first launch. If it possibly failed, run this once in Terminal:
 
@@ -94,22 +88,24 @@ Normally the Xcode license is accepted automatically on first launch. If it poss
 sudo xcodebuild -license
 ```
 
-### New iPhone or iPad isn't connecting?
+### Device shows “Connected (limited support)”
 
-If your new iPhone or iPad isn’t appearing or showing any games, it’s usually because very new Apple devices (like upcoming iPhones or iPads) require a newer version of Xcode and Command Line Tools than what’s currently available from App Store. 
+If your device shows **Connected (limited support)**, Xcode may still be preparing the device or you may need a newer Xcode and command-line tools version (common with beta or very new iOS versions).
 
-You need to install the latest XCODE beta and Command Line tools here: https://developer.apple.com/download/ 
+1. Install the latest Xcode beta and command-line tools: https://developer.apple.com/download/ 
 
-Switch to the latest Xcode Beta and its Command Line Tools in Terminal:
+2. Switch to Xcode Beta in Terminal:
 ```
 sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer
 ```
-Then verify your setup:
+3. Verify your setup:
 ```
 xcode-select -p
 xcodebuild -version
 ```
-You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.x (or newer)`
+
+> [!IMPORTANT]
+> You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.x` or newer)
 
 ## Known issues
 
@@ -195,18 +191,5 @@ xcrun devicectl manage unpair --device <DEVICE-UDID>
 
 and to many others who have helped! Thanks
 
-## Optional Compatibility Data
-Metal HUD Mobile Config can optionally send compatibility data to help me improve the app. 
-
-You’ll be asked once and data is only sent if you choose “Yes”.
-
-ONLY Includes:
-- Device model (eg - iPhone 17 Pro Max, iPhone18,2)
-- App/game name
-
-Does NOT include:
-- Personal info
-- Device identifiers
-- Logs
-
-This is to help improve app name detection and compatibility. 
+## ChatGPT
+This app has been built with ChatGPT 
