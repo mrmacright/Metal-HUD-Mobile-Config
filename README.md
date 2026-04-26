@@ -1,20 +1,22 @@
-<table border="0" cellspacing="0" cellpadding="0" style="border:0; border-collapse:collapse;">
-  <tr>
-    <td style="border:0; vertical-align: top; padding-right: 20px;">
-
 # Enable Metal HUD on iPhone, iPad & Apple TV!
 
+<table border="0" cellspacing="0" cellpadding="0">
+<tr>
+<td width="65%" style="border:none;">
+
 - Launch Metal HUD instantly for supported games  
-- View connected devices and running games (system apps hidden)  
-- Customize HUD presets, position, and scale *(Requires iOS 26 / iPadOS 26 / tvOS 26)*  
+- View connected devices and running games  
+- Customize HUD presets, position, and scale  
 - Save and relaunch games with HUD  
 - View logs directly in the app  
 
-    </td>
-    <td style="border:0;">
-      <img width="300" src="https://github.com/user-attachments/assets/4c910612-3b4d-41ee-af00-e076a6d657f8" />
-    </td>
-  </tr>
+</td>
+<td width="35%" align="right" style="border:none;">
+
+<img width="260" src="https://github.com/user-attachments/assets/327aff18-a173-4e56-93d1-220229cfde74" />
+
+</td>
+</tr>
 </table>
 
 ## Requirements 
