@@ -206,7 +206,8 @@ APP_DISPLAY_RENAME = {
     "HacPro-IOS-Shipping": "Borderlands Mobile",
     "cod": "Call of Duty: Mobile",
     "RainbowSixMobile": "Rainbow Six Mobile",
-    "Endfield": "Arknights: Endfield"
+    "Endfield": "Arknights: Endfield",
+    "HTGame-IOS-Shipping": "NTE: Neverness to Everness"
     
 }
 
@@ -1422,6 +1423,11 @@ def refresh_command_history_combo():
         device_display = entry.get("device_display") or entry.get("udid") or "Unknown Device"
 
         display_str = f"{device_display} - {display_app_name}"
+
+        # Keep the newest saved settings for this game/device combo
+        if display_str in appname_to_command:
+            continue
+
         display_entries.append(display_str)
         appname_to_command[display_str] = entry
 
@@ -1660,7 +1666,7 @@ def process_apps_output(output):
         "Dose.app", "Memoji.app", "Mind.app", "NanoAlarm.app", "NanoCalculator.app", "NanoCamera.app", "NanoHeartRhythm.app",
         "NanoMaps.app", "NanoMenstrualCycles.app", "NanoMusicRecognition.app", "NanoNowPlaying.app", "NanoOxygenSaturation.app", "NanoPassbook.app", "NanoReminders.app",
         "NanoSleep.app", "NanoStopwatch.app", "NanoTranslate.app", "NanoTVRemote.app", "StarWarp WatchKit App.app", "TinCan.app", "WatchApp.app",
-        "WatchApp.app", "WatchApp.app", "WhatsAppWatchApp.app",
+        "WatchApp.app", "WatchApp.app", "WhatsAppWatchApp.app", "NanoNotes.app", 
     ]
 
     unique_apps = {}
@@ -1850,8 +1856,8 @@ def run_command_in_thread(command):
         launch_output_text.after(0, lambda: update_launch_output(f"Error: {e}"))
 
 def show_temporary_status_message(message, duration=3000):
-    status_label.config(text=message)
-    status_label.after(duration, lambda: status_label.config(text=""))
+    launch_status_label.config(text=message)
+    launch_status_label.after(duration, lambda: launch_status_label.config(text=""))
 
 def save_app_path():
     udid = device_udid_combo.get().strip()
@@ -2438,11 +2444,31 @@ def on_app_path_select(event):
 app_path_combo.bind("<<ComboboxSelected>>", on_app_path_select)
 
 ttk.Label(scrollable_frame, text="Saved Games").pack(anchor="w", padx=padx_side)
-saved_paths_combo = ttk.Combobox(scrollable_frame, values=sorted(saved_paths.keys()))
-saved_paths_combo.pack(fill=tk.X, padx=padx_side, pady=5)
+
+saved_paths_combo = ttk.Combobox(
+    scrollable_frame,
+    values=sorted(saved_paths.keys()),
+    state="readonly",
+    width=40
+)
+saved_paths_combo.pack(anchor="w", padx=padx_side, pady=5)
+
+saved_paths_combo.bind("<FocusIn>", lambda e: saved_paths_combo.selection_clear())
+saved_paths_combo.bind("<Button-1>", lambda e: saved_paths_combo.selection_clear())
+
 saved_paths_combo.bind("<<ComboboxSelected>>", on_saved_path_select)
 
-ttk.Button(scrollable_frame, text="Delete Saved Game", command=delete_saved_path).pack(anchor="w", padx=padx_side, pady=(0, 10))
+ttk.Button(
+    scrollable_frame,
+    text="Save Game",
+    command=save_app_path
+).pack(anchor="w", padx=padx_side, pady=(0, 5))
+
+ttk.Button(
+    scrollable_frame,
+    text="Delete Saved Game",
+    command=delete_saved_path
+).pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 def extract_device_and_app_from_command(cmd):
     udid_match = re.search(r"--device\s+([^\s]+)", cmd)
@@ -2465,8 +2491,15 @@ history_display_entries = []
 appname_to_command = {}
 
 ttk.Label(scrollable_frame, text="Previous Games").pack(anchor="w", padx=padx_side)
-command_history_combo = ttk.Combobox(scrollable_frame, values=[], state="readonly")
-command_history_combo.pack(fill=tk.X, padx=padx_side, pady=(0, 10))
+command_history_combo = ttk.Combobox(
+    scrollable_frame,
+    values=[],
+    state="readonly",
+    width=40
+)
+command_history_combo.bind("<FocusIn>", lambda e: command_history_combo.selection_clear())
+command_history_combo.bind("<Button-1>", lambda e: command_history_combo.selection_clear())
+command_history_combo.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 refresh_command_history_combo()
 
@@ -2517,7 +2550,6 @@ hud_arrow_font = tkfont.Font(size=18, weight="bold")
 hud_advanced_open = tk.BooleanVar(value=False)
 
 hud_advanced_header = ttk.Frame(scrollable_frame)
-hud_advanced_header.pack(fill="x", padx=padx_side, pady=(10, 5))
 
 hud_arrow_label = ttk.Label(
     hud_advanced_header,
@@ -2556,24 +2588,33 @@ hud_advanced_header.bind("<Button-1>", lambda e: toggle_hud_advanced())
 hud_arrow_label.bind("<Button-1>", lambda e: toggle_hud_advanced())
 hud_advanced_title.bind("<Button-1>", lambda e: toggle_hud_advanced())
 
+HUD_CONTROL_WIDTH = 370
+
 # === HUD PRESETS ===
 
-ttk.Label(hud_advanced_frame, text="HUD Preset").pack(anchor="w")
+HUD_CONTROL_WIDTH = 380
 
-preset_dropdown = ttk.OptionMenu(
+ttk.Label(hud_advanced_frame, text="Metric Presets").pack(anchor="w")
+
+preset_dropdown = ttk.Combobox(
     hud_advanced_frame,
-    hud_preset_var,
-    "Default",
-    "Default",
-    "Simple",
-    "FPS Only",
-    "Thermals",
-    "Compiled Shaders",
-    "Rich",
-    "Full",
-    "Custom"
+    textvariable=hud_preset_var,
+    values=[
+        "Default",
+        "Simple",
+        "FPS Only",
+        "Thermals",
+        "Compiled Shaders",
+        "Rich",
+        "Full",
+        "Custom"
+    ],
+    state="readonly",
+    height=8,
+    width=39,
+    justify="left"
 )
-preset_dropdown.pack(fill=tk.X, pady=(0, 10))
+preset_dropdown.pack(anchor="w", pady=(0, 10))
 
 hud_elements_display_map = {
     "Metal Device": "device",
@@ -2647,7 +2688,7 @@ on_preset_change()
 
 # === HUD ALIGNMENT OPTIONS ===
 
-ttk.Label(hud_advanced_frame, text="Set HUD Location").pack(anchor="w", pady=(5, 0))
+ttk.Label(hud_advanced_frame, text="Location").pack(anchor="w", pady=(5, 0))
 
 hud_alignment_var = tk.StringVar(value="Top-Right")
 
@@ -2670,9 +2711,10 @@ hud_alignment_combo = ttk.Combobox(
     textvariable=hud_alignment_var,
     values=list(hud_alignment_display_map.keys()),
     state="readonly",
-    height=5
+    height=5,
+    width=39
 )
-hud_alignment_combo.pack(fill=tk.X, pady=(0, 10))
+hud_alignment_combo.pack(anchor="w", pady=(0, 10))
 
 def get_alignment_internal():
     """Return the internal string used by HUD (e.g., 'topleft')."""
@@ -2689,21 +2731,187 @@ hud_scale_map = {
     "Max": "1.0"
 }
 
-ttk.Label(hud_advanced_frame, text="Set HUD Scale").pack(anchor="w")
+ttk.Label(hud_advanced_frame, text="Scale").pack(anchor="w")
 
 hud_scale_var = tk.StringVar(value="Default")
+hud_scale_options = ["Small", "Default", "Large", "Larger", "Max"]
 
-hud_scale_options = list(hud_scale_map.keys())
-
-hud_scale_optionmenu = ttk.OptionMenu(
+hud_scale_slider_frame = tk.Frame(
     hud_advanced_frame,
-    hud_scale_var,
-    hud_scale_var.get(),
-    *hud_scale_options
+    bg=root.cget("bg"),
+    width=HUD_CONTROL_WIDTH,
+    height=38,
+    bd=0,
+    highlightthickness=0
 )
-hud_scale_optionmenu.pack(fill=tk.X, pady=(0, 10))
+hud_scale_slider_frame.pack(anchor="w", pady=(2, 6))
+hud_scale_slider_frame.pack_propagate(False)
+
+hud_scale_canvas = tk.Canvas(
+    hud_scale_slider_frame,
+    width=HUD_CONTROL_WIDTH,
+    height=38,
+    bg=root.cget("bg"),
+    bd=0,
+    highlightthickness=0
+)
+hud_scale_canvas.pack(fill=tk.BOTH, expand=True)
+
+hud_scale_value_label = ttk.Label(
+    hud_advanced_frame,
+    textvariable=hud_scale_var
+)
+hud_scale_value_label.pack(anchor="w", pady=(0, 10))
+
+def draw_round_rect(canvas, x1, y1, x2, y2, radius, **kwargs):
+    points = [
+        x1 + radius, y1,
+        x2 - radius, y1,
+        x2, y1,
+        x2, y1 + radius,
+        x2, y2 - radius,
+        x2, y2,
+        x2 - radius, y2,
+        x1 + radius, y2,
+        x1, y2,
+        x1, y2 - radius,
+        x1, y1 + radius,
+        x1, y1
+    ]
+    return canvas.create_polygon(points, smooth=True, **kwargs)
+
+
+def scale_name_to_index(name):
+    if name in hud_scale_options:
+        return hud_scale_options.index(name)
+    return hud_scale_options.index("Default")
+
+
+def update_hud_scale_from_slider_index(index):
+    index = max(0, min(4, int(round(index))))
+    hud_scale_var.set(hud_scale_options[index])
+    draw_hud_scale_slider()
+
+
+def draw_hud_scale_slider():
+    hud_scale_canvas.delete("all")
+
+    width = hud_scale_canvas.winfo_width()
+    if width <= 1:
+        width = 600
+
+    height = 38
+    pad_x = 32
+    track_y = 19
+    track_h = 5
+    knob_r = 10
+
+    min_x = pad_x + 55
+    max_x = width - pad_x - 55
+
+    selected_index = scale_name_to_index(hud_scale_var.get())
+
+    if max_x <= min_x:
+        return
+
+    step = (max_x - min_x) / 4
+    knob_x = min_x + (selected_index * step)
+
+    # Background pill
+    draw_round_rect(
+        hud_scale_canvas,
+        4, 4, width - 4, height - 4,
+        26,
+        fill="white",
+        outline=""
+    )
+
+    # Small / max icons
+    hud_scale_canvas.create_text(
+        pad_x,
+        track_y,
+        text="↙↗",
+        fill="#8E8E93",
+        font=("SF Pro Text", 12, "bold")
+    )
+
+    hud_scale_canvas.create_text(
+        width - pad_x,
+        track_y,
+        text="↗↙",
+        fill="#8E8E93",
+        font=("SF Pro Text", 12, "bold")
+    )
+
+    # Track background
+    hud_scale_canvas.create_line(
+        min_x,
+        track_y,
+        max_x,
+        track_y,
+        fill="#DADADA",
+        width=track_h,
+        capstyle=tk.ROUND
+    )
+
+    # Blue selected track
+    hud_scale_canvas.create_line(
+        min_x,
+        track_y,
+        knob_x,
+        track_y,
+        fill="#0A84FF",
+        width=track_h,
+        capstyle=tk.ROUND
+    )
+
+    # Knob shadow
+    hud_scale_canvas.create_oval(
+        knob_x - knob_r + 2,
+        track_y - knob_r + 3,
+        knob_x + knob_r + 2,
+        track_y + knob_r + 3,
+        fill="#D0D0D0",
+        outline=""
+    )
+
+    # Knob
+    hud_scale_canvas.create_oval(
+        knob_x - knob_r,
+        track_y - knob_r,
+        knob_x + knob_r,
+        track_y + knob_r,
+        fill="white",
+        outline=""
+    )
+
+
+def on_hud_scale_slider_event(event):
+    width = hud_scale_canvas.winfo_width()
+    pad_x = 42
+    min_x = pad_x + 55
+    max_x = width - pad_x - 55
+
+    if max_x <= min_x:
+        return
+
+    percent = (event.x - min_x) / (max_x - min_x)
+    index = round(percent * 4)
+    update_hud_scale_from_slider_index(index)
+
+
+hud_scale_canvas.bind("<Button-1>", on_hud_scale_slider_event)
+hud_scale_canvas.bind("<B1-Motion>", on_hud_scale_slider_event)
+hud_scale_canvas.bind("<Configure>", lambda e: draw_hud_scale_slider())
+
+hud_scale_var.trace_add("write", lambda *args: draw_hud_scale_slider())
+
+root.after(100, draw_hud_scale_slider)
 
 # === RESTORE SAVED HUD STATE ===
+
+saved_preset = hud_settings_saved.get("preset", "Default")
+hud_preset_var.set(saved_preset)
 
 saved_custom = hud_settings_saved.get("custom_elements", {})
 for key, var in hud_elements_vars.items():
@@ -2723,6 +2931,7 @@ for key, var in hud_elements_vars.items():
 
     saved_scale = hud_settings_saved.get("scale", "Default")
     hud_scale_var.set(saved_scale)
+    root.after(100, draw_hud_scale_slider)
 
 # === LAUNCH METAL HUD ===
 
@@ -2731,7 +2940,46 @@ launch_button = ttk.Button(
     text="Launch App with Metal Performance HUD",
     command=launch_app
 )
-launch_button.pack(anchor="w", padx=padx_side, pady=(10, 10))
+
+style = ttk.Style()
+
+current_font = tkfont.nametofont("TkDefaultFont")
+larger_font = current_font.copy()
+larger_font.configure(size=int(current_font.cget("size") * 1.2))
+
+style.configure(
+    "Launch.TButton",
+    font=larger_font,
+    padding=(30, 11)
+)
+
+launch_button.configure(style="Launch.TButton")
+
+launch_button.pack(anchor="w", padx=padx_side, pady=(4, 2))
+
+launch_status_label = ttk.Label(
+    scrollable_frame,
+    text="",
+    foreground="red"
+)
+
+analytics_checkbox = ttk.Checkbutton(
+    scrollable_frame,
+    text="Share anonymous compatibility data",
+    variable=analytics_opt_in_var,
+    command=lambda: save_data()
+)
+analytics_checkbox.pack(anchor="w", padx=padx_side, pady=(5, 2))
+
+analytics_note = ttk.Label(
+    scrollable_frame,
+    text="Includes device model, app name and connection state only"
+)
+analytics_note.pack(anchor="w", padx=padx_side, pady=(0, 8))
+
+launch_status_label.pack(anchor="w", padx=padx_side, pady=(0, 10))
+
+hud_advanced_header.pack(fill="x", padx=padx_side, pady=(10, 5))
 
 def update_launch_button_text(app_name):
     """
@@ -2766,20 +3014,6 @@ def toggle_logs():
         canvas.yview_moveto(1.0)
 
         launch_output_text.see(tk.END)
-
-analytics_checkbox = ttk.Checkbutton(
-    scrollable_frame,
-    text="Share anonymous compatibility data",
-    variable=analytics_opt_in_var,
-    command=lambda: save_data()
-)
-analytics_checkbox.pack(anchor="w", padx=padx_side, pady=(0, 5))
-
-analytics_note = ttk.Label(
-    scrollable_frame,
-    text="Includes device model, app name and connection state only"
-)
-analytics_note.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
 toggle_log_button = ttk.Button(
     hud_advanced_frame,

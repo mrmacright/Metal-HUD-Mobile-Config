@@ -15,8 +15,8 @@ OPTIONS = {
     "arch": "arm64",
     "plist": {
         "CFBundleName": "Metal HUD Mobile Config",
-        "CFBundleShortVersionString": "3.0.4",
-        "CFBundleVersion": "3.0.4",
+        "CFBundleShortVersionString": "3.0.5",
+        "CFBundleVersion": "3.0.5",
         "CFBundleIdentifier": "com.stewie.metalhud",
         "LSMinimumSystemVersion": "15.6",
     },
