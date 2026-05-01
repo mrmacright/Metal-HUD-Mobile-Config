@@ -4,6 +4,10 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 
 <img width="300" alt="MetalHUDVideo" src="https://github.com/user-attachments/assets/affeb269-0c07-4c13-90bd-3e12c754ed25" />
 
+- For support email: business@mrmacright.com
+
+- [Support my work on Buy Me a Coffee](https://buymeacoffee.com/mrmacright)
+
 ## Requirements 
 
 ▶ macOS Tahoe 26.2 or later and [M1 or later](https://support.apple.com/en-au/116943)
@@ -166,12 +170,6 @@ xcrun devicectl device process launch \
 ```
 xcrun devicectl manage unpair --device <DEVICE-UDID>
 ```
-
-## Other
-
-[Join my Discord server for support](https://discord.gg/RaXugyqp63)
-
-[Support my work on Buy Me a Coffee](https://buymeacoffee.com/mrmacright)
 
 ## Special thanks
 
