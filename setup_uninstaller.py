@@ -11,8 +11,8 @@ OPTIONS = {
     "plist": {
         "CFBundleName": "Uninstaller Metal HUD Mobile Config",
         "CFBundleIdentifier": "com.stewie.metalhud.uninstaller",
-        "CFBundleShortVersionString": "3.0.5",
-        "CFBundleVersion": "3.0.5",
+        "CFBundleShortVersionString": "4.0.0",
+        "CFBundleVersion": "4.0.0",
         "LSMinimumSystemVersion": "15.6",
     },
 }
