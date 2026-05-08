@@ -73,25 +73,31 @@ iOS 17–18 only support the Default preset.
 **Available (paired + wireless)**  
 Paired and reachable over Wi-Fi — no USB cable needed.
 
-**Connected**  
+▶ Connected
+
 Device connected and ready.
 
-**Available (preparing)**  
+▶ Available (preparing) 
+
 Device is visible, but Xcode may still be preparing it or requires pairing. Metal HUD may still work.
 
-**Available (pairing required)**  
+▶ Available (pairing required)
+
 Device is visible but may need pairing or trust confirmation. Connect via USB and tap Trust if prompted.
 
-**Connected (limited support)**  
+▶ Connected (limited support)
+
 Xcode may still be preparing the device. If you can't connect, install the latest Xcode beta and switch to it:
 ```bash
 sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer
 ```
 
-**Unavailable**  
+▶ Unavailable
+
 Device is offline, turned off, or not reachable on the same Wi-Fi network.
 
-**Unsupported**  
+▶ Unsupported
+
 This device does not support Metal HUD.
 
 ### Why isn't Game Mode turning on?
