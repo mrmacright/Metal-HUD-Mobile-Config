@@ -32,51 +32,85 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 > - Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which cannot run on iOS  
 > - iOS 16 or earlier is not supported as `devicectl` is unavailable
 
+## CONNECTION HELP
+
+### How to launch a game with Metal HUD
+
+Apps are only detectable when already open and in the foreground.
+
+1. Launch the game on your device
+2. Keep it open in the foreground
+3. Click **Show Running Games**
+4. Choose your game → Launch App with Metal HUD
+
+### Device not connecting?
+
+If you can't connect to a device, it's likely not paired correctly. Try the following steps:
+
+1. Connect your iPhone or iPad via USB
+2. Unlock the device
+3. Tap **Trust This Computer** if prompted
+4. On the Mac, click **Allow** if asked to connect the accessory
+
+> [!IMPORTANT]
+> If you previously dismissed the trust prompt, reset it on the device and try again:
+> - Settings → General → Transfer or Reset iPhone → Reset → Reset Location & Privacy
+
 ### How to connect to Apple TV
 1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
 2. Open Xcode → Window → Devices and Simulators → Discovered
 3. Pair Apple TV → enter verification code → Connect
 4. Open Metal HUD Mobile Config → List Devices
 
-> [!IMPORTANT]
-> You might need to re-pair after tvOS/macOS updates
+### Custom HUD metrics not working?
 
-## CONNECTION HELP
+Custom metrics, position, and scale require iOS 26, iPadOS 26, or tvOS 26 or later.
 
-### No games detected?
-Apps are only detectable when already open and in the foreground: 
-1. Launch the game on your device  
-2. Keep it open in the foreground  
-3. Click **Show Running Games** again  
+iOS 17–18 only support the Default preset.
 
-### Device not connecting?
+### Connection states
 
-If you can't connect to a device, it's likely not paired correctly. Try the following steps:
+**Available (paired + wireless)**  
+Paired and reachable over Wi-Fi — no USB cable needed.
 
-1. Connect your iPhone or iPad via USB  
-2. Unlock the device  
-3. On the device, tap **Trust This Computer** if prompted  
-4. On the Mac, click **Allow** if asked to connect the accessory  
+**Connected**  
+Device connected and ready.
 
-> [!IMPORTANT]
-> If you previously dismissed the trust prompt, reset it on the device and try again:
-> - Settings → General → Transfer or Reset iPhone → Reset → Reset Location & Privacy
+**Available (preparing)**  
+Device is visible, but Xcode may still be preparing it or requires pairing. Metal HUD may still work.
 
-### Check connection in Xcode
+**Available (pairing required)**  
+Device is visible but may need pairing or trust confirmation. Connect via USB and tap Trust if prompted.
 
-Sometimes macOS has not finished preparing the device, especially on first connection or after iOS/macOS updates.
+**Connected (limited support)**  
+Xcode may still be preparing the device. If you can't connect, install the latest Xcode beta and switch to it:
+```bash
+sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer
+```
 
-1. Open Xcode → Window → Devices and Simulators
+**Unavailable**  
+Device is offline, turned off, or not reachable on the same Wi-Fi network.
 
-2. Wait for Xcode to finish preparing the device
+**Unsupported**  
+This device does not support Metal HUD.
 
-<img src="https://github.com/user-attachments/assets/ad1995ef-1b16-473d-b827-9eeedff3255c" width="600" />
+### Why isn't Game Mode turning on?
 
-<img src="https://github.com/user-attachments/assets/29480f4c-2b41-4773-a27b-c02eb8f77286" width="600" />
+Game Mode turns on automatically for supported games. If it isn't turning on, the game likely doesn't support Game Mode yet. This can only be enabled by the game developer in Xcode — external tools cannot force it on.
 
-3. Confirm your device is connected, then return to Metal HUD Mobile Config
+### Is it safe to use with online games?
 
-<img src="https://github.com/user-attachments/assets/d02a60b0-dec7-4852-94e4-aeb9b9989004" width="350" />
+Metal Performance HUD has been widely used in games like PUBG MOBILE, COD: Mobile, and Genshin Impact. However, some anti-cheat systems may detect it and block the game from launching.
+
+Use at your own risk, especially in competitive online games.
+
+### Why isn't Metal HUD showing?
+
+If the game launches but the Metal HUD does not appear, the game is likely not using Metal graphics (for example, it may use OpenGL instead). Metal HUD only works with games powered by Metal.
+
+### Why is a game called something different than its actual name?
+
+This app detects the game's internal app name from the App Store package. Some developers do not use the official game title internally, so certain games may appear with generic names like “Game”.
 
 ### Xcode license
 
@@ -85,35 +119,6 @@ Normally the Xcode license is accepted automatically on first launch. If it poss
 ```bash
 sudo xcodebuild -license
 ```
-
-### Device shows “Connected (limited support)”
-
-If your device shows **Connected (limited support)**, Xcode may still be preparing the device or you may need a newer Xcode and command-line tools version (common with beta or very new iOS versions).
-
-1. Install the latest Xcode beta and command-line tools: https://developer.apple.com/download/ 
-
-2. Switch to Xcode Beta in Terminal:
-```
-sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer
-```
-3. Verify your setup:
-```
-xcode-select -p
-xcodebuild -version
-```
-
-> [!IMPORTANT]
-> You should see a path ending in `Xcode-beta.app/Contents/Developer` and a recent build version (for example, `Xcode 26.x` or newer)
-
-## Known issues
-
-- Game names may differ from App Store names
-
-- Metal HUD does not work with games not powered by Metal, for example OpenGL-based games
-  
-- Some games with anti-cheat might not work with Metal HUD or could possibly ban you
-  
-- If you’ve manually adjusted Metal HUD Metrics on your iPhone/iPad under Developer → Graphics HUD (iOS 26 / iPadOS 26 / tvOS 26), the Default Metal HUD preset will launch using your custom metrics. Press **Reset** on your device to revert to the default metrics
 
 ## Manual commands in terminal
 

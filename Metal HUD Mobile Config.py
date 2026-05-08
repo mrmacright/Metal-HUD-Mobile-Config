@@ -1,7 +1,8 @@
 # ==========================================================
-#  METAL HUD MOBILE CONFIG 
+#  METAL HUD MOBILE CONFIG
 #  Author: Stewie (MrMacRight)
-#  Purpose: Metal HUD iOS launcher GUI & iOS device management 
+#  Purpose: Metal HUD iOS launcher GUI & iOS device management
+#  Copyright © 2025 Stewie (MrMacRight). All rights reserved.
 # ==========================================================
 
 # === IMPORTS AND INITIAL SETUP ===
@@ -20,7 +21,7 @@ import signal
 from tkinter.ttk import Progressbar
 import tkinter.font as tkfont
 import webbrowser
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageEnhance
 import glob
 
 process = None
@@ -69,13 +70,15 @@ LAST_DEVICE_SCAN = []
 DEVICE_ICON_ROOT = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "assets",
+    "UI",
     "Devices"
 )
 
 CONNECTION_ICON_ROOT = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "assets",
-    "Connection"
+    "UI",
+    "Wireless State"
 )
 
 DEVICE_ICON_CACHE = {}
@@ -105,7 +108,6 @@ STATE_ICON_NAME_MAP = {
 }
 
 OPEN_GAME_WARNING_SHOWN = False
-WARZONE_WARNING_SHOWN = False
 FARLIGHT_WARNING_SHOWN = False
 DEVICE_PREPARING_WARNING_SHOWN = False
 RESTORING_FROM_PROFILE = False
@@ -124,29 +126,6 @@ xcode_status_var = None
 startup_finished = False
 
 # === LOG AND DEVICE DETECTION HELPERS ===
-WARZONE_LOG_INDICATORS = [
-    "telemetry.codefusion.technology",
-    "codefusion.technology",
-    "telemetry.codefusion",
-    "app terminated due to signal 10",
-    "acquired tunnel connection to device",
-]
-
-def detect_warzone_anti_cheat(output: str) -> bool:
-    """
-    Return True only if the output matches known Warzone anti-cheat patterns:
-    1. Connection to telemetry.codefusion.technology
-    2. App terminated due to signal 10
-    """
-    if not output:
-        return False
-
-    text = output.lower()
-    if "telemetry.codefusion.technology" in text and "app terminated due to signal 10" in text:
-        return True
-
-    return False
-
 FARLIGHT_LOG_INDICATORS = [
     "device anomaly detected",                
     "temporarily unable to access the game",  
@@ -221,18 +200,10 @@ def add_display_name(app_name: str) -> str:
     return APP_DISPLAY_RENAME.get(app_name, app_name)
 
 def make_unique_app_names(app_list):
-    counts = {}
     display_list = []
-    internal_map = {}
 
-    for i, app in enumerate(app_list):
-        display = add_display_name(app)
-
-        counts[display] = counts.get(display, 0) + 1
-        unique_display = display + ("\u200B" * counts[display])
-
-        display_list.append(display)  
-        internal_map[display] = app  
+    for app in app_list:
+        display_list.append(add_display_name(app))
 
     return display_list, app_list
 
@@ -424,7 +395,6 @@ def get_connection_icon(state: str):
 
         img = img.resize((20, 14), Image.LANCZOS)
 
-        from PIL import ImageEnhance
         img = ImageEnhance.Sharpness(img).enhance(1.2)
 
         image = ImageTk.PhotoImage(img)
@@ -482,105 +452,7 @@ def update_show_games_button_text(device):
     model = device["model"].replace("?", "'")
     show_games_button.config(text=f"Show games on {model}")
 
-def build_device_row_left_text(widget, device: dict) -> str:
-    row_font = tkfont.Font(font=widget.cget("font"))
 
-    name = truncate_text_to_px(device["name"], DEVICE_NAME_MAX_PX, row_font)
-
-    state = truncate_text_to_px(
-        get_display_state_text(device["state"]),
-        DEVICE_STATE_MAX_PX,
-        row_font
-    )
-
-    return f"\t{name}\t{state}\t"
-
-
-def render_devices_with_icons(widget, devices):
-    widget.config(state='normal')
-    widget.delete("1.0", tk.END)
-
-    widget._icon_refs = []
-    widget._row_icon_slots = []
-    widget._device_rows = list(devices)
-
-    bg = widget.cget("background")
-
-    for i, d in enumerate(devices):
-        device_icon = get_device_icon(d["model"])
-        connection_icon = get_connection_icon(d["state"])
-
-        row_slots = []
-
-        device_icon_slot = tk.Frame(
-            widget,
-            width=DEVICE_ICON_SLOT_WIDTH,
-            height=DEVICE_ICON_SLOT_HEIGHT,
-            bg=bg,
-            bd=0,
-            highlightthickness=0
-        )
-        device_icon_slot.pack_propagate(False)
-        device_icon_slot._icon_label = None
-
-        if device_icon:
-            widget._icon_refs.append(device_icon)
-
-            icon_label = tk.Label(
-                device_icon_slot,
-                image=device_icon,
-                bg=bg,
-                bd=0,
-                highlightthickness=0
-            )
-            icon_label.image = device_icon
-            device_icon_slot._icon_label = icon_label
-            icon_label.place(relx=1.0, rely=0.5, x=-4, anchor="e")
-
-        row_slots.append(device_icon_slot)
-        widget.window_create(tk.END, window=device_icon_slot, align="center")
-
-        widget.insert(tk.END, build_device_row_left_text(widget, d))
-
-        connection_icon_slot = tk.Frame(
-            widget,
-            width=CONNECTION_ICON_SLOT_WIDTH,
-            height=CONNECTION_ICON_SLOT_HEIGHT,
-            bg=bg,
-            bd=0,
-            highlightthickness=0
-        )
-        connection_icon_slot.pack_propagate(False)
-        connection_icon_slot._icon_label = None
-
-        if connection_icon:
-            widget._icon_refs.append(connection_icon)
-
-            connection_label = tk.Label(
-                connection_icon_slot,
-                image=connection_icon,
-                bg=bg,
-                bd=0,
-                highlightthickness=0
-            )
-            connection_label.image = connection_icon
-            connection_icon_slot._icon_label = connection_label
-            connection_label.place(relx=0.5, rely=0.5, anchor="center")
-
-        row_slots.append(connection_icon_slot)
-        widget.window_create(tk.END, window=connection_icon_slot, align="center")
-
-        widget.insert(tk.END, build_device_row_right_text(d))
-
-        widget._row_icon_slots.append(row_slots)
-
-        if i < len(devices) - 1:
-            widget.insert(tk.END, "\n")
-
-    widget.config(state='disabled')
-
-def build_device_row_right_text(device: dict) -> str:
-    return f"\t{device['model']}".replace("?", "'")
 
 def highlight_device_row(widget, line_num):
     selected_bg = _SELECTION
@@ -945,7 +817,7 @@ def show_xcode_overlay(
     )
     panel.place(relx=0.5, rely=0.5, anchor="center", width=700, height=360)
 
-    icon_path = resource_path("assets", "Xcode.png")
+    icon_path = resource_path("assets", "UI", "Xcode.png")
     if os.path.exists(icon_path):
         img = Image.open(icon_path).convert("RGBA")
         img.thumbnail((120, 120), Image.LANCZOS)
@@ -1063,17 +935,6 @@ def ensure_xcode_ready_or_exit():
         return
 
     developer_dir = os.path.join(xcode_app, "Contents", "Developer")
-
-    try:
-        result = subprocess.run(
-            ["xcode-select", "-p"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            text=True
-        )
-        current = result.stdout.strip() if result.returncode == 0 else ""
-    except Exception:
-        current = ""
 
     if os.path.exists(developer_dir):
         try:
@@ -1295,7 +1156,7 @@ _FG_SECONDARY  = "#3A3A3C"
 _FG_TERTIARY   = "#636366"  
 _FG_PLACEHOLDER= "#AEAEB2"
 _RED           = "#FF3B30"   
-_SELECTION     = "#CCE4FF"   # 
+_SELECTION     = "#CCE4FF"
 
 _FONT_BODY     = ("SF Pro Text", 13)
 _FONT_BODY_MED = ("SF Pro Text", 13, "bold")
@@ -1419,14 +1280,14 @@ _style.map("Launch.TButton",
     relief=[("pressed", "flat"), ("active", "flat")]
 )
 
-_cb_asset_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "Checkbox")
+_cb_asset_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "UI", "Checkbox")
 _CB_SIZE = 13
 _cb_uncheck_img = ImageTk.PhotoImage(Image.open(os.path.join(_cb_asset_root, "Uncheck.png")).resize((_CB_SIZE, _CB_SIZE), Image.LANCZOS))
 _cb_check_img   = ImageTk.PhotoImage(Image.open(os.path.join(_cb_asset_root, "Check.png")).resize((_CB_SIZE, _CB_SIZE), Image.LANCZOS))
 
 # === LOADING SPINNER ===
 _SPINNER_FRAME_COUNT = 12
-_raw_spinner = Image.open(resource_path("assets", "loading.png")).convert("RGBA").resize((24, 24), Image.LANCZOS)
+_raw_spinner = Image.open(resource_path("assets", "UI", "loading.png")).convert("RGBA").resize((24, 24), Image.LANCZOS)
 _spinner_frames = [
     ImageTk.PhotoImage(_raw_spinner.rotate(-i * (360 // _SPINNER_FRAME_COUNT), resample=Image.BICUBIC))
     for i in range(_SPINNER_FRAME_COUNT)
@@ -1640,8 +1501,6 @@ def save_data():
     try:
         with open(DATA_FILE, "w") as f:
             json.dump(data, f, indent=2)
-        print(f"Data saved to {DATA_FILE}")
-        print(f"Saved data content:\n{json.dumps(data, indent=2)}")
     except Exception as e:
         print("Error saving data:", e)
 
@@ -1667,18 +1526,6 @@ def ask_analytics_permission(force=False):
 
     analytics_opt_in = result
     save_data()
-
-def maybe_prompt_analytics_after_launch():
-    global analytics_prompt_launch_count, analytics_opt_in
-
-    if analytics_opt_in is not None:
-        return
-
-    analytics_prompt_launch_count += 1
-    save_data()
-
-    if analytics_prompt_launch_count >= 3:
-        root.after(800, ask_analytics_permission)
 
 def maybe_prompt_analytics_after_launch():
     global analytics_prompt_launch_count, analytics_opt_in
@@ -1773,7 +1620,7 @@ def _preload_connection_help_images():
     import tempfile, subprocess as _sp
 
     try:
-        _icns = resource_path("MyIcon.icns")
+        _icns = resource_path("assets", "App Icons", "MyIcon.icns")
         _fd, _tmp = tempfile.mkstemp(suffix=".png")
         os.close(_fd)
         _sp.run(["sips", "-s", "format", "png", "--resampleHeightWidth", "104", "104",
@@ -1783,7 +1630,7 @@ def _preload_connection_help_images():
         _chelp_img_cache["_icon_path"] = None
 
     try:
-        _p = resource_path("assets", "Connection Help", "No Games Detected", "iPhone 17 Pro Max_Metal HUD OFF.png")
+        _p = resource_path("assets", "Connection Help", "iPhone 17 Pro Max", "iPhone 17 Pro Max_Metal HUD OFF.png")
         _r = Image.open(_p).convert("RGBA")
         _w = 380
         _r = _r.resize((_w, int(_w * _r.height / _r.width)), Image.LANCZOS)
@@ -1792,23 +1639,16 @@ def _preload_connection_help_images():
         _chelp_img_cache["ngd_pil"] = None
 
     try:
-        _r = Image.open(resource_path("assets", "Trust This Computer.png")).convert("RGBA")
+        _r = Image.open(resource_path("assets", "Connection Help", "Trust This Computer.png")).convert("RGBA")
         _w = 300
         _r = _r.resize((_w, int(_w * _r.height / _r.width)), Image.LANCZOS)
         _chelp_img_cache["trust_pil"] = _r
     except Exception:
         _chelp_img_cache["trust_pil"] = None
 
-    try:
-        _r = Image.open(resource_path("assets", "XCODE connection.png")).convert("RGBA")
-        _w = 300
-        _r = _r.resize((_w, int(_w * _r.height / _r.width)), Image.LANCZOS)
-        _chelp_img_cache["xcode_conn_pil"] = _r
-    except Exception:
-        _chelp_img_cache["xcode_conn_pil"] = None
 
     try:
-        _r = Image.open(resource_path("assets", "Metal HUD.png")).convert("RGBA")
+        _r = Image.open(resource_path("assets", "Connection Help", "Metal HUD_iOS 26.png")).convert("RGBA")
         _w = 320
         _r = _r.resize((_w, int(_w * _r.height / _r.width)), Image.LANCZOS)
         _chelp_img_cache["hud_pil"] = _r
@@ -1816,7 +1656,7 @@ def _preload_connection_help_images():
         _chelp_img_cache["hud_pil"] = None
 
     try:
-        _r = Image.open(resource_path("assets", "Game Mode.png")).convert("RGBA")
+        _r = Image.open(resource_path("assets", "Connection Help", "Game Mode.png")).convert("RGBA")
         _gm_w = 420
         _r = _r.resize((_gm_w, int(_gm_w * _r.height / _r.width)), Image.LANCZOS)
         _chelp_img_cache["gamemode_pil"] = _r
@@ -1824,7 +1664,7 @@ def _preload_connection_help_images():
         _chelp_img_cache["gamemode_pil"] = None
 
     try:
-        _r = Image.open(resource_path("assets", "PUBG Mobile with Metal HUD.png")).convert("RGBA")
+        _r = Image.open(resource_path("assets", "Connection Help", "PUBG Mobile with Metal HUD.png")).convert("RGBA")
         _w = 500
         _r = _r.resize((_w, int(_w * _r.height / _r.width)), Image.LANCZOS)
         _chelp_img_cache["pubg_pil"] = _r
@@ -2843,8 +2683,7 @@ def run_command(command):
     except subprocess.CalledProcessError as e:
         output = e.output if e.output else str(e)
 
-    print(f"Command Output:\n{output}")
-    root.after(0, lambda: update_launch_output(output))  
+    root.after(0, lambda: update_launch_output(output))
 
     return output.strip()
 
@@ -3586,21 +3425,34 @@ def update_launch_output(output):
     append_log(output + "\n")
 
     global OPENGL_WARNING_SHOWN
-    if not OPENGL_WARNING_SHOWN and "OpenGL" in output:
+
+    text = (output or "").lower()
+
+    opengl_detected = any(marker in text for marker in [
+        "opengl es",
+        "gles is",
+        "sdl gl version",
+        "aaplopenglviewcontroller",
+    ])
+
+    if opengl_detected and not OPENGL_WARNING_SHOWN:
         OPENGL_WARNING_SHOWN = True
-        root.after(0, lambda: messagebox.showwarning(
-            "OpenGL Detected",
-            "Warning: OpenGL detected in the logs. Metal HUD may not work!"
-        ))
 
-    global WARZONE_WARNING_SHOWN, FARLIGHT_WARNING_SHOWN
-    if not WARZONE_WARNING_SHOWN and detect_warzone_anti_cheat(output):
-        WARZONE_WARNING_SHOWN = True
-        root.after(0, lambda: messagebox.showwarning(
-            "Warzone Not Supported",
-            "Note! Metal HUD doesn’t work with COD Warzone due to anti-cheat. The game may crash if you try to use it"
-        ))
+        def _show_opengl_button_warning():
+            launch_button.config(
+                text="OpenGL detected, Metal HUD may not work"
+            )
 
+            root.after(
+                10000,
+                lambda: update_launch_button_text(
+                    app_path_combo.get()
+                )
+            )
+
+        root.after(0, _show_opengl_button_warning)
+
+    global FARLIGHT_WARNING_SHOWN
     if not FARLIGHT_WARNING_SHOWN and detect_farlight_issue(output):
         FARLIGHT_WARNING_SHOWN = True
         root.after(0, lambda: messagebox.showwarning(
@@ -3653,7 +3505,7 @@ def send_analytics(device_model, app_name, connection_state):
             payload = json.dumps({
                 "device_model": device_model,
                 "app_name": app_name,
-                "connection_state": connection_state   # ← ADD THIS
+                "connection_state": connection_state
             }).encode("utf-8")
 
             req = urllib.request.Request(
@@ -3838,7 +3690,8 @@ def is_app_running(udid, bundle_id):
 # === APP LAUNCH AND METAL HUD EXECUTION ===
 
 def launch_app():
-    global current_launch_process
+    global current_launch_process, OPENGL_WARNING_SHOWN
+    OPENGL_WARNING_SHOWN = False
 
     udid = device_udid_combo.get().strip()
 

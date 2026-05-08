@@ -4,10 +4,10 @@ APP = ['Metal HUD Mobile Config.py']
 DATA_FILES = []
 
 OPTIONS = {
-    "iconfile": "MyIcon.icns",
+    "iconfile": "assets/App Icons/MyIcon.icns",
     "packages": ["tkinter"],
     "resources": [
-        "MyIcon.icns",
+        "assets/App Icons/MyIcon.icns",
         "setup_xcode.sh",
         "assets"
     ],
@@ -15,10 +15,11 @@ OPTIONS = {
     "arch": "arm64",
     "plist": {
         "CFBundleName": "Metal HUD Mobile Config",
-        "CFBundleShortVersionString": "4.0.0",
-        "CFBundleVersion": "4.0.0",
+        "CFBundleShortVersionString": "4.0.1",
+        "CFBundleVersion": "4.0.1",
         "CFBundleIdentifier": "com.stewie.metalhud",
         "LSMinimumSystemVersion": "15.6",
+        "NSHumanReadableCopyright": "Copyright © 2025 Stewie (MrMacRight). All rights reserved.",
     },
 }
 
