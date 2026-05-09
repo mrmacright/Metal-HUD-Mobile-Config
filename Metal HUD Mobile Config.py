@@ -99,11 +99,11 @@ CONNECTION_ICON_SLOT_WIDTH = 26
 CONNECTION_ICON_SLOT_HEIGHT = 23
 
 STATE_ICON_NAME_MAP = {
-    "available": "available",
-    "available (paired)": "available (paired)",
-    "unavailable": "unavailable",
-    "connected": "connected",
-    "connected (no ddi)": "connected (no DDI)",
+    "available": "Available (preparing)",
+    "available (paired)": "available (paired + wireless)",
+    "unavailable": "Unavailable",
+    "connected": "Connected",
+    "connected (no ddi)": "Connected (limited support)",
     "unsupported": "Unsupported",
 }
 
@@ -191,7 +191,10 @@ APP_DISPLAY_RENAME = {
     "cod": "Call of Duty: Mobile",
     "RainbowSixMobile": "Rainbow Six Mobile",
     "Endfield": "Arknights: Endfield",
-    "HTGame-IOS-Shipping": "NTE: Neverness to Everness"
+    "HTGame-IOS-Shipping": "NTE: Neverness to Everness",
+    "DeathStranding": "Death Stranding",
+    "Hitman WOA": "HITMAN World of Assassination",
+    "g112": "Racing Master"
     
 }
 
@@ -365,19 +368,19 @@ def get_connection_icon_path(state: str) -> str | None:
 
     if not filename:
         if "available (pairing)" in normalized:
-            filename = "available (pairing)"
+            filename = "available (pairing required)"
         elif normalized == "available":
-            filename = "available"
+            filename = "Available (preparing)"
         elif "available (paired)" in normalized:
-            filename = "available (paired)"
+            filename = "available (paired + wireless)"
         elif normalized == "unsupported":
             filename = "Unsupported"
         elif normalized.startswith("connected"):
-            filename = "connected"
+            filename = "Connected"
         elif normalized.startswith("unavailable"):
-            filename = "unavailable"
+            filename = "Unavailable"
         else:
-            filename = "connected"
+            filename = "Connected"
 
     path = os.path.join(CONNECTION_ICON_ROOT, f"{filename}.png")
     return path if os.path.exists(path) else None
