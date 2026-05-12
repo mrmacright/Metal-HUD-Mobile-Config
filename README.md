@@ -25,7 +25,7 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 
 ▶ [iPadOS 17 or later](https://support.apple.com/en-au/guide/ipad/ipad213a25b2/17.0/ipados/17.0)
 
-▶ Apple TV HD (2015) or later
+▶ Apple TV 4K (1st gen, 2017) or later
 
 > [!IMPORTANT]
 > - System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS, & tvOS  
@@ -61,6 +61,9 @@ If you can't connect to a device, it's likely not paired correctly. Try the foll
 2. Open Xcode → Window → Devices and Simulators → Discovered
 3. Pair Apple TV → enter verification code → Connect
 4. Open Metal HUD Mobile Config → List Devices
+
+> [!IMPORTANT]
+> Apple TV HD (2015) is not supported
 
 ### Custom HUD metrics not working?
 
