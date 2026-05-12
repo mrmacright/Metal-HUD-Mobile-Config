@@ -12,7 +12,7 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 
 ▶ macOS Tahoe 26.2 or later and [M1 or later](https://support.apple.com/en-au/116943)
 
-▶ Xcode 26.4.1 (20–30 GB free space recommended)
+▶ Xcode 26.5 (20–30 GB free space recommended)
 
 ▶ [Version 2.9.2](https://github.com/mrmacright/Metal-HUD-Mobile-Config/releases/tag/2.9.2) and earlier supports Intel Macs, but future compatibility is not guaranteed
 
