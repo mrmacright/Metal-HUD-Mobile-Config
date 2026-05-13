@@ -23,9 +23,14 @@ import tkinter.font as tkfont
 import webbrowser
 from PIL import Image, ImageTk, ImageEnhance
 import glob
+import urllib.request
 
 process = None
 current_launch_process = None
+
+CURRENT_VERSION = "4.0.4"
+GITHUB_RELEASES_API = "https://api.github.com/repos/mrmacright/Metal-HUD-Mobile-Config/releases/latest"
+GITHUB_RELEASES_PAGE = "https://github.com/mrmacright/Metal-HUD-Mobile-Config/releases/latest"
 
 MAX_LOG_LINES = 50000
 
@@ -57,6 +62,37 @@ def check_macos_version(min_version="26.2"):
         sys.exit(1)
 
 check_macos_version()
+
+# === UPDATE CHECK ===
+def check_for_updates():
+    def _fetch():
+        try:
+            req = urllib.request.Request(
+                GITHUB_RELEASES_API,
+                headers={"User-Agent": "Metal-HUD-Mobile-Config"}
+            )
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode())
+            latest = data.get("tag_name", "").lstrip("v")
+            current = CURRENT_VERSION.lstrip("v")
+            if latest and tuple(int(x) for x in latest.split(".")) > tuple(int(x) for x in current.split(".")):
+                root.after(0, lambda: _prompt_update(latest))
+        except Exception:
+            pass
+
+    def _prompt_update(latest):
+        answer = messagebox.askyesno(
+            "Update Available",
+            f"A new version of Metal HUD Mobile Config is available.\n\n"
+            f"Current version:  {CURRENT_VERSION}\n"
+            f"Latest version:    {latest}\n\n"
+            f"Would you like to download the update?",
+            icon="info"
+        )
+        if answer:
+            webbrowser.open(GITHUB_RELEASES_PAGE)
+
+    threading.Thread(target=_fetch, daemon=True).start()
 
 # === DEVICE MODEL CODE → FRIENDLY NAME MAP ===
 DEVICE_MODEL_FRIENDLY_NAMES = {
@@ -329,6 +365,7 @@ APP_DISPLAY_RENAME = {
     "DeathStranding": "Death Stranding",
     "Hitman WOA": "HITMAN World of Assassination",
     "PESmobile": "eFootball",
+    "SevenDeadlySins_Origin": "The Seven Deadly Sins: Origin",
     "g112": "Racing Master"
     
 }
@@ -2293,7 +2330,7 @@ def show_connection_help(scroll_to=None):
 
     tk.Label(
         _plat_text,
-        text="▶    Apple TV HD (2015) or later",
+        text="▶    Apple TV 4K (1st gen, 2017) or later",
         font=("SF Pro Text", 13),
         fg=_FG_PRIMARY,
         bg=_SURFACE,
@@ -2445,6 +2482,18 @@ def show_connection_help(scroll_to=None):
         anchor="w",
     ).pack(anchor="w")
     _plat_repair_frame.pack(anchor="w", pady=(12, 0), fill="x")
+
+    _atv_unsupported_frame = tk.Frame(_atv_text, bg=_BG, padx=14, pady=8)
+    tk.Label(
+        _atv_unsupported_frame,
+        text="Apple TV HD is not supported",
+        font=("SF Pro Text", 13),
+        fg=_FG_PRIMARY,
+        bg=_BG,
+        justify="left",
+        anchor="w",
+    ).pack(anchor="w")
+    _atv_unsupported_frame.pack(anchor="w", pady=(8, 0), fill="x")
 
     txt.window_create(tk.END, window=_atv_frame, stretch=True)
     txt.insert(tk.END, "\n")
@@ -2925,6 +2974,23 @@ def open_xcode_download():
     subprocess.Popen(["open", "macappstore://itunes.apple.com/app/id497799835"])
 
 # === DEVICE MANAGEMENT ===
+def device_sort_key(d):
+    raw = d["state"]
+    state = get_display_state_text(raw).lower()
+    if state.startswith("available (paired)"):
+        priority = 0
+    elif state.startswith("available"):
+        priority = 1
+    elif state.startswith("connected"):
+        priority = 2
+    elif raw == "unsupported":
+        priority = 3
+    elif state.startswith("unavailable"):
+        priority = 4
+    else:
+        priority = 99
+    return (priority, d["name"].lower())
+
 def restore_device_preview():
     """Populate the device list from the last saved scan without running devicectl."""
     global DEVICE_INFO_CACHE, DEVICE_STATE_CACHE
@@ -2962,7 +3028,8 @@ def restore_device_preview():
     DEVICE_INFO_CACHE = device_info
     DEVICE_STATE_CACHE = device_states
 
-    render_devices_with_icons(device_list_frame, LAST_DEVICE_SCAN)
+    sorted_devices = sorted(LAST_DEVICE_SCAN, key=device_sort_key)
+    render_devices_with_icons(device_list_frame, sorted_devices)
     device_list_frame.device_info = device_info
 
     udids = [d["identifier"] for d in LAST_DEVICE_SCAN]
@@ -3070,30 +3137,15 @@ def list_devices():
                 if normalize_model_for_icon(model) == "Apple Watch":
                     state = "unsupported"
 
+                if "AppleTV5,3" in model:
+                    state = "unsupported"
+
                 devices.append({
                     "name": name,
                     "identifier": identifier,
                     "state": state,
                     "model": model
                 })
-
-            def device_sort_key(d):
-                state = get_display_state_text(d["state"]).lower()
-
-                if state.startswith("available (paired)"):
-                    priority = 0
-                elif state.startswith("available"):
-                    priority = 1
-                elif state.startswith("connected"):
-                    priority = 2
-                elif state.startswith("unavailable"):
-                    priority = 3
-                elif state == "unsupported":
-                    priority = 4
-                else:
-                    priority = 99
-
-                return (priority, d["name"].lower())
 
             devices.sort(key=device_sort_key)
 
@@ -4900,6 +4952,7 @@ root.after(100, check_xcode_version_or_exit)
 
 root.after(200, _apply_macos_titlebar_color)
 root.after(200, _remove_app_menu_items)
+root.after(1000, check_for_updates)
 
 # === MAINLOOP ===
 root.mainloop()
