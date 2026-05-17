@@ -21,14 +21,21 @@ import signal
 from tkinter.ttk import Progressbar
 import tkinter.font as tkfont
 import webbrowser
-from PIL import Image, ImageTk, ImageEnhance
+from PIL import Image, ImageTk, ImageEnhance, ImageDraw
 import glob
 import urllib.request
+import urllib.parse
+import io
+from app_data import (
+    APP_DISPLAY_RENAME, METAL_HUD_SUPPORTED, METAL_HUD_UNSUPPORTED, APP_FILTER_OUT,
+    APP_STORE_IDS, BUNDLE_IDS, SKIP_ICON_LOOKUP, APP_ICON_SEARCH_NAME, VERSIONED_APP_DISPLAY_NAMES,
+    STALE_ICON_CACHE,
+)
 
 process = None
 current_launch_process = None
 
-CURRENT_VERSION = "4.0.4"
+CURRENT_VERSION = "4.1.0"
 GITHUB_RELEASES_API = "https://api.github.com/repos/mrmacright/Metal-HUD-Mobile-Config/releases/latest"
 GITHUB_RELEASES_PAGE = "https://github.com/mrmacright/Metal-HUD-Mobile-Config/releases/latest"
 
@@ -254,6 +261,14 @@ CONNECTION_ICON_ROOT = os.path.join(
 DEVICE_ICON_CACHE = {}
 CONNECTION_ICON_CACHE = {}
 
+ICON_CACHE_DIR = os.path.expanduser("~/.cache/metal-hud-icons")
+GAME_ICON_PIL_CACHE   = {}   
+GAME_ICON_PHOTO_CACHE = {}   
+GAME_ICON_URL_MAP     = {}   
+GAME_LIST_GENERATION  = [0]  
+LIVE_BUNDLE_ID_MAP    = {}  
+LIVE_DISPLAY_NAME_MAP = {}   
+
 DEVICE_NAME_MAX_PX = 150
 DEVICE_STATE_MAX_PX = 260
 
@@ -277,12 +292,17 @@ STATE_ICON_NAME_MAP = {
     "unsupported": "Unsupported",
 }
 
+APP_LAST_DETECTED = {}  
+_current_apps_data = []  
+hidden_apps = set()
+pinned_apps = set()
+_apps_search_var = None  
+_apps_sort_var = None    
+
 OPEN_GAME_WARNING_SHOWN = False
-FARLIGHT_WARNING_SHOWN = False
 DEVICE_PREPARING_WARNING_SHOWN = False
 RESTORING_FROM_PROFILE = False
 OPENGL_WARNING_SHOWN = False
-WUTHERING_WAVES_WARNING_SHOWN = False
 XCODE_VERSION_WARNING_SHOWN = False
 FIRST_DEVICE_SCAN_WARNING_SHOWN = False
 PAIRING_ATTEMPTS = 0
@@ -296,83 +316,32 @@ xcode_status_var = None
 startup_finished = False
 
 # === LOG AND DEVICE DETECTION HELPERS ===
-FARLIGHT_LOG_INDICATORS = [
-    "device anomaly detected",                
-    "temporarily unable to access the game",  
-    "0-3-2048",                                
-    "accesskeyid not found",                  
-    "solarlandclient",                         
-    "farlight"                                
-]
+_GREEN = "#34C759"
 
-def detect_farlight_issue(output: str) -> bool:
-    """
-    Return True if any known Farlight/SolarlandClient log indicator appears.
-    Called per-line as logs stream in.
-    """
-    if not output:
-        return False
-    text = output.lower()
-    for indicator in FARLIGHT_LOG_INDICATORS:
-        if indicator in text:
-            return True
-    return False
+def _metal_hud_status(internal, display):
+    if internal in METAL_HUD_SUPPORTED or display in METAL_HUD_SUPPORTED:
+        return ("Supports Metal HUD", _GREEN)
+    if internal in METAL_HUD_UNSUPPORTED or display in METAL_HUD_UNSUPPORTED:
+        return ("Metal HUD Unsupported", _RED)
+    return None
 
-def detect_wuthering_waves_issue(output: str) -> bool:
-    """
-    Detect Wuthering Waves Metal HUD startup conflict.
-    Identified by Client process + perfsight + apm_postCallGraph errors.
-    """
-    if not output:
-        return False
+for _bn in STALE_ICON_CACHE:
+    try:
+        os.remove(os.path.join(ICON_CACHE_DIR, f"{_bn}.png"))
+    except Exception:
+        pass
 
-    text = output.lower()
-
-    return (
-        "client[" in text
-        and "perfsight" in text
-        and "apm_postcallgraph" in text
-    )
-
-APP_DISPLAY_RENAME = {
-    "ShadowTrackerExtra": "PUBG MOBILE",
-    "scimitar": "Assassin's Creed Mirage",
-    "SolarlandClient": "Farlight 84",
-    "hkrpg": "Honkai: Star Rail",
-    "bh3oversea": "Honkai Impact 3",
-    "X6Game": "Infinity Nikki",
-    "ExtremeGame": "PUBG: New State",
-    "librdr_1.50.60293175_ios-netflix_ww": "Red Dead Redemption Netflix",
-    "librdr_1.50.60293175_ios_ww": "Red Dead Redemption",
-    "WWE2K_Apple": "WWE 2K25: Netflix Edition",
-    "narutoNext1": "NARUTO: Ultimate Ninja STORM",
-    "Civ6_iOS64_Metal_FinalRelease": "CIV 6",
-    "cobalt-tv": "Beach Buggy Racing 2",
-    "OH2-IOS-Shipping": "Oceanhorn 3",
-    "OH2-TVOS-Shipping": "Oceanhorn 3",
-    "PrinceofPersiaTheLostCrown": "Prince of Persia The Lost Crown",
-    "EasyDeliveryCo.": "Easy Delivery Co.",
-    "SubwaySurf": "Subway Surfers",
-    "FortniteClient-IOS-Shipping": "Fortnite",
-    "GenshinImpact": "Genshin Impact",
-    "GRIDLegends": "GRID Legends",
-    "TheDivision": "The Division Resurgence",
-    "HacPro-IOS-Shipping": "Borderlands Mobile",
-    "cod": "Call of Duty: Mobile",
-    "RainbowSixMobile": "Rainbow Six Mobile",
-    "Endfield": "Arknights: Endfield",
-    "HTGame-IOS-Shipping": "NTE: Neverness to Everness",
-    "DeathStranding": "Death Stranding",
-    "Hitman WOA": "HITMAN World of Assassination",
-    "PESmobile": "eFootball",
-    "SevenDeadlySins_Origin": "The Seven Deadly Sins: Origin",
-    "g112": "Racing Master"
-    
-}
+for _f in glob.glob(os.path.join(ICON_CACHE_DIR, "librdr_*.png")):
+    try:
+        os.remove(_f)
+    except Exception:
+        pass
 
 # === APP DISPLAY AND DEVICE INFO HELPERS ===
 def add_display_name(app_name: str) -> str:
-    return APP_DISPLAY_RENAME.get(app_name, app_name)
+    if app_name in APP_DISPLAY_RENAME:
+        return APP_DISPLAY_RENAME[app_name]
+    return LIVE_DISPLAY_NAME_MAP.get(app_name, app_name)
 
 def make_unique_app_names(app_list):
     display_list = []
@@ -580,6 +549,245 @@ def get_connection_icon(state: str):
         print(f"Could not load connection icon from {path}: {e}")
         return None
 
+def _disk_icon_path(internal_name):
+    return os.path.join(ICON_CACHE_DIR, f"{internal_name}.png")
+
+def _disk_icon_url_path(internal_name):
+    return os.path.join(ICON_CACHE_DIR, f"{internal_name}.url")
+
+def _shorten_mzstatic_url(url):
+    """Normalise Apple CDN URL to 100x100 — keeps the filename segment (required by CDN)."""
+    if not url or "mzstatic.com" not in url:
+        return url
+    return re.sub(r'/\d+x\d+bb\.jpg$', '/100x100bb.jpg', url)
+
+def _itunes_lookup(url):
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Metal-HUD-Mobile-Config"})
+        with urllib.request.urlopen(req, timeout=4) as resp:
+            data = json.loads(resp.read().decode())
+        results = data.get("results", [])
+        if results:
+            raw = results[0].get("artworkUrl512") or results[0].get("artworkUrl100")
+            return _shorten_mzstatic_url(raw)
+    except Exception:
+        pass
+    return None
+
+def _backfill_icon_urls():
+    """Background thread: generate missing .url sidecars for already-cached icons."""
+    if not os.path.isdir(ICON_CACHE_DIR):
+        return
+    for fname in os.listdir(ICON_CACHE_DIR):
+        if not fname.endswith(".png"):
+            continue
+        internal = fname[:-4]
+        url_path = _disk_icon_url_path(internal)
+        if os.path.exists(url_path):
+            continue
+        artwork_url = None
+        app_id = APP_STORE_IDS.get(internal)
+        if app_id:
+            artwork_url = _itunes_lookup(f"https://itunes.apple.com/lookup?id={app_id}")
+        if not artwork_url:
+            bundle_id = BUNDLE_IDS.get(internal)
+            if bundle_id:
+                artwork_url = _itunes_lookup(
+                    f"https://itunes.apple.com/lookup?bundleId={urllib.parse.quote(bundle_id)}"
+                )
+        if not artwork_url:
+            search_name = APP_ICON_SEARCH_NAME.get(internal) or APP_DISPLAY_RENAME.get(internal)
+            if not search_name and internal not in SKIP_ICON_LOOKUP:
+                search_name = internal
+            if search_name:
+                safe = urllib.parse.quote(search_name)
+                artwork_url = _itunes_lookup(
+                    f"https://itunes.apple.com/search?term={safe}&entity=software&limit=1"
+                )
+        if artwork_url:
+            try:
+                with open(url_path, "w") as _uf:
+                    _uf.write(artwork_url)
+                GAME_ICON_URL_MAP[internal] = artwork_url
+            except Exception:
+                pass
+
+def _fetch_bundle_id_map(udid):
+    """Query devicectl for installed apps; return (bundle_map, name_map). Background-safe."""
+    import tempfile
+    tmp = os.path.join(tempfile.gettempdir(), "metal-hud-apps.json")
+    try:
+        result = subprocess.run(
+            ["xcrun", "devicectl", "device", "info", "apps",
+             "--device", udid, "--include-removable-apps", "-j", tmp],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=30,
+        )
+        if result.returncode != 0:
+            err = result.stderr.decode(errors="replace").strip()
+            append_log(f"[BundleMap] devicectl apps failed (code {result.returncode}): {err}\n")
+            return {}, {}
+        with open(tmp) as f:
+            data = json.load(f)
+        bundle_map = {}
+        name_map = {}
+        for app in data.get("result", {}).get("apps", []):
+            url = app.get("url", "")
+            bundle_id = app.get("bundleIdentifier", "")
+            display_name = app.get("name", "")
+            if url and bundle_id:
+                basename = os.path.basename(url.rstrip("/"))
+                if basename.endswith(".app"):
+                    internal = basename[:-4]
+                    bundle_map[internal] = bundle_id
+                    if display_name:
+                        name_map[internal] = display_name
+        append_log(f"[BundleMap] loaded {len(bundle_map)} apps from device\n")
+        for _k in sorted(bundle_map.keys()):
+            append_log(f"[BundleMap]   {_k}: {bundle_map[_k]}\n")
+        return bundle_map, name_map
+    except subprocess.TimeoutExpired:
+        append_log("[BundleMap] devicectl apps timed out (>30s)\n")
+        return {}, {}
+    except Exception as e:
+        append_log(f"[BundleMap] error: {e}\n")
+        return {}, {}
+    finally:
+        try:
+            os.remove(tmp)
+        except Exception:
+            pass
+
+def _round_icon(img, radius_pct=0.27):
+    """Apply smooth rounded-corner mask (supersampled for anti-aliased edges)."""
+    size = img.size
+    scale = 4
+    big = (size[0] * scale, size[1] * scale)
+    radius = int(size[0] * radius_pct * scale)
+    mask = Image.new("L", big, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.rounded_rectangle((0, 0, big[0] - 1, big[1] - 1), radius=radius, fill=255)
+    mask = mask.resize(size, Image.LANCZOS)
+    result = img.copy()
+    result.putalpha(mask)
+    return result
+
+def _fetch_game_icon_pil(internal_name, display_name=None):
+    """Background-safe. Returns a 26×26 PIL.Image or None on failure."""
+    live_bundle_id = LIVE_BUNDLE_ID_MAP.get(internal_name)
+    live_display_name = LIVE_DISPLAY_NAME_MAP.get(internal_name)
+
+    if not live_display_name:
+        for _prefix, _known in VERSIONED_APP_DISPLAY_NAMES.items():
+            if internal_name.startswith(_prefix):
+                live_display_name = _known
+                break
+    if internal_name in SKIP_ICON_LOOKUP and not live_bundle_id and not live_display_name:
+        return None
+
+    if internal_name in GAME_ICON_PIL_CACHE:
+        return GAME_ICON_PIL_CACHE[internal_name]
+
+    disk_path = _disk_icon_path(internal_name)
+    if os.path.exists(disk_path):
+        try:
+            img = _round_icon(Image.open(disk_path).convert("RGBA").resize((40, 40), Image.LANCZOS))
+            GAME_ICON_PIL_CACHE[internal_name] = img
+            url_path = _disk_icon_url_path(internal_name)
+            if os.path.exists(url_path):
+                try:
+                    with open(url_path) as _uf:
+                        GAME_ICON_URL_MAP[internal_name] = _shorten_mzstatic_url(_uf.read().strip())
+                except Exception:
+                    pass
+            append_log(f"[Icon] {internal_name}: loaded from disk cache\n")
+            return img
+        except Exception:
+            pass
+
+    artwork_url = None
+    icon_source = None
+
+    app_id = APP_STORE_IDS.get(internal_name)
+    if app_id:
+        artwork_url = _itunes_lookup(f"https://itunes.apple.com/lookup?id={app_id}")
+        if artwork_url:
+            icon_source = f"App Store ID {app_id}"
+
+    if not artwork_url:
+        bundle_id = BUNDLE_IDS.get(internal_name)
+        if bundle_id:
+            artwork_url = _itunes_lookup(
+                f"https://itunes.apple.com/lookup?bundleId={urllib.parse.quote(bundle_id)}"
+            )
+            if artwork_url:
+                icon_source = f"bundle ID {bundle_id}"
+
+    if not artwork_url and live_display_name and internal_name not in SKIP_ICON_LOOKUP:
+        safe = urllib.parse.quote(live_display_name)
+        artwork_url = _itunes_lookup(
+            f"https://itunes.apple.com/search?term={safe}&entity=software&limit=1"
+        )
+        if artwork_url:
+            icon_source = f"live display name search \"{live_display_name}\""
+
+    if not artwork_url and live_bundle_id:
+        artwork_url = _itunes_lookup(
+            f"https://itunes.apple.com/lookup?bundleId={urllib.parse.quote(live_bundle_id)}"
+        )
+        if artwork_url:
+            icon_source = f"bundle ID {live_bundle_id}"
+
+    if not artwork_url:
+        if internal_name in SKIP_ICON_LOOKUP:
+            search_term = live_display_name  
+        else:
+            search_term = APP_ICON_SEARCH_NAME.get(internal_name, display_name)
+            if search_term == live_display_name:
+                search_term = None 
+        if search_term:
+            safe = urllib.parse.quote(search_term)
+            artwork_url = _itunes_lookup(
+                f"https://itunes.apple.com/search?term={safe}&entity=software&limit=1"
+            )
+            if artwork_url:
+                icon_source = f"name search \"{search_term}\""
+
+    if not artwork_url:
+        append_log(f"[Icon] {internal_name}: no icon found, using generic\n")
+        return None
+
+    try:
+        with urllib.request.urlopen(artwork_url, timeout=5) as img_resp:
+            img_data = img_resp.read()
+        os.makedirs(ICON_CACHE_DIR, exist_ok=True)
+        with open(disk_path, "wb") as f:
+            f.write(img_data)
+        try:
+            with open(_disk_icon_url_path(internal_name), "w") as _uf:
+                _uf.write(artwork_url)
+        except Exception:
+            pass
+        GAME_ICON_URL_MAP[internal_name] = artwork_url
+        img = _round_icon(Image.open(io.BytesIO(img_data)).convert("RGBA").resize((40, 40), Image.LANCZOS))
+        GAME_ICON_PIL_CACHE[internal_name] = img
+        append_log(f"[Icon] {internal_name}: fetched via {icon_source}\n")
+        return img
+    except Exception:
+        return None
+
+def _get_game_icon_photo(internal_name):
+    """Main-thread only. Converts cached PIL image to PhotoImage, or returns None."""
+    if internal_name in GAME_ICON_PHOTO_CACHE:
+        return GAME_ICON_PHOTO_CACHE[internal_name]
+    pil = GAME_ICON_PIL_CACHE.get(internal_name)
+    if pil:
+        photo = ImageTk.PhotoImage(pil)
+        GAME_ICON_PHOTO_CACHE[internal_name] = photo
+        return photo
+    return None
+
 def get_display_state_text(state: str) -> str:
     original_state = (state or "").replace("?", "'")
     normalized_state = original_state.lower()
@@ -689,7 +897,7 @@ def render_devices_with_icons(widget, devices):
         name_cell.grid(row=0, column=0, sticky="w")
         name_cell.grid_propagate(False)
 
-        ICON_SLOT_WIDTH = 40  # tweak this
+        ICON_SLOT_WIDTH = 40  
 
         icon_slot = tk.Frame(name_cell, width=ICON_SLOT_WIDTH, height=46, bg=_SURFACE)
         icon_slot.pack(side="left")
@@ -791,16 +999,15 @@ def render_devices_with_icons(widget, devices):
                 for child in w.winfo_children():
                     set_bg_recursive(child, color)
 
-            # reset every row first
             for child_row in widget.winfo_children():
                 if isinstance(child_row, tk.Frame) and not getattr(child_row, "_is_separator", False):
                     set_bg_recursive(child_row, _SURFACE)
 
-            # highlight selected row only
             set_bg_recursive(selected_row, _SELECTION)
 
             connection_hint_label.config(text="")
 
+            widget.focus_set()
             return "break"
 
         def bind_row_click(widget_to_bind):
@@ -1210,7 +1417,6 @@ def _apply_macos_titlebar_color(hex_color=None):
             None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p))
         f_obj(win, sel("setBackgroundColor:"), color)
 
-        # Remove the separator line below the title bar (NSTitlebarSeparatorStyleNone = 1)
         f_int = ctypes.cast(libobjc.objc_msgSend, ctypes.CFUNCTYPE(
             None, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int64))
         f_int(win, sel("setTitlebarSeparatorStyle:"), 1)
@@ -1296,7 +1502,6 @@ def _remove_app_menu_items():
         app_item = f_at(main_menu, sel("itemAtIndex:"), 0)
         app_menu = libobjc.objc_msgSend(app_item, sel("submenu"))
 
-        # Remove everything except Quit (terminate:); separators are removed too
         count = f_count(app_menu, sel("numberOfItems"))
         to_remove = []
         for i in range(count):
@@ -1460,6 +1665,12 @@ _CB_SIZE = 13
 _cb_uncheck_img = ImageTk.PhotoImage(Image.open(os.path.join(_cb_asset_root, "Uncheck.png")).resize((_CB_SIZE, _CB_SIZE), Image.LANCZOS))
 _cb_check_img   = ImageTk.PhotoImage(Image.open(os.path.join(_cb_asset_root, "Check.png")).resize((_CB_SIZE, _CB_SIZE), Image.LANCZOS))
 
+# === GENERIC GAME ICON ===
+_generic_game_icon = ImageTk.PhotoImage(
+    Image.open(resource_path("assets", "App Icons", "Generic Icon.png"))
+    .resize((40, 40), Image.LANCZOS)
+)
+
 # === LOADING SPINNER ===
 _SPINNER_FRAME_COUNT = 12
 _raw_spinner = Image.open(resource_path("assets", "UI", "loading.png")).convert("RGBA").resize((24, 24), Image.LANCZOS)
@@ -1611,7 +1822,7 @@ selected_library = ""
 library_panel_open = False
 
 def load_data():
-    global saved_paths, command_history, hud_settings_saved, analytics_opt_in, analytics_prompt_launch_count, first_device_scan_notice_shown, custom_app_names, window_geometry_saved, LAST_DEVICE_SCAN, selected_library, library_panel_open
+    global saved_paths, command_history, hud_settings_saved, analytics_opt_in, analytics_prompt_launch_count, first_device_scan_notice_shown, custom_app_names, window_geometry_saved, LAST_DEVICE_SCAN, selected_library, library_panel_open, hidden_apps, pinned_apps
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r") as f:
@@ -1629,6 +1840,8 @@ def load_data():
                 ]
                 selected_library = data.get("selected_library", "")
                 library_panel_open = data.get("library_panel_open", False)
+                hidden_apps = set(data.get("hidden_apps", []))
+                pinned_apps = set(data.get("pinned_apps", []))
         except Exception as e:
             print("Error loading saved data:", e)
             saved_paths = {}
@@ -1675,6 +1888,8 @@ def save_data():
         "last_device_scan": LAST_DEVICE_SCAN,
         "selected_library": saved_paths_combo.get() if "saved_paths_combo" in globals() else selected_library,
         "library_panel_open": library_panel_open,
+        "hidden_apps": list(hidden_apps),
+        "pinned_apps": list(pinned_apps),
     }
     try:
         with open(DATA_FILE, "w") as f:
@@ -1683,7 +1898,6 @@ def save_data():
         print("Error saving data:", e)
 
 # === GENERAL GUI HELPERS ===
-
 def ask_analytics_permission(force=False):
     global analytics_opt_in
 
@@ -1697,8 +1911,9 @@ def ask_analytics_permission(force=False):
         "Help Improve Metal HUD",
         "Would you like to share compatibility data to help improve Metal HUD?\n\n"
         "This includes:\n"
-        "• Device model (iPhone/iPad/Apple TV)\n"
-        "• App/game name being tested\n\n"
+        "• Device model\n"
+        "• Connection type (USB / Wi-Fi)\n"
+        "• App name & icon\n\n"
         "No personal information or device identifiers are collected."
     )
 
@@ -2074,8 +2289,6 @@ def show_connection_help(scroll_to=None):
 
     def _on_mousewheel(e):
         top, _ = txt.yview()
-        # Fraction-based scroll: avoids jumping over tall embedded sections.
-        # delta/120 normalises mouse wheel clicks; trackpad sends smaller values.
         delta_fraction = -e.delta / 120 * 0.05
         txt.yview_moveto(max(0.0, min(1.0, top + delta_fraction)))
         _show_sb()
@@ -3289,7 +3502,6 @@ def refresh_command_history_combo():
 
         display_str = f"{device_display} - {display_app_name}"
 
-        # Keep the newest saved settings for this game/device combo
         if display_str in appname_to_command:
             continue
 
@@ -3341,8 +3553,26 @@ def show_apps():
 
     def background_task():
         try:
+            bundle_map = {}
+            name_map = {}
+
+            def _fetch_bundles():
+                nonlocal bundle_map, name_map
+                bundle_map, name_map = _fetch_bundle_id_map(udid)
+
+            bundle_thread = threading.Thread(target=_fetch_bundles, daemon=True)
+            bundle_thread.start()
+
             command = f"xcrun devicectl device info processes --device {udid} 2>&1"
             output = run_command(command)
+
+            bundle_thread.join(timeout=32)
+
+            LIVE_BUNDLE_ID_MAP.clear()
+            LIVE_BUNDLE_ID_MAP.update(bundle_map)
+            LIVE_DISPLAY_NAME_MAP.clear()
+            LIVE_DISPLAY_NAME_MAP.update(name_map)
+
             root.after(0, lambda: process_apps_output(output))
         finally:
             root.after(0, games_spinner.stop)
@@ -3353,19 +3583,59 @@ def show_apps():
 last_letter_pressed = None
 last_letter_index = -1
 
+def _apps_move_selection(direction):
+    rf_list = getattr(apps_list_frame, "_row_frames", [])
+    if not rf_list:
+        return
+    current = getattr(apps_list_frame, "_selected_index", -1)
+    visible = [i for i, rf in enumerate(rf_list) if rf is not None]
+    if not visible:
+        return
+    if current not in visible:
+        target = visible[0]
+    else:
+        pos = visible.index(current)
+        if direction == "down":
+            pos = min(pos + 1, len(visible) - 1)
+        else:
+            pos = max(pos - 1, 0)
+        target = visible[pos]
+
+    row = rf_list[target]
+    full_path = apps_list_frame.full_path_map[target]
+    display = apps_list_frame.display_list[target]
+
+    for rf in rf_list:
+        if rf is not None:
+            _set_widget_bg(rf, _SURFACE)
+    _set_widget_bg(row, _SELECTION)
+    apps_list_frame._selected_index = target
+    app_path_combo.set(display)
+    app_path_combo.full_path = full_path
+    update_launch_button_text(display)
+    apps_list_frame.selected_app_name = display
+
+    apps_canvas.update_idletasks()
+    row.update_idletasks()
+    total = apps_list_frame.winfo_height()
+    y = row.winfo_y()
+    h = apps_canvas.winfo_height()
+    if total > 0:
+        apps_canvas.yview_moveto(max(0.0, min(1.0, (y - h / 3) / total)))
+
 def jump_to_app_starting_with(letter):
     global last_letter_pressed, last_letter_index
 
-    apps_text.config(state='normal')
-    lines = apps_text.get("1.0", "end-1c").splitlines()
+    display_list = getattr(apps_list_frame, "display_list", [])
+    rf_list = getattr(apps_list_frame, "_row_frames", [])
+    if not display_list:
+        return
 
-    matches = []
-    for i, line in enumerate(lines, start=1):
-        if line.lower().startswith(letter.lower()):
-            matches.append((i, line))
-
+    matches = [
+        i for i, name in enumerate(display_list)
+        if name.lower().startswith(letter.lower()) and i < len(rf_list) and rf_list[i] is not None
+    ]
     if not matches:
-        apps_text.config(state='disabled')
         return
 
     if last_letter_pressed == letter:
@@ -3374,22 +3644,19 @@ def jump_to_app_starting_with(letter):
         last_letter_pressed = letter
         last_letter_index = 0
 
-    target_line_num, target_line_text = matches[last_letter_index]
+    target = matches[last_letter_index]
+    row = rf_list[target]
+    full_path = apps_list_frame.full_path_map[target]
+    display = display_list[target]
 
-    apps_text.tag_remove("selected_app", "1.0", tk.END)
-    start = f"{target_line_num}.0"
-    end = f"{target_line_num}.end"
-    apps_text.tag_add("selected_app", start, end)
-    apps_text.see(start)
-
-    index = target_line_num - 1
-    full_path = apps_text.full_path_map[index]
-    if full_path:
-        app_path_combo.set(target_line_text)
-        app_path_combo.full_path = full_path
-        update_launch_button_text(target_line_text)
-
-    apps_text.config(state='disabled')
+    for rf in rf_list:
+        if rf is not None:
+            _set_widget_bg(rf, _SURFACE)
+    _set_widget_bg(row, _SELECTION)
+    apps_list_frame._selected_index = target
+    app_path_combo.set(display)
+    app_path_combo.full_path = full_path
+    update_launch_button_text(display)
 
 def on_apps_keypress(event):
     if not event.char or not event.char.isalpha():
@@ -3397,7 +3664,6 @@ def on_apps_keypress(event):
     jump_to_app_starting_with(event.char)
 
 # === FILTER AND UPDATE RUNNING APP LIST ===
-
 def detect_device_locked_issue(output: str) -> bool:
     if not output:
         return False
@@ -3410,13 +3676,265 @@ def detect_device_locked_issue(output: str) -> bool:
         "kamdmobileimagemounterdevicelocked" in text
     )
 
-def process_apps_output(output):
-    global DEVICE_PREPARING_WARNING_SHOWN
+def _set_widget_bg(widget, color):
+    try:
+        widget.config(bg=color)
+    except Exception:
+        pass
+    for child in widget.winfo_children():
+        _set_widget_bg(child, color)
 
-        # DEVELOPER MODE DISABLED
+
+def _show_apps_error(message):
+    for child in apps_list_frame.winfo_children():
+        child.destroy()
+    apps_list_frame.full_path_map = []
+    apps_list_frame.display_list = []
+    apps_list_frame._internal_names = []
+    apps_list_frame._row_frames = []
+    apps_list_frame._selected_index = -1
+    tk.Label(
+        apps_list_frame,
+        text=message,
+        bg=_SURFACE,
+        fg=_FG_SECONDARY,
+        font=_FONT_BODY,
+        justify="left",
+        anchor="nw",
+        padx=16,
+        pady=16,
+    ).pack(anchor="nw", fill="x", padx=16, pady=16)
+
+def _apply_apps_sort(data):
+    sort = (_apps_sort_var.get() if _apps_sort_var else "").replace("Sort by: ", "") or "Recently Detected"
+    if sort == "Name":
+        base = sorted(data, key=lambda x: x[2].lower())
+    elif sort == "Previously Launched":
+        history_order = {}
+        for idx, entry in enumerate(command_history):
+            if not isinstance(entry, dict):
+                continue
+            fp = entry.get("app_path", "")
+            if fp and fp not in history_order:
+                history_order[fp] = idx
+        base = sorted(data, key=lambda x: history_order.get(x[0], 9999))
+    else:
+        base = sorted(data, key=lambda x: APP_LAST_DETECTED.get(x[1], 0.0), reverse=True)
+    pinned = [x for x in base if x[1] in pinned_apps]
+    unpinned = [x for x in base if x[1] not in pinned_apps]
+    return pinned + unpinned
+
+def _refresh_hidden_games_combo():
+    pass 
+
+def _hide_app(internal_name):
+    hidden_apps.add(internal_name)
+    save_data()
+    _do_refilter()
+    _refresh_hidden_games_combo()
+
+def _pin_app(internal_name):
+    pinned_apps.add(internal_name)
+    save_data()
+    _do_refilter()
+
+def _unpin_app(internal_name):
+    pinned_apps.discard(internal_name)
+    save_data()
+    _do_refilter()
+
+def _render_apps_rows(data, current_gen):
+    for child in apps_list_frame.winfo_children():
+        child.destroy()
+
+    apps_list_frame.full_path_map = [d[0] for d in data]
+    apps_list_frame._internal_names = [d[1] for d in data]
+    apps_list_frame.display_list = [d[2] for d in data]
+    apps_list_frame._row_frames = [None] * len(data)
+    apps_list_frame._selected_index = -1
+
+    search_term = (_apps_search_var.get() if _apps_search_var else "").strip().lower()
+
+    visible = [
+        (i, fp, internal, display)
+        for i, (fp, internal, display) in enumerate(data)
+        if not search_term or search_term in display.lower() or search_term in internal.lower()
+    ]
+
+    for j, (i, full_path, internal, display) in enumerate(visible):
+        row = tk.Frame(apps_list_frame, bg=_SURFACE, height=54)
+        row.pack(fill="x")
+        row.pack_propagate(False)
+        row._internal = internal
+        apps_list_frame._row_frames[i] = row
+
+        icon_slot = tk.Frame(row, width=54, height=54, bg=_SURFACE)
+        icon_slot.pack(side="left")
+        icon_slot.pack_propagate(False)
+
+        photo = _get_game_icon_photo(internal) or _generic_game_icon
+        icon_lbl = tk.Label(icon_slot, image=photo, bg=_SURFACE, bd=0)
+        icon_lbl.image = photo
+        icon_lbl.place(relx=0.5, rely=0.5, anchor="center")
+        row._icon_label = icon_lbl
+
+        text_area = tk.Frame(row, bg=_SURFACE)
+        text_area.pack(side="left", fill="both", expand=True, padx=(4, 12))
+
+        text_center = tk.Frame(text_area, bg=_SURFACE)
+        text_center.place(relx=0, rely=0.5, anchor="w", relwidth=1)
+
+        tk.Label(
+            text_center, text=display,
+            bg=_SURFACE, fg=_FG_PRIMARY, font=_FONT_BODY, anchor="w",
+        ).pack(anchor="w")
+
+        if internal in SKIP_ICON_LOOKUP:
+            tk.Label(
+                text_center, text="Game name not identifiable",
+                bg=_SURFACE, fg=_FG_TERTIARY, font=("SF Pro Text", 11), anchor="w",
+            ).pack(anchor="w")
+
+        hud_status = _metal_hud_status(internal, display)
+        if hud_status:
+            tk.Label(
+                text_center, text=hud_status[0],
+                bg=_SURFACE, fg=hud_status[1], font=("SF Pro Text", 11), anchor="w",
+            ).pack(anchor="w")
+
+        def make_select(idx, fp, dn, r):
+            def _select(event=None):
+                for rf in apps_list_frame._row_frames:
+                    if rf is not None:
+                        _set_widget_bg(rf, _SURFACE)
+                _set_widget_bg(r, _SELECTION)
+                apps_list_frame._selected_index = idx
+                app_path_combo.set(dn)
+                app_path_combo.full_path = fp
+                update_launch_button_text(dn)
+                apps_list_frame.selected_app_name = dn
+                apps_canvas.focus_set()
+                return "break"
+            return _select
+
+        select_fn = make_select(i, full_path, display, row)
+
+        def make_three_dot_menu(iname, dname):
+            def _show(event=None):
+                menu = tk.Menu(root, tearoff=0)
+                if iname in pinned_apps:
+                    menu.add_command(label="Unpin from Top", command=lambda: _unpin_app(iname))
+                else:
+                    menu.add_command(label="Pin to Top", command=lambda: _pin_app(iname))
+                menu.add_separator()
+                menu.add_command(
+                    label="Hide App",
+                    command=lambda: _hide_app(iname)
+                )
+                menu.add_separator()
+                def _make_report(rtype, msg):
+                    def _do():
+                        icon_url = GAME_ICON_URL_MAP.get(iname, "")
+                        send_app_report(iname, dname, icon_url, rtype)
+                        messagebox.showinfo("Report Sent", f"{msg}\n\nI'll review and fix it in a future update.")
+                    return _do
+                menu.add_command(label="Report Wrong Icon",          command=_make_report("Wrong Icon",       f"Thanks! Wrong icon report for \"{dname}\" has been sent."))
+                menu.add_command(label="Report Wrong Name",          command=_make_report("Wrong Name",       f"Thanks! Wrong name report for \"{dname}\" has been sent."))
+                menu.add_command(label="Report: Not a Game",         command=_make_report("Not a Game",       f"Thanks! \"{dname}\" has been flagged as not a game."))
+                menu.add_command(label="Report: Metal HUD Supported",   command=_make_report("HUD Supported",   f"Thanks! \"{dname}\" has been reported as Metal HUD supported."))
+                menu.add_command(label="Report: Metal HUD Unsupported", command=_make_report("HUD Unsupported", f"Thanks! \"{dname}\" has been reported as Metal HUD unsupported."))
+                try:
+                    menu.tk_popup(event.x_root, event.y_root)
+                finally:
+                    menu.grab_release()
+            return _show
+
+        dots_btn = tk.Label(
+            row,
+            text="⋮",
+            bg=_SURFACE,
+            fg=_FG_SECONDARY,
+            font=("SF Pro Text", 18),
+            padx=10,
+            pady=0,
+        )
+        dots_btn.pack(side="right", fill="y")
+        dots_btn.bind("<Button-1>", make_three_dot_menu(internal, display))
+
+        def bind_all(w, fn, exclude=None):
+            if w is exclude:
+                return
+            w.bind("<Button-1>", fn)
+            for child in w.winfo_children():
+                bind_all(child, fn, exclude=exclude)
+
+        bind_all(row, select_fn, exclude=dots_btn)
+
+        if j < len(visible) - 1:
+            sep = tk.Frame(apps_list_frame, bg=_BORDER, height=1)
+            sep._is_separator = True
+            sep.pack(fill="x")
+
+    if visible:
+        first_i, first_fp, first_display = visible[0][0], visible[0][1], visible[0][3]
+        first_row = apps_list_frame._row_frames[first_i]
+        if first_row:
+            apps_list_frame._selected_index = first_i
+            _set_widget_bg(first_row, _SELECTION)
+            app_path_combo.set(first_display)
+            app_path_combo.full_path = first_fp
+            update_launch_button_text(first_display)
+
+    def _bg_fetch_icons():
+        for _, internal, display in data:
+            if GAME_LIST_GENERATION[0] != current_gen:
+                return
+            if internal in GAME_ICON_PHOTO_CACHE:
+                continue
+            pil = _fetch_game_icon_pil(internal, display_name=display)
+            if pil and GAME_LIST_GENERATION[0] == current_gen:
+                def _apply(iname=internal):
+                    if GAME_LIST_GENERATION[0] != current_gen:
+                        return
+                    photo = _get_game_icon_photo(iname)
+                    if not photo:
+                        return
+                    for rf in apps_list_frame._row_frames:
+                        if rf is not None and getattr(rf, '_internal', None) == iname:
+                            try:
+                                rf._icon_label.config(image=photo)
+                                rf._icon_label.image = photo
+                            except Exception:
+                                pass
+                            break
+                root.after(0, _apply)
+
+        for _, internal, display in _current_apps_data:
+            if GAME_LIST_GENERATION[0] != current_gen:
+                return
+            if internal not in hidden_apps:
+                continue
+            if internal in GAME_ICON_PHOTO_CACHE:
+                continue
+            _fetch_game_icon_pil(internal, display_name=display)
+
+    threading.Thread(target=_bg_fetch_icons, daemon=True).start()
+    _bind_apps_scroll_hover(apps_list_frame)
+
+def _do_refilter():
+    if not _current_apps_data:
+        return
+    visible_data = [d for d in _current_apps_data if d[1] not in hidden_apps]
+    sorted_data = _apply_apps_sort(visible_data)
+    current_gen = GAME_LIST_GENERATION[0]
+    _render_apps_rows(sorted_data, current_gen)
+
+def process_apps_output(output):
+    global DEVICE_PREPARING_WARNING_SHOWN, _current_apps_data
+
+    # DEVELOPER MODE DISABLED
     if output and "Developer Mode is disabled" in output:
-        set_text_widget(
-            apps_text,
+        _show_apps_error(
             "DEVELOPER MODE DISABLED\n\n"
             "Enable it on your device:\n"
             "Settings → Privacy & Security → Developer Mode"
@@ -3425,8 +3943,7 @@ def process_apps_output(output):
 
     # DEVICE LOCKED
     if detect_device_locked_issue(output):
-        set_text_widget(
-            apps_text,
+        _show_apps_error(
             "DEVICE LOCKED\n\n"
             "Unlock the device and try again.\n\n"
             "Then click:\n"
@@ -3439,27 +3956,21 @@ def process_apps_output(output):
 
     if is_pairing_error(output):
         PAIRING_ATTEMPTS += 1
-
-        if PAIRING_ATTEMPTS >= 3:
-            message = (
-                "STILL CONNECTING\n\n"
-                "Unlock → Trust → replug (may take a few tries)\n\n"
-                "Then: Show Running Games"
-            )
-        else:
-            message = (
-                "DEVICE NOT PAIRED\n\n"
-                "Unlock → Is USB connected? → Trust → replug\n\n"
-                "Then: Show Running Games"
-            )
-
-        set_text_widget(apps_text, message)
+        message = (
+            "STILL CONNECTING\n\n"
+            "Unlock → Trust → replug (may take a few tries)\n\n"
+            "Then: Show Running Games"
+        ) if PAIRING_ATTEMPTS >= 3 else (
+            "DEVICE NOT PAIRED\n\n"
+            "Unlock → Is USB connected? → Trust → replug\n\n"
+            "Then: Show Running Games"
+        )
+        _show_apps_error(message)
         return
 
     # No processes returned yet (Xcode preparing)
     if not output or not output.strip():
-        set_text_widget(
-            apps_text,
+        _show_apps_error(
             "DEVICE PREPARING\n\n"
             "No running games were found yet.\n\n"
             "This is normal the first time a device is connected\n"
@@ -3472,19 +3983,16 @@ def process_apps_output(output):
             "Show Running Games"
         )
         return
-    
-    # Device is ready but no obvious user apps are running
+
     has_user_app = (
         "Bundle/Application" in output or
         ".app" in output
     )
 
-    # reset after successful communication
     PAIRING_ATTEMPTS = 0
 
     if not has_user_app:
-        set_text_widget(
-            apps_text,
+        _show_apps_error(
             "NO GAMES DETECTED\n\n"
             "Launch a game and try again.\n\n"
             "Then click:\n"
@@ -3492,40 +4000,7 @@ def process_apps_output(output):
         )
         return
 
-    filter_out = [
-        "Photos.app", "Weather.app", "VoiceMemos.app", "News.app", "Tips.app",
-        "Reminders.app", "Music.app", "Maps.app", "Stocks.app", "AppStore.app",
-        "Measure.app", "Magnifier.app", "Books.app", "Shortcuts.app", "Podcasts.app",
-        "Calculator.app", "Health.app", "FindMy.app", "Freeform.app", "Camera.app",
-        "AppleTV.app", "YouTube.app", "TestFlight.app", "MobileCal.app", "MobileMail.app",
-        "MobileSafari.app", "SequoiaTranslator.app", "MobileNotes.app", "MobileTimer.app",
-        "Home.app", "Journal.app", "Files.app", "Fitness.app", "Passbook.app",
-        "MobileSMS.app", "Bridge.app", "Messenger.app", "ChatGPT.app", "WhatsApp.app",
-        "Drive.app", "Spotify.app", "Discord.app", "Bumble.app", "Meetup.app",
-        "ProtonNative.app", "YouTubeCreator.app", "Tinder.app", "Hinge.app", "TikTok.app",
-        "Google.app", "maps.app", "Docs.app", "Gmail.app", "Twitch.app", "Instagram.app",
-        "Snapchat.app", "Authenticator.app", "Preview.app", "Games.app", "Final Cut Camera.app", 
-        "MobilePhone.app", "Max-iOS.app", "Facebook.app", "Argo.app", "Compass.app", "Dominguez.app", 
-        "Evernote.app", "FaceBook.app", "LinkedIn.app", "Notion.app", "Outlook-iOS.app", "PrimeVideo.app", 
-        "Slack.app", "TeamSpaceApp.app", "Telegram.app", "YouTubeKids.app", "Zoom.app", "Signal.app", "Sheets.app", 
-        "Netflix.app", "DisneyPlus.app", "OneNote.app", "Tachyon.app", "Word.app", "RunestoneEditor.app", "Contacts.app", 
-        "FaceTime.app", "Image Playground.app", "MobileStore.app", "Amazon.app", "Apple Store.app", "Control Center.app", "Passwords.app",
-        "RedditApp.app", "BlackmagicCam.app", "Cash.app", "Chase.app", "Helix.app", "com.roborock.smart.app", "MintMobile.app", "GooglePhotos.app",
-        "Geekbench 6.app", "WeatherViewer.app", "Twitter.app", "narwhal2.app", "OneDrive.app", "To Do.app", "Todoist.app", "CapCut.app", "HelloTalk_Binary.app",
-        "Threads.app", "Truecaller.app", "Viber.app", "WeChat.app", "1Password.app", "Microsoft Authenticator.app", "GrokApp.app", "DMSS-GSA.app", "MyDictionary.app",
-        "Strava.app", "dictionary-ios.app", "cpkamerasmart.app", "Flo.app", "HikConnect.app", "LegoApp.app", "ReelShort.app", "LegoBuilder.app", "Meesho.app",
-        "Paytm.app", "TimeTree.app", "YouTubeMusic.app", "WeatherPlus.app", "Canva.app", "ActivityMonitorApp.app", "CommBankProd.app", "VLC for iOS.app", "Xero.app",
-        "ActivityMonitorApp.app", "CommBankProd.app", "2048.app", "Cellopark.app", "Kubofit GLH Release.app", "myID.iOS.app", "TeamTrack.app",
-    ]
-
-    filter_out_watch = [
-        "NanoMedications.app", "NanoMail.app", "NanoTimer.app", "NanoCalendar.app", "FindDevices.app", "NanoWorldClock.app", "SessionTrackerApp.app",
-        "Urchin.app", "Starbucks WatchKit App.app", "NanoHealthBalance.app", "FindItems.app", "HeartRate.app", "NanoWeather.app",
-        "Dose.app", "Memoji.app", "Mind.app", "NanoAlarm.app", "NanoCalculator.app", "NanoCamera.app", "NanoHeartRhythm.app",
-        "NanoMaps.app", "NanoMenstrualCycles.app", "NanoMusicRecognition.app", "NanoNowPlaying.app", "NanoOxygenSaturation.app", "NanoPassbook.app", "NanoReminders.app",
-        "NanoSleep.app", "NanoStopwatch.app", "NanoTranslate.app", "NanoTVRemote.app", "StarWarp WatchKit App.app", "TinCan.app", "WatchApp.app",
-        "WatchApp.app", "WatchApp.app", "WhatsAppWatchApp.app", "NanoNotes.app", 
-    ]
+    filter_out = APP_FILTER_OUT
 
     unique_apps = {}
     for line in output.splitlines():
@@ -3535,17 +4010,14 @@ def process_apps_output(output):
             if match:
                 full_path = match.group(1)
                 app_name = os.path.basename(full_path)
-                if app_name in filter_out or app_name in filter_out_watch:
+                if app_name in filter_out:
                     continue
                 if full_path not in unique_apps:
                     unique_apps[full_path] = app_name
 
-    # === NO USER APPS RUNNING (ONLY SYSTEM PROCESSES FOUND) ===
     if not unique_apps:
         append_log("\n[DEBUG] devicectl output:\n" + output + "\n")
-        
-        set_text_widget(
-            apps_text,
+        _show_apps_error(
             "NO GAMES DETECTED\n\n"
             "Launch a game and try again.\n\n"
             "Then click:\n"
@@ -3553,65 +4025,29 @@ def process_apps_output(output):
         )
         return
 
-    if unique_apps:
-        DEVICE_PREPARING_WARNING_SHOWN = False
+    DEVICE_PREPARING_WARNING_SHOWN = False
 
-    sorted_apps = sorted(unique_apps.items(), key=lambda x: x[1].lower())
-
-    def add_suffix(app_name: str) -> str:
-        return f"{app_name}{APP_DISPLAY_SUFFIX[app_name]}" if app_name in APP_DISPLAY_SUFFIX else app_name
-
-    display_names = []
-    app_name_to_full_path = {}
-
-    display_names = []
-    app_name_to_full_path = {}
-    app_index_map = []
-
-    for full_path, app_name in sorted_apps:
+    now = time.time()
+    raw_apps_data = []
+    for full_path, app_name in unique_apps.items():
         base_name = app_name[:-4] if app_name.endswith(".app") else app_name
         display_name = add_display_name(base_name)
+        APP_LAST_DETECTED[base_name] = now
+        raw_apps_data.append((full_path, base_name, display_name))
 
-        display_names.append(display_name)
-        app_index_map.append(full_path)
+    _current_apps_data[:] = raw_apps_data
 
-    set_text_widget(apps_text, "\n".join(display_names))
+    GAME_LIST_GENERATION[0] += 1
+    current_gen = GAME_LIST_GENERATION[0]
 
-    apps_text.full_path_map = app_index_map
-    apps_text.display_list = display_names
+    visible_data = [d for d in raw_apps_data if d[1] not in hidden_apps]
+    sorted_data = _apply_apps_sort(visible_data)
+    _render_apps_rows(sorted_data, current_gen)
 
-    app_names = display_names
-    app_path_combo['values'] = app_names
+    display_names = [d[2] for d in raw_apps_data]
+    app_path_combo['values'] = display_names
 
-    if app_names:
-        app_path_combo.set(app_names[0])
-        app_path_combo.full_path = app_index_map[0]
-    else:
-        app_path_combo.set('')
-        app_path_combo.full_path = None
-
-    if not sorted_apps:
-        update_launch_button_text(None)
-
-    apps_text.config(state='normal')
-    lines = apps_text.get("1.0", "end-1c").splitlines()
-    if lines:
-        apps_text.tag_remove("selected_app", "1.0", tk.END)
-        apps_text.tag_add("selected_app", "1.0", "1.end")
-        apps_text.mark_set("insert", "1.0")
-        apps_text.see("insert")
-        first_app = lines[0].strip()
-        first_index = 0
-        app_path_combo.set(first_app)
-        app_path_combo.full_path = app_index_map[first_index]
-        update_launch_button_text(first_app)
-    apps_text.config(state='disabled')
-
-    apps_text.focus_set()
-    apps_text.bind("<Up>", lambda e: move_selection(apps_text, "up"))
-    apps_text.bind("<Down>", lambda e: move_selection(apps_text, "down"))
-    apps_text.bind("<Return>", lambda e: launch_app())
-    apps_text.bind("<Key>", on_apps_keypress)
+    apps_canvas.focus_set()
 
 # === OUTPUT PROCESSING AND WARNINGS ===
 def update_launch_output(output):
@@ -3645,42 +4081,11 @@ def update_launch_output(output):
 
         root.after(0, _show_opengl_button_warning)
 
-    global FARLIGHT_WARNING_SHOWN
-    if not FARLIGHT_WARNING_SHOWN and detect_farlight_issue(output):
-        FARLIGHT_WARNING_SHOWN = True
-        root.after(0, lambda: messagebox.showwarning(
-            "Farlight 84 Not Supported",
-            "Note! Metal HUD does not work with Farlight 84 (SolarlandClient.app).\n\n"
-            "The game detects the HUD as a device anomaly and will refuse to run. "
-            "In-game you may see: \"Device anomaly detected. Temporarily unable to access the game. (0-3-2048)\".\n\n"
-            "Launch the game without the HUD (disable the HUD preset or launch normally) to play."
-        ))
-
-    global WUTHERING_WAVES_WARNING_SHOWN
-    if (
-        not WUTHERING_WAVES_WARNING_SHOWN
-        and detect_wuthering_waves_issue(output)
-    ):
-        WUTHERING_WAVES_WARNING_SHOWN = True
-        root.after(0, lambda: messagebox.showwarning(
-            "Wuthering Waves – Known Metal HUD Startup Issue",
-            "Metal HUD detected a known startup issue with Wuthering Waves.\n\n"
-            "When launched with Metal HUD enabled and network access active, "
-            "the game may appear frozen on the loading screen and stop responding.\n\n"
-            "Workaround (follow carefully):\n"
-            "• Launch the game with Metal HUD enabled\n"
-            "• If the game appears frozen, temporarily disable Wi-Fi or cellular data\n"
-            "• Return to the game without closing it\n"
-            "• Wait — the game may look stuck for a long time\n"
-            "• When the “No network connection” message appears, re-enable Wi-Fi or cellular data\n"
-            "• Return to the game and wait or tap the screen until it connects\n\n"
-            "This process can be slow and unreliable, but the game will eventually load "
-            "successfully with Metal HUD active."
-        ))
 
 # === ANALYTICS, SAVED GAMES, AND HUD CONFIG HELPERS ===
+_ANALYTICS_URL = "https://script.google.com/macros/s/AKfycbzlfap_uHHIys-_tRiQSTIw1ZGqgjt-pDNlYDVjIA5_hkw6nujAkWmTeWofAri6B6IJ/exec"
 
-def send_analytics(device_model, app_name, connection_state):
+def send_analytics(device_model, app_name, connection_state, icon_url="", raw_app_name=""):
     if "analytics_opt_in_var" in globals():
         if not analytics_opt_in_var.get():
             return
@@ -3694,33 +4099,56 @@ def send_analytics(device_model, app_name, connection_state):
 
     def worker():
         try:
-            import urllib.request
-            import urllib.error
-
-            url = "https://script.google.com/macros/s/AKfycby26bffVmtXznlAlPdLVhIHZZArUGVOMv4xoxZZEK2o6bPNGhEWwRjvAxB5zIlpAR1z/exec"
-
             payload = json.dumps({
+                "type": "launch",
                 "device_model": device_model,
-                "app_name": app_name,
+                "device_model_real": device_model_real,
                 "connection_state": connection_state,
                 "connection_real": connection_real,
-                "device_model_real": device_model_real
+                "app_name": app_name,
+                "raw_app_name": raw_app_name,
+                "app_icon_url": icon_url,
             }).encode("utf-8")
 
             req = urllib.request.Request(
-                url,
+                _ANALYTICS_URL,
                 data=payload,
                 headers={"Content-Type": "application/json"},
-                method="POST"
+                method="POST",
             )
 
-            with urllib.request.urlopen(req, timeout=2) as response:
-                response.read()
+            with urllib.request.urlopen(req, timeout=15) as response:
+                body = response.read().decode("utf-8", errors="replace")
+                print(f"[Analytics] response: {body}")
 
         except Exception as e:
-            print("Analytics send failed:", e)
+            print(f"[Analytics] send failed: {e}")
 
     threading.Thread(target=worker, daemon=True).start()
+
+def send_app_report(internal_name, display_name, icon_url, report_type):
+    def worker():
+        try:
+            payload = json.dumps({
+                "type":         "icon_report",
+                "report_type":  report_type,
+                "raw_app_name": internal_name,
+                "app_name":     display_name,
+                "app_icon_url": icon_url,
+            }).encode("utf-8")
+            req = urllib.request.Request(
+                _ANALYTICS_URL,
+                data=payload,
+                headers={"Content-Type": "application/json"},
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=15) as response:
+                print(f"[App report] response: {response.read().decode('utf-8', errors='replace')}")
+        except Exception as e:
+            print(f"[App report] send failed: {e}")
+
+    threading.Thread(target=worker, daemon=True).start()
+
 
 def run_command_in_thread(command):
     try:
@@ -3788,7 +4216,6 @@ def delete_saved_path():
             app_path_combo.set('')
         save_data()  
 
-# Restore saved game
 def on_saved_path_select(event):
     global RESTORING_FROM_PROFILE
     RESTORING_FROM_PROFILE = True
@@ -3887,7 +4314,6 @@ def is_app_running(udid, bundle_id):
     return bundle_id in result.stdout
 
 # === APP LAUNCH AND METAL HUD EXECUTION ===
-
 def launch_app():
     global current_launch_process, OPENGL_WARNING_SHOWN
     OPENGL_WARNING_SHOWN = False
@@ -3923,7 +4349,8 @@ def launch_app():
     )
 
     update_command_history(base_command, udid, app_path)
-    send_analytics(device_model, app_name, connection_state)
+    icon_url = GAME_ICON_URL_MAP.get(raw_app_name, "")
+    send_analytics(device_model, app_name, connection_state, icon_url=icon_url, raw_app_name=raw_app_name)
 
     try:
         if current_launch_process and current_launch_process.poll() is None:
@@ -4019,86 +4446,26 @@ def device_enter(event):
     device_text.bind("<Return>", device_enter)
 
 def on_apps_text_click(event):
-    apps_text.config(state='normal')
-
-    index = apps_text.index(f"@{event.x},{event.y}")
-    line_num = index.split('.')[0]
-    line_start = f"{line_num}.0"
-    line_end = f"{line_num}.end"
-    app_name = apps_text.get(line_start, line_end).strip()
-
-    if not app_name or not hasattr(apps_text, "full_path_map"):
-        apps_text.config(state='disabled')
-        return
-
-    index = int(line_num) - 1
-    full_path = apps_text.full_path_map[index]
-
-    apps_text.tag_remove("selected_app", "1.0", tk.END)
-    apps_text.tag_add("selected_app", line_start, line_end)
-
-    if full_path:
-        app_path_combo.set(app_name)
-        app_path_combo.full_path = full_path
-        update_launch_button_text(app_name)
-        apps_text.selected_app_name = app_name
-    else:
-        app_path_combo.set('')
-        app_path_combo.full_path = None
-        update_launch_button_text(None)
-        apps_text.selected_app_name = None
-
-    apps_text.config(state='disabled')
-
-    apps_text.bind("<Up>", lambda e: move_selection(apps_text, "up"))
-    apps_text.bind("<Down>", lambda e: move_selection(apps_text, "down"))
+    pass  
 
 def move_selection(widget, direction="down"):
-    """
-    Move the selection in a scrolledtext widget up or down by one line.
-    direction: "up" or "down"
-    """
+    """Move selection in the device list (up/down by one row)."""
+    if widget != device_text:
+        return
     widget.config(state='normal')
-    ranges = widget.tag_ranges("selected_device") if widget == device_text else widget.tag_ranges("selected_app")
-    if ranges:
-        line_start = widget.index(ranges[0])
-        line_num = int(line_start.split('.')[0])
-    else:
-        line_num = 1  
+    ranges = widget.tag_ranges("selected_device")
+    line_num = int(widget.index(ranges[0]).split('.')[0]) if ranges else 1
 
     if direction == "down":
-        new_line = line_num + 1
-        if new_line > int(widget.index(tk.END).split('.')[0]) - 1:
-            new_line = line_num  
+        new_line = min(line_num + 1, int(widget.index(tk.END).split('.')[0]) - 1)
     else:
-        new_line = line_num - 1
-        if new_line < 1:
-            new_line = 1  
+        new_line = max(line_num - 1, 1)
 
-    line_start = f"{new_line}.0"
-    line_end = f"{new_line}.end"
+    highlight_device_row(widget, new_line)
+    widget.see(f"{new_line}.0")
 
-    if widget == device_text:
-        highlight_device_row(widget, new_line)
-    else:
-        widget.tag_remove("selected_app", "1.0", tk.END)
-        widget.tag_add("selected_app", line_start, line_end)
-
-    widget.see(line_start)
-
-    line_text = widget.get(line_start, line_end).strip()
-
-    if widget == device_text and hasattr(widget, "_device_rows"):
-        if 1 <= new_line <= len(widget._device_rows):
-            device_udid_combo.set(widget._device_rows[new_line - 1]["identifier"])
-    elif widget == apps_text and hasattr(widget, "full_path_map"):
-        app_name = line_text.strip()
-        index = new_line - 1
-        full_path = widget.full_path_map[index]
-        if full_path:
-            app_path_combo.set(app_name)
-            app_path_combo.full_path = full_path
-            update_launch_button_text(app_name)
+    if hasattr(widget, "_device_rows") and 1 <= new_line <= len(widget._device_rows):
+        device_udid_combo.set(widget._device_rows[new_line - 1]["identifier"])
     widget.config(state='disabled')
 
 # === Export logs to desktop ===
@@ -4139,7 +4506,6 @@ def export_logs_to_desktop():
         messagebox.showerror("Export Failed", f"Could not export logs:\n{e}")
 
 # === GUI INITIALIZATION ===
-
 root.title("Metal HUD Mobile Config")
 load_data()
 
@@ -4151,7 +4517,7 @@ screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 
 max_height = screen_height - 120
-default_height = min(730, max_height)
+default_height = min(870, max_height)
 
 x = (screen_width - default_width) // 2
 y = max(20, (screen_height - default_height) // 2)
@@ -4160,7 +4526,6 @@ default_geometry = f"{default_width}x{default_height}+{x}+{y}"
 
 root.geometry(window_geometry_saved or default_geometry)
 
-# Lock main window size
 locked_width = default_width
 locked_height = default_height
 
@@ -4192,7 +4557,6 @@ root.bind("<Configure>", on_window_resize)
 padx_side = 44
 
 # === Scrollable Layout ===
-
 outer_frame = tk.Frame(root, bg=_BG)
 outer_frame.pack(fill="both", expand=True)
 
@@ -4265,6 +4629,53 @@ command_history_combo = ttk.Combobox(
     width=28
 )
 command_history_combo.pack(anchor="w", pady=(4, 0), fill="x")
+
+tk.Frame(panel_inner, bg=_BORDER, height=1).pack(fill="x", pady=(16, 0))
+
+tk.Label(
+    panel_inner,
+    text="HIDDEN GAMES",
+    bg=_SURFACE,
+    fg=_FG_TERTIARY,
+    font=("SF Pro Text", 10),
+    anchor="w"
+).pack(anchor="w", pady=(12, 0))
+
+hidden_games_combo = ttk.Combobox(
+    panel_inner,
+    values=[],
+    state="readonly",
+    width=28
+)
+hidden_games_combo.pack(anchor="w", pady=(4, 8), fill="x")
+
+def _refresh_hidden_games_combo():
+    names = sorted(
+        add_display_name(n) + f" ({n})" for n in hidden_apps
+    )
+    hidden_games_combo["values"] = names
+    if names:
+        hidden_games_combo.set(names[0])
+    else:
+        hidden_games_combo.set("")
+
+def _unhide_selected():
+    sel = hidden_games_combo.get()
+    if not sel:
+        return
+    import re as _re
+    m = _re.search(r'\(([^)]+)\)$', sel)
+    if not m:
+        return
+    internal = m.group(1)
+    hidden_apps.discard(internal)
+    save_data()
+    _refresh_hidden_games_combo()
+    _do_refilter()
+
+ttk.Button(panel_inner, text="Unhide", command=_unhide_selected).pack(anchor="w")
+
+_refresh_hidden_games_combo()
 
 def open_side_panel_instant():
     side_panel.config(width=320)
@@ -4493,12 +4904,11 @@ unpair_button = ttk.Button(scrollable_frame, text="Unpair", command=unpair_devic
 unpair_button.pack_forget()
 
 # === SHOW RUNNING GAMES UI ===
-
 show_games_frame = ttk.Frame(scrollable_frame)
 show_games_frame.pack(anchor="w", fill="x", padx=padx_side, pady=(0, 5))
 
 show_games_top_row = ttk.Frame(show_games_frame)
-show_games_top_row.pack(anchor="w")
+show_games_top_row.pack(fill="x")
 
 show_games_button = ttk.Button(
     show_games_top_row,
@@ -4509,29 +4919,122 @@ show_games_button.pack(side="left")
 
 games_spinner = SpinningIcon(show_games_top_row)
 
+_apps_sort_var = tk.StringVar(value="Sort by: Name")
+_sort_combo = ttk.Combobox(
+    show_games_top_row,
+    textvariable=_apps_sort_var,
+    values=["Sort by: Name", "Sort by: Recently Detected", "Sort by: Previously Launched"],
+    state="readonly",
+    width=26,
+)
+_sort_combo.pack(side="right")
+_sort_combo.bind("<<ComboboxSelected>>", lambda _: _sort_combo.selection_clear())
+_apps_sort_var.trace_add("write", lambda *_: _do_refilter())
+
+_apps_search_var = tk.StringVar()
+
+_search_pill = tk.Frame(show_games_top_row, bg=_SURFACE_ALT, highlightthickness=1,
+                        highlightbackground=_BORDER, highlightcolor=_ACCENT)
+_search_pill.pack(side="left", padx=(10, 10), ipady=3, ipadx=6)
+
+tk.Label(_search_pill, text="⌕", bg=_SURFACE_ALT, fg=_FG_PLACEHOLDER,
+         font=("SF Pro Text", 14)).pack(side="left", padx=(6, 2))
+
+_search_entry = tk.Entry(_search_pill, bd=0, relief="flat", bg=_SURFACE_ALT,
+                         fg=_FG_PLACEHOLDER, insertbackground=_FG_PRIMARY,
+                         font=_FONT_BODY, width=16, highlightthickness=0)
+_search_entry.pack(side="left", padx=(0, 6), pady=1)
+_search_entry.insert(0, "Search games")
+
+def _on_search_focus_in(e):
+    _search_pill.config(highlightbackground=_ACCENT)
+    if _search_entry.get() == "Search games":
+        _search_entry.delete(0, tk.END)
+        _search_entry.config(fg=_FG_PRIMARY)
+
+def _on_search_focus_out(e):
+    _search_pill.config(highlightbackground=_BORDER)
+    val = _search_entry.get().strip()
+    if not val:
+        _search_entry.delete(0, tk.END)
+        _search_entry.insert(0, "Search games")
+        _search_entry.config(fg=_FG_PLACEHOLDER)
+        _apps_search_var.set("")
+    else:
+        _apps_search_var.set(val)
+
+def _on_search_keyrelease(_e=None):
+    val = _search_entry.get()
+    _apps_search_var.set("" if val == "Search games" else val)
+
+_search_entry.bind("<FocusIn>", _on_search_focus_in)
+_search_entry.bind("<FocusOut>", _on_search_focus_out)
+_search_entry.bind("<KeyRelease>", _on_search_keyrelease)
+_apps_search_var.trace_add("write", lambda *_: _do_refilter())
 
 # === RUNNING GAMES LIST UI ===
-_apps_outer, _apps_inner = make_rounded_box(scrollable_frame, radius=20)
-_apps_outer.pack(fill=tk.BOTH, padx=padx_side, pady=15, expand=True)
+_apps_outer, _apps_inner = make_rounded_box(scrollable_frame, radius=20, height=320)
+_apps_outer.pack(fill=tk.X, padx=padx_side, pady=(8, 15))
 
-apps_text = scrolledtext.ScrolledText(
+apps_canvas = tk.Canvas(
     _apps_inner,
-    height=7,
-    state='disabled',
-    background=_SURFACE,
-    foreground=_FG_PRIMARY,
-    relief="flat",
-    borderwidth=0,
+    bg=_SURFACE,
+    bd=0,
     highlightthickness=0,
-    font=default_font,
-    padx=10,
-    pady=8,
 )
-apps_text.tag_configure("selected_app", background=_SELECTION, foreground=_FG_PRIMARY)
-apps_text.pack(fill=tk.BOTH, expand=True)
-apps_text.bind("<Button-1>", on_apps_text_click)
+apps_canvas.pack(side="left", fill="both", expand=True, padx=(8, 0), pady=6)
 
-disable_text_selection(apps_text)
+_apps_scrollbar = tk.Scrollbar(_apps_inner, orient="vertical", command=apps_canvas.yview)
+_apps_scrollbar.pack(side="right", fill="y", pady=6)
+apps_canvas.configure(yscrollcommand=_apps_scrollbar.set)
+
+apps_list_frame = tk.Frame(apps_canvas, bg=_SURFACE)
+_apps_canvas_window = apps_canvas.create_window((0, 0), window=apps_list_frame, anchor="nw")
+
+def _on_apps_list_configure(event=None):
+    apps_canvas.configure(scrollregion=apps_canvas.bbox("all"))
+
+def _on_apps_canvas_resize(event):
+    apps_canvas.itemconfig(_apps_canvas_window, width=event.width)
+
+apps_list_frame.bind("<Configure>", _on_apps_list_configure)
+apps_canvas.bind("<Configure>", _on_apps_canvas_resize)
+
+def _on_apps_mousewheel(event):
+    apps_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    return "break"
+
+_apps_mw_timer = [None]
+
+def _enable_apps_scroll(e=None):
+    if _apps_mw_timer[0]:
+        root.after_cancel(_apps_mw_timer[0])
+        _apps_mw_timer[0] = None
+    apps_canvas.bind_all("<MouseWheel>", _on_apps_mousewheel)
+
+def _disable_apps_scroll_delayed(e=None):
+    if _apps_mw_timer[0]:
+        root.after_cancel(_apps_mw_timer[0])
+    _apps_mw_timer[0] = root.after(120, lambda: apps_canvas.unbind_all("<MouseWheel>"))
+
+def _bind_apps_scroll_hover(w):
+    w.bind("<Enter>", _enable_apps_scroll)
+    w.bind("<Leave>", _disable_apps_scroll_delayed)
+    for child in w.winfo_children():
+        _bind_apps_scroll_hover(child)
+
+apps_canvas.bind("<Enter>", _enable_apps_scroll)
+apps_canvas.bind("<Leave>", _disable_apps_scroll_delayed)
+apps_list_frame.bind("<Enter>", _enable_apps_scroll)
+apps_list_frame.bind("<Leave>", _disable_apps_scroll_delayed)
+
+apps_canvas.bind("<Up>", lambda e: _apps_move_selection("up"))
+apps_canvas.bind("<Down>", lambda e: _apps_move_selection("down"))
+apps_canvas.bind("<Return>", lambda e: launch_app())
+apps_canvas.bind("<Key>", on_apps_keypress)
+apps_canvas.configure(takefocus=1)
+
+apps_text = apps_list_frame
 
 app_path_combo = ttk.Combobox(scrollable_frame, values=[])
 
@@ -4610,7 +5113,6 @@ hud_preset_var = tk.StringVar(value="Default")
 analytics_opt_in_var = tk.BooleanVar(value=bool(analytics_opt_in))
 
 # === HUD ADVANCED OPTIONS (COLLAPSIBLE) ===
-
 hud_arrow_font = tkfont.Font(size=18, weight="bold")
 
 hud_advanced_open = tk.BooleanVar(value=False)
@@ -4657,7 +5159,6 @@ hud_advanced_title.bind("<Button-1>", lambda e: toggle_hud_advanced())
 HUD_CONTROL_WIDTH = 370
 
 # === HUD PRESETS ===
-
 HUD_CONTROL_WIDTH = 380
 
 preset_menu = tk.Menu(hud_menu, tearoff=0)
@@ -4777,7 +5278,6 @@ hud_preset_var.trace_add("write", on_preset_change)
 on_preset_change()  
 
 # === HUD ALIGNMENT OPTIONS ===
-
 hud_alignment_var = tk.StringVar(value="Top-Right")
 
 hud_alignment_display_map = {
@@ -4811,7 +5311,6 @@ def get_alignment_internal():
     return hud_alignment_display_map.get(display_value, "topright")
 
 # === HUD SCALE OPTIONS ===
-
 hud_scale_map = {
     "Small": "0.15",
     "Default": "0.2",
@@ -4845,7 +5344,6 @@ hud_menu.add_command(
 )
 
 # === RESTORE SAVED HUD STATE ===
-
 saved_preset = hud_settings_saved.get("preset", "Default")
 hud_preset_var.set(saved_preset)
 
@@ -4877,7 +5375,6 @@ if library_panel_open:
     open_side_panel_instant()
 
 # === LAUNCH METAL HUD ===
-
 launch_button = ttk.Button(
     scrollable_frame,
     text="Launch App with Metal HUD",
@@ -4900,13 +5397,22 @@ analytics_checkbox = ttk.Checkbutton(
     variable=analytics_opt_in_var,
     command=lambda: save_data()
 )
-analytics_checkbox.pack(anchor="w", padx=padx_side, pady=(5, 2))
+analytics_checkbox.pack(anchor="w", padx=padx_side, pady=(5, 0))
 
-analytics_note = ttk.Label(
+_analytics_info_lines = [
+    "  • Device model",
+    "  • Connection type (USB / Wi-Fi)",
+    "  • App name & icon",
+]
+_analytics_info_label = tk.Label(
     scrollable_frame,
-    text="Includes device model, app name and connection state only"
+    text="\n".join(_analytics_info_lines),
+    justify="left",
+    bg=_BG,
+    fg=_FG_TERTIARY,
+    font=("SF Pro Text", 11),
 )
-analytics_note.pack(anchor="w", padx=padx_side, pady=(0, 8))
+_analytics_info_label.pack(anchor="w", padx=padx_side, pady=(2, 2))
 
 launch_status_label.pack(anchor="w", padx=padx_side, pady=(0, 10))
 
@@ -4927,7 +5433,6 @@ def open_config_panel():
     config_window.focus_force()
 
 # === LOG PANEL CONTROLS ===
-
 hud_menu.add_separator()
 
 hud_menu.add_command(
@@ -4953,6 +5458,7 @@ root.after(100, check_xcode_version_or_exit)
 root.after(200, _apply_macos_titlebar_color)
 root.after(200, _remove_app_menu_items)
 root.after(1000, check_for_updates)
+threading.Thread(target=_backfill_icon_urls, daemon=True).start()
 
 # === MAINLOOP ===
 root.mainloop()
