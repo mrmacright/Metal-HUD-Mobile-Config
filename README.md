@@ -60,7 +60,7 @@ If you can't connect to a device, it's likely not paired correctly. Try the foll
 1. On Apple TV go to Settings > Remotes and Devices > Remote App and Devices
 2. Open Xcode → Window → Devices and Simulators → Discovered
 3. Pair Apple TV → enter verification code → Connect
-4. Open Metal HUD Mobile Config → List Devices
+4. Open FPS Logger → List Devices
 
 > [!IMPORTANT]
 > Apple TV HD (2015) is not supported

@@ -1,21 +1,29 @@
-MIT License
+Copyright (c) 2025 MrMacRight. All rights reserved.
 
-Copyright (c) 2025 MrMacRight
+This license applies solely to the graphical user interface (GUI) and application code created by MrMacRight. The Metal Performance HUD is a feature of Apple Inc.'s operating system and is not covered by, affiliated with, or endorsed by this license or its author.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Source code is made available for viewing, personal use, and non-commercial modification under the following terms:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. PERMITTED USE
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+You may view, fork, modify, and distribute this software free of charge for personal and non-commercial purposes. Content creators (e.g. YouTube, Twitch, podcasts) may freely use, display, and discuss this software in their content, including monetized content, provided the software itself is not sold.
+
+2. RESTRICTIONS
+
+You may not, without prior written permission from the copyright holder:
+
+a. Sell, sublicense, or otherwise distribute this software or any derivative work for commercial gain.
+
+b. Include this software or any derivative work in a paid product or service — except that content creators (YouTube, Twitch, podcasts, and similar platforms) may feature this software in monetized content, provided the software itself is not sold.
+
+3. COMMERCIAL LICENSING
+
+A separate commercial license is required for any commercial use. To inquire about commercial licensing, contact: business@mrmacright.com
+
+4. ATTRIBUTION
+
+Any permitted non-commercial use must retain this copyright notice and these license terms in all copies or substantial portions of the software.
+
+5. NO WARRANTY
+
+This software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. In no event shall the copyright holder be liable for any claim, damages, or other liability arising from the use of this software.

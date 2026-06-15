@@ -1,0 +1,498 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0E41EE452FC9229200265B90 /* FPSLoggerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000001 /* FPSLoggerApp.swift */; };
+		0E41EE462FC9229200265B90 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000002 /* ContentView.swift */; };
+		0E41EE472FC9229200265B90 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000003 /* MainView.swift */; };
+		0E41EE482FC9229200265B90 /* DeviceListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000004 /* DeviceListView.swift */; };
+		0E41EE492FC9229200265B90 /* AppListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000005 /* AppListView.swift */; };
+		0E41EE4B2FC9229200265B90 /* LogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000007 /* LogView.swift */; };
+		0E41EE4C2FC9229200265B90 /* ConnectionHelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000008 /* ConnectionHelpView.swift */; };
+		0E41EE4D2FC9229200265B90 /* PolicyOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000009 /* PolicyOverlayView.swift */; };
+		0E41EE4E2FC9229200265B90 /* AnalyticsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000010 /* AnalyticsView.swift */; };
+		0E41EE4F2FC9229200265B90 /* XcodeOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000011 /* XcodeOverlayView.swift */; };
+		0E41EE502FC9229200265B90 /* AppData.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012 /* AppData.swift */; };
+		0E41EE512FC9229200265B90 /* DeviceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000013 /* DeviceModels.swift */; };
+		0E41EE522FC9229200265B90 /* Device.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000014 /* Device.swift */; };
+		0E41EE532FC9229200265B90 /* AppEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000015 /* AppEntry.swift */; };
+		0E41EE542FC9229200265B90 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000016 /* AppSettings.swift */; };
+		0E41EE552FC9229200265B90 /* MainViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000017 /* MainViewModel.swift */; };
+		0E41EE562FC9229200265B90 /* DeviceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000018 /* DeviceService.swift */; };
+		0E41EE582FC9229200265B90 /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000020 /* AnalyticsService.swift */; };
+		0E41EE592FC9229200265B90 /* PersistenceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000021 /* PersistenceService.swift */; };
+		0E41EE5A2FC9229200265B90 /* XcodeManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000022 /* XcodeManager.swift */; };
+		0E41EE5B2FC9229200265B90 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000023 /* Extensions.swift */; };
+		0E41EE5C2FC9229200265B90 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000024 /* Assets.xcassets */; };
+		0E41EE5D2FC9229200265B90 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = AA000025 /* assets */; };
+		0E41EE602FC9229200265B90 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000027 /* LibraryView.swift */; };
+		0E41EE612FC9229200265B90 /* CustomMetricsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000028 /* CustomMetricsView.swift */; };
+		0E41EE652FC9229200265B90 /* UninstallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000042 /* UninstallView.swift */; };
+		0E41EE682FC9229200265B90 /* ConnectionStateInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000045 /* ConnectionStateInfoView.swift */; };
+		AA000138 /* MyIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = AA000026 /* MyIcon.icns */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		AA000001 /* FPSLoggerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FPSLoggerApp.swift; sourceTree = "<group>"; };
+		AA000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		AA000003 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		AA000004 /* DeviceListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceListView.swift; sourceTree = "<group>"; };
+		AA000005 /* AppListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppListView.swift; sourceTree = "<group>"; };
+		AA000007 /* LogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogView.swift; sourceTree = "<group>"; };
+		AA000008 /* ConnectionHelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionHelpView.swift; sourceTree = "<group>"; };
+		AA000009 /* PolicyOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PolicyOverlayView.swift; sourceTree = "<group>"; };
+		AA000010 /* AnalyticsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsView.swift; sourceTree = "<group>"; };
+		AA000011 /* XcodeOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XcodeOverlayView.swift; sourceTree = "<group>"; };
+		AA000012 /* AppData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppData.swift; sourceTree = "<group>"; };
+		AA000013 /* DeviceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceModels.swift; sourceTree = "<group>"; };
+		AA000014 /* Device.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Device.swift; sourceTree = "<group>"; };
+		AA000015 /* AppEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEntry.swift; sourceTree = "<group>"; };
+		AA000016 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		AA000017 /* MainViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewModel.swift; sourceTree = "<group>"; };
+		AA000018 /* DeviceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceService.swift; sourceTree = "<group>"; };
+		AA000020 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		AA000021 /* PersistenceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceService.swift; sourceTree = "<group>"; };
+		AA000022 /* XcodeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XcodeManager.swift; sourceTree = "<group>"; };
+		AA000023 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		AA000024 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA000025 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../../../assets; sourceTree = "<group>"; };
+		AA000026 /* MyIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = MyIcon.icns; sourceTree = "<group>"; };
+		AA000027 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		AA000028 /* CustomMetricsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomMetricsView.swift; sourceTree = "<group>"; };
+		AA000030 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		AA000032 /* FPS Logger iOS GitHub.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "FPS Logger iOS GitHub.entitlements"; sourceTree = "<group>"; };
+		AA000040 /* FPS Logger iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "FPS Logger iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000042 /* UninstallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UninstallView.swift; sourceTree = "<group>"; };
+		AA000045 /* ConnectionStateInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStateInfoView.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA010002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA020000 = {
+			isa = PBXGroup;
+			children = (
+				EE000001 /* FPS Logger iOS Github */,
+				AA000025 /* assets */,
+				AA020010 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		EE000001 /* FPS Logger iOS Github */ = {
+			isa = PBXGroup;
+			children = (
+				AA000030 /* Info.plist */,
+				AA000032 /* FPS Logger iOS GitHub.entitlements */,
+				EE000002 /* Sources */,
+				AA000024 /* Assets.xcassets */,
+				AA000026 /* MyIcon.icns */,
+			);
+			sourceTree = "<group>";
+		};
+		EE000002 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				AA000001 /* FPSLoggerApp.swift */,
+				AA020002 /* Views */,
+				AA020003 /* ViewModels */,
+				AA020004 /* Models */,
+				AA020005 /* Services */,
+				AA020006 /* Utilities */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		AA020002 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				AA000002 /* ContentView.swift */,
+				AA000003 /* MainView.swift */,
+				AA000004 /* DeviceListView.swift */,
+				AA000005 /* AppListView.swift */,
+				AA000007 /* LogView.swift */,
+				AA000008 /* ConnectionHelpView.swift */,
+				AA000009 /* PolicyOverlayView.swift */,
+				AA000010 /* AnalyticsView.swift */,
+				AA000011 /* XcodeOverlayView.swift */,
+				AA000042 /* UninstallView.swift */,
+				AA000045 /* ConnectionStateInfoView.swift */,
+				AA000027 /* LibraryView.swift */,
+				AA000028 /* CustomMetricsView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		AA020003 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				AA000017 /* MainViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		AA020004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				AA000012 /* AppData.swift */,
+				AA000013 /* DeviceModels.swift */,
+				AA000014 /* Device.swift */,
+				AA000015 /* AppEntry.swift */,
+				AA000016 /* AppSettings.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AA020005 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				AA000018 /* DeviceService.swift */,
+				AA000020 /* AnalyticsService.swift */,
+				AA000021 /* PersistenceService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AA020006 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				AA000022 /* XcodeManager.swift */,
+				AA000023 /* Extensions.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		AA020010 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA000040 /* FPS Logger iOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA030002 /* FPS Logger iOS Github */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA050002 /* Build configuration list for PBXNativeTarget "FPS Logger iOS Github" */;
+			buildPhases = (
+				AA040003 /* Sources */,
+				AA040004 /* Resources */,
+				AA010002 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "FPS Logger iOS Github";
+			productName = "FPS Logger iOS";
+			productReference = AA000040 /* FPS Logger iOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA000000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1700;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					AA030002 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = AA050000 /* Build configuration list for PBXProject "FPS Logger iOS Github" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA020000;
+			productRefGroup = AA020010 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA030002 /* FPS Logger iOS Github */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA040004 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E41EE5C2FC9229200265B90 /* Assets.xcassets in Resources */,
+				0E41EE5D2FC9229200265B90 /* assets in Resources */,
+				AA000138 /* MyIcon.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA040003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0E41EE452FC9229200265B90 /* FPSLoggerApp.swift in Sources */,
+				0E41EE462FC9229200265B90 /* ContentView.swift in Sources */,
+				0E41EE472FC9229200265B90 /* MainView.swift in Sources */,
+				0E41EE482FC9229200265B90 /* DeviceListView.swift in Sources */,
+				0E41EE492FC9229200265B90 /* AppListView.swift in Sources */,
+				0E41EE4B2FC9229200265B90 /* LogView.swift in Sources */,
+				0E41EE4C2FC9229200265B90 /* ConnectionHelpView.swift in Sources */,
+				0E41EE4D2FC9229200265B90 /* PolicyOverlayView.swift in Sources */,
+				0E41EE4E2FC9229200265B90 /* AnalyticsView.swift in Sources */,
+				0E41EE4F2FC9229200265B90 /* XcodeOverlayView.swift in Sources */,
+				0E41EE502FC9229200265B90 /* AppData.swift in Sources */,
+				0E41EE512FC9229200265B90 /* DeviceModels.swift in Sources */,
+				0E41EE522FC9229200265B90 /* Device.swift in Sources */,
+				0E41EE532FC9229200265B90 /* AppEntry.swift in Sources */,
+				0E41EE542FC9229200265B90 /* AppSettings.swift in Sources */,
+				0E41EE552FC9229200265B90 /* MainViewModel.swift in Sources */,
+				0E41EE562FC9229200265B90 /* DeviceService.swift in Sources */,
+				0E41EE582FC9229200265B90 /* AnalyticsService.swift in Sources */,
+				0E41EE592FC9229200265B90 /* PersistenceService.swift in Sources */,
+				0E41EE5A2FC9229200265B90 /* XcodeManager.swift in Sources */,
+				0E41EE5B2FC9229200265B90 /* Extensions.swift in Sources */,
+				0E41EE602FC9229200265B90 /* LibraryView.swift in Sources */,
+				0E41EE612FC9229200265B90 /* CustomMetricsView.swift in Sources */,
+				0E41EE652FC9229200265B90 /* UninstallView.swift in Sources */,
+				0E41EE682FC9229200265B90 /* ConnectionStateInfoView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA060001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA060002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_CYCLE = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+			};
+			name = Release;
+		};
+		AA060005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "FPS Logger iOS GitHub.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 4;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 9F6479KQ24;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				ICON_FILE = "$(SRCROOT)/../../assets/App Icons/MyIcon.icns";
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 5.0.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stewie.metalhud;
+				PRODUCT_NAME = "FPS Logger iOS";
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		AA060006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "FPS Logger iOS GitHub.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 4;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = 9F6479KQ24;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				ICON_FILE = "$(SRCROOT)/../../assets/App Icons/MyIcon.icns";
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 5.0.3;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stewie.metalhud;
+				PRODUCT_NAME = "FPS Logger iOS";
+				SUPPORTED_PLATFORMS = macosx;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA050000 /* Build configuration list for PBXProject "FPS Logger iOS Github" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA060001 /* Debug */,
+				AA060002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA050002 /* Build configuration list for PBXNativeTarget "FPS Logger iOS Github" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA060005 /* Debug */,
+				AA060006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AA000000 /* Project object */;
+}
