@@ -4,17 +4,12 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 
 <img width="300" alt="MetalHUDVideo" src="https://github.com/user-attachments/assets/affeb269-0c07-4c13-90bd-3e12c754ed25" />
 
-- For support email: business@mrmacright.com
-
-- [Support my work on Buy Me a Coffee](https://buymeacoffee.com/mrmacright)
-
 ## Requirements 
+▶ [NEW App Store build - No Xcode required](https://apps.apple.com/app/fps-logger/id6763967836)
 
 ▶ macOS Tahoe 26.2 or later and [M1 or later](https://support.apple.com/en-au/116943)
 
 ▶ Xcode 26.5 (13GB+ free space required)
-
-▶ [Version 2.9.2](https://github.com/mrmacright/Metal-HUD-Mobile-Config/releases/tag/2.9.2) and earlier supports Intel Macs, but future compatibility is not guaranteed
 
 > [!NOTE]
 > **Windows is not supported — This app requires Xcode and Terminal and they only run on macOS**
@@ -33,6 +28,8 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 > - iOS 16 or earlier is not supported as `devicectl` is unavailable
 
 ## CONNECTION HELP
+
+For support email: business@mrmacright.com
 
 ### How to launch a game with Metal HUD
 
@@ -73,16 +70,26 @@ iOS 17–18 only support the Default preset.
 
 ### Connection states
 
-**Available (paired + wireless)**  
+▶ Available (paired + wireless)
+
 Paired and reachable over Wi-Fi — no USB cable needed.
 
 ▶ Connected
 
-Device connected and ready.
+Device is connected via USB and ready. Wireless support may still be preparing.
+
+▶ connecting
+
+Device is connected via USB and ready. Wireless support may still be preparing.
 
 ▶ Available (preparing) 
 
-Device is visible, but Xcode may still be preparing it or requires pairing. Metal HUD may still work.
+Device is visible but still preparing. Pairing may be required. Metal HUD may still work.
+
+If device isn't ready:
+
+- Disconnect and reconnect the USB cable
+- Unlock the device and tap Trust if prompted
 
 ▶ Available (pairing required)
 
@@ -90,10 +97,7 @@ Device is visible but may need pairing or trust confirmation. Connect via USB an
 
 ▶ Connected (limited support)
 
-Xcode may still be preparing the device. If you can't connect, install the latest Xcode beta and switch to it:
-```bash
-sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer
-```
+This device may have trouble enabling Metal HUD. If you can't connect, try updating your device or Xcode, or download Xcode beta from the App Store or developer.apple.com. You can still try Show Running Games.
 
 ▶ Unavailable
 
@@ -101,7 +105,7 @@ Device is offline, turned off, or not reachable on the same Wi-Fi network.
 
 ▶ Unsupported
 
-This device does not support Metal HUD.
+This device does not support Metal HUD.
 
 ### Why isn't Game Mode turning on?
 
