@@ -73,7 +73,7 @@ iOS 17–18 only support the Default preset.
 
 ### Connection states
 
-**Available (paired + wireless)**  
+▶ Available (paired + wireless) 
 Paired and reachable over Wi-Fi — no USB cable needed.
 
 ▶ Connected
