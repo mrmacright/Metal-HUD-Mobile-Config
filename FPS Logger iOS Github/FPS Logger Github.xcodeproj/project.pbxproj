@@ -60,7 +60,7 @@
 		AA000022 /* XcodeManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XcodeManager.swift; sourceTree = "<group>"; };
 		AA000023 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		AA000024 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		AA000025 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../../../assets; sourceTree = "<group>"; };
+		AA000025 /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../assets; sourceTree = "<group>"; };
 		AA000026 /* MyIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = MyIcon.icns; sourceTree = "<group>"; };
 		AA000027 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
 		AA000028 /* CustomMetricsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomMetricsView.swift; sourceTree = "<group>"; };
@@ -422,7 +422,7 @@
 				DEVELOPMENT_TEAM = 9F6479KQ24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				ICON_FILE = "$(SRCROOT)/../../assets/App Icons/MyIcon.icns";
+				ICON_FILE = "$(SRCROOT)/../assets/App Icons/MyIcon.icns";
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -453,7 +453,7 @@
 				DEVELOPMENT_TEAM = 9F6479KQ24;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				ICON_FILE = "$(SRCROOT)/../../assets/App Icons/MyIcon.icns";
+				ICON_FILE = "$(SRCROOT)/../assets/App Icons/MyIcon.icns";
 				INFOPLIST_FILE = Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
