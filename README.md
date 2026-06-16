@@ -6,6 +6,7 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 
 ## Download 
 ▶ [App Store build - No Xcode required](https://apps.apple.com/app/fps-logger/id6763967836)
+
 ▶ Github build - requires Xcode
 
 ## Requirements 
