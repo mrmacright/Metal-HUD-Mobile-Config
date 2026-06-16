@@ -108,7 +108,7 @@ Device is offline, turned off, or not reachable on the same Wi-Fi network.
 
 ▶ Unsupported
 
-This device does not support Metal HUD.
+This device does not support Metal HUD.
 
 ### Why isn't Game Mode turning on?
 
