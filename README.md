@@ -7,7 +7,7 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 ## Download 
 ▶ [App Store build - No Xcode required](https://apps.apple.com/app/fps-logger/id6763967836)
 
-▶ Github build - requires Xcode
+▶ [Github build - requires Xcode](https://github.com/mrmacright/FPS-Logger/releases)
 
 ## Requirements 
 ▶ macOS Tahoe 26.2 or later and [M1 or later](https://support.apple.com/en-au/116943)
