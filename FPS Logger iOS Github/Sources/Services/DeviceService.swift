@@ -179,7 +179,7 @@ final class DeviceService {
             guard uuidPattern.firstMatch(in: identifier, range: range) != nil else { continue }
 
             let normalized = DeviceModels.clean(model)
-            if normalized.hasPrefix("Apple Watch") { state = "unsupported" }
+            if normalized.hasPrefix("Apple Watch") || normalized.hasPrefix("Watch") { state = "unsupported" }
             if rawModel.contains("AppleTV5,3") || model.contains("Apple TV (4th generation)") {
                 state = "unsupported"
             }

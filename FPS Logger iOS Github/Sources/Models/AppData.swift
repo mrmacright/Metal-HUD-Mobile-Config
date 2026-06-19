@@ -207,6 +207,8 @@ enum AppData {
         "Microsoft Authenticator.app", "1Password.app",
         // Dating
         "Tinder.app", "Hinge.app", "Bumble.app", "grindrx.app", "Yubo.app", "POF.app",
+        // GPS Trackers
+        "Life360.app",
         // Other
         "inoreader.app", "Aol.app", "BlackmagicCam.app", "LegoApp.app",
         "LegoBuilder.app", "Bridge.app", "Google.app", "Argo.app",

@@ -9,7 +9,7 @@ struct MainView: View {
     @State private var showCustomMetrics = false
     @State private var showContactSupportAlert = false
     @State private var splitPosition: CGFloat = 635
-    private let minSplit: CGFloat = 360
+    private let minSplit: CGFloat = 490
     private let maxSplit: CGFloat = 800
     @State private var logPanelHeight: CGFloat = 140
     private let minLogHeight: CGFloat = 50

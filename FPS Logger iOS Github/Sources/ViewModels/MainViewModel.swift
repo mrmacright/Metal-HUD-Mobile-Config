@@ -104,7 +104,10 @@ final class MainViewModel {
         hiddenApps = Set(state.hiddenApps)
         pinnedApps = Set(state.pinnedApps)
         firstDeviceScanNoticeShown = state.firstDeviceScanNoticeShown
-        lastDeviceScan = state.lastDeviceScan
+        lastDeviceScan = state.lastDeviceScan.map {
+            guard $0.deviceType == .appleWatch else { return $0 }
+            var d = $0; d.state = "unsupported"; return d
+        }
         showLibrary = state.libraryPanelOpen
         showLogPanel = state.logPanelOpen
         // Restore console-detected identities so generic-named apps show correctly on relaunch
@@ -119,7 +122,7 @@ final class MainViewModel {
         livePathDisplayNames = state.detectedPathNames
 
         analytics.isOptedIn = analyticsOptIn == true
-        analytics.appVersion = version
+        analytics.appVersion = "\(version) FPS Logger iOS Github"
         analytics.getDisplayState = { [weak self] state in
             self?.devices.first(where: { $0.identifier == state })?.displayState ?? state
         }

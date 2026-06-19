@@ -429,7 +429,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 5.0.3;
+				MARKETING_VERSION = 5.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stewie.metalhud;
 				PRODUCT_NAME = "FPS Logger iOS";
 				SUPPORTED_PLATFORMS = macosx;
@@ -460,7 +460,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 26.2;
-				MARKETING_VERSION = 5.0.3;
+				MARKETING_VERSION = 5.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.stewie.metalhud;
 				PRODUCT_NAME = "FPS Logger iOS";
 				SUPPORTED_PLATFORMS = macosx;

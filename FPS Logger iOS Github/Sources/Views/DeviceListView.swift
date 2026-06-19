@@ -39,10 +39,13 @@ struct DeviceListView: View {
             // Device column headers
             HStack(spacing: 0) {
                 Text("Name")
+                    .lineLimit(1)
                     .frame(width: 200, alignment: .leading)
                 Text("State")
+                    .lineLimit(1)
                     .frame(width: 230, alignment: .leading)
                 Text("Model")
+                    .lineLimit(1)
                     .padding(.leading, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Text("")
