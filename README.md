@@ -15,7 +15,7 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 ▶ Xcode 26.5 (13GB+ free space required)
 
 > [!NOTE]
-> **Windows is not supported — This app requires Xcode and Terminal and they only run on macOS**
+> **Windows is not supported — This app requires `devicectl` which is only available on macOS**
 
 ## Supported platforms for Metal HUD
 
@@ -27,7 +27,7 @@ Launch Metal HUD instantly for games, view connected devices, customize HUD pres
 
 > [!IMPORTANT]
 > - System-wide HUD support is not possible — Metal HUD works per app by design on iOS, iPadOS, & tvOS  
-> - Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires Xcode and Terminal, which cannot run on iOS  
+> - Can I use this app on iPhone or iPad without a Mac? No — Metal HUD requires a Mac for activation on iOS
 > - iOS 16 or earlier is not supported as `devicectl` is unavailable
 
 ## CONNECTION HELP
