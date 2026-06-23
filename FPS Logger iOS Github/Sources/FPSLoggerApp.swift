@@ -35,7 +35,7 @@ struct FPSLoggerApp: App {
                         } label: {
                             let isActive = viewModel.hudSettings.preset == preset
                                 && !(preset == .custom && viewModel.hudSettings.selectedSavedPresetID != nil)
-                            Label(preset.rawValue, systemImage: isActive ? "checkmark" : "")
+                            Label { Text(preset.rawValue) } icon: { if isActive { Image(systemName: "checkmark") } }
                         }
                     }
 
@@ -48,8 +48,7 @@ struct FPSLoggerApp: App {
                                 viewModel.hudSettings.selectedSavedPresetID = saved.id
                                 viewModel.save()
                             } label: {
-                                Label(saved.name,
-                                      systemImage: viewModel.hudSettings.selectedSavedPresetID == saved.id ? "checkmark" : "")
+                                Label { Text(saved.name) } icon: { if viewModel.hudSettings.selectedSavedPresetID == saved.id { Image(systemName: "checkmark") } }
                             }
                         }
                     }
@@ -61,8 +60,7 @@ struct FPSLoggerApp: App {
                             viewModel.hudSettings.alignment = alignment
                             viewModel.save()
                         } label: {
-                            Label(alignment.rawValue,
-                                  systemImage: viewModel.hudSettings.alignment == alignment ? "checkmark" : "")
+                            Label { Text(alignment.rawValue) } icon: { if viewModel.hudSettings.alignment == alignment { Image(systemName: "checkmark") } }
                         }
                     }
                 }
@@ -73,8 +71,7 @@ struct FPSLoggerApp: App {
                             viewModel.hudSettings.scale = scale
                             viewModel.save()
                         } label: {
-                            Label(scale.rawValue,
-                                  systemImage: viewModel.hudSettings.scale == scale ? "checkmark" : "")
+                            Label { Text(scale.rawValue) } icon: { if viewModel.hudSettings.scale == scale { Image(systemName: "checkmark") } }
                         }
                     }
                 }

@@ -110,6 +110,11 @@ struct AppListView: View {
                 .onChange(of: vm.selectedApp) { _, newApp in
                     if let app = newApp { proxy.scrollTo(app.id) }
                 }
+                .onChange(of: vm.appSearchText) { _, newText in
+                    if newText.isEmpty, let app = vm.selectedApp {
+                        proxy.scrollTo(app.id)
+                    }
+                }
             }
         }
     }
@@ -199,11 +204,7 @@ struct AppRowView: View {
                     showReportSentAlert("\"\(app.displayName)\" has been reported as Metal HUD supported.")
                 }
                 Button("Report: Metal HUD Unsupported") {
-                    vm.analytics.sendAppReport(
-                        internalName: app.internalName, displayName: app.displayName,
-                        iconURL: "", reportType: "HUD Unsupported"
-                    )
-                    showReportSentAlert("\"\(app.displayName)\" has been reported as Metal HUD unsupported.")
+                    showHUDUnsupportedDialog()
                 }
             } label: {
                 Image(systemName: "ellipsis")
@@ -290,6 +291,40 @@ private extension AppRowView {
             let detail = details.isEmpty ? "" : " (\(details))"
             showReportSentAlert("\"\(app.displayName)\" has been flagged as not a game\(detail).")
         }
+        #endif
+    }
+
+    func showHUDUnsupportedDialog() {
+        #if canImport(AppKit)
+        let alert = NSAlert()
+        alert.messageText = "Report: Metal HUD Unsupported"
+        alert.informativeText = "Before submitting — did the Metal HUD overlay actually appear when you launched \"\(app.displayName)\"?"
+        alert.alertStyle = .informational
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 22))
+        textField.placeholderString = "Provide more info (optional)"
+        alert.accessoryView = textField
+
+        alert.addButton(withTitle: "Yes, HUD Launched")
+        alert.addButton(withTitle: "No, HUD Didn't Appear")
+        alert.addButton(withTitle: "Cancel")
+
+        let response = alert.runModal()
+        let reportType: String
+        switch response {
+        case .alertFirstButtonReturn:  reportType = "HUD Unsupported (HUD Did Launch)"
+        case .alertSecondButtonReturn: reportType = "HUD Unsupported (HUD Didn't Launch)"
+        default: return
+        }
+        let details = textField.stringValue.trimmingCharacters(in: .whitespaces)
+        vm.analytics.sendAppReport(
+            internalName: app.internalName,
+            displayName: app.displayName,
+            iconURL: "",
+            reportType: reportType,
+            suggestedName: details
+        )
+        showReportSentAlert("\"\(app.displayName)\" has been reported as Metal HUD unsupported.")
         #endif
     }
 

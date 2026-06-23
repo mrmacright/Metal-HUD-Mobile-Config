@@ -171,6 +171,7 @@ struct CustomMetricsView: View {
                         #endif
                         .font(.system(size: 13))
                         .help("Shows each metric in three columns: average (last 120 frames), min and max (last 1200 frames)")
+                        .disabled(true)
                         Text("Shows each metric in three columns: average over the last 120 frames, and min/max over the last 1200 frames.")
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)

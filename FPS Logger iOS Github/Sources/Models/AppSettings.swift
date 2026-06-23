@@ -50,6 +50,7 @@ struct HUDSettings: Codable, Equatable {
         var id: String { rawValue }
         case `default`       = "Default"
         case simple          = "Simple"
+        case metalFX         = "MetalFX"
         case fpsOnly         = "FPS Only"
         case thermals        = "Thermals"
         case compiledShaders = "Compiled Shaders"
@@ -75,6 +76,8 @@ struct HUDSettings: Codable, Equatable {
                 return nil
             case .simple:
                 return "device,layersize,fps"
+            case .metalFX:
+                return "device,fps,metalfx"
             case .fpsOnly:
                 return "fps"
             case .thermals:

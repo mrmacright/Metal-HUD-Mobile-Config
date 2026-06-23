@@ -80,6 +80,7 @@ enum AppData {
         "CultOfTheLamb":                           "Cult of the Lamb",
         "IAmYourBeast":                            "I Am Your Beast",
         "MonumentValley3":                         "Monument Valley 3",
+        "AmongTheSleep":                           "Among the Sleep",
         "PineHearts":                              "Pine Hearts",
         "PowerWashSimulator":                      "PowerWash Simulator",
         "SongsOfConquest":                         "Songs of Conquest",
@@ -90,6 +91,21 @@ enum AppData {
         "Delta":                                   "Delta - Game Emulator",
         "Folium-iOS":                              "Folium",
         "RetroArchTV":                             "RetroArch",
+        "FreeFireMAX":                             "Free Fire MAX",
+        "FreeFire":                                "Free Fire",
+        "P5X":                                     "Persona 5: The Phantom X",
+        "RollingSky":                              "Rolling Sky",
+        "CCCMobile":                               "Choo-Choo Charles",
+        "ThisAintEvenPokerYaJoker":                "This Aint Even Poker, Ya Joker",
+        "BALLxPIT":                                "BALL x PIT",
+        "NovaDrift":                               "Nova Drift",
+        "shotgunking":                             "Shotgun King",
+        "BackpackBattles_GB":                      "Backpack Battles",
+        "DrovaMobile":                             "DROVA - Forsaken Kin",
+        "Minishoot":                               "Minishoot' Adventures",
+        "NNF_FULLVERSION":                         "Nubby's Number Factory",
+        "Chowdren":                                "Pepper Grinder",
+        "Trxmobile":                               "Tomb Raider I-III Remastered",
     ]
 
     // MARK: - Metal HUD Support
@@ -109,7 +125,8 @@ enum AppData {
         "RainbowSixMobile", "hkrpg", "bh3oversea", "X6Game", "EasyDeliveryCo.",
         "Wreckfest", "wildrift", "aces", "riftriff", "DarkRevival", "QRSL",
         "IslandersNewShores", "CultOfTheLamb", "IAmYourBeast", "MonumentValley3",
-        "PineHearts", "PowerWashSimulator", "SongsOfConquest",
+        "PineHearts", "PowerWashSimulator", "SongsOfConquest", "FreeFire", "FreeFireMAX",
+        "AmongTheSleep", "P5X", "RollingSky", "CCCMobile", "CozyCaravan", "Descenders", "ThisAintEvenPokerYaJoker", "BALLxPIT", "NovaDrift", "DrovaMobile", "Minishoot", "NNF_FULLVERSION", "Pikuniku",
         // Display names for apps without aliased internal names
         "Resident Evil 2", "Resident Evil 3", "Resident Evil 4",
         "RESIDENT EVIL 7 biohazard", "Resident Evil Village for iOS",
@@ -128,7 +145,7 @@ enum AppData {
     ]
 
     static let metalHUDUnstable: Set<String> = [
-        "RetroArch", "Delta", "ManicEmu", "PPSSPP", "Folium-iOS", "SideStore", "MeloNX",
+        "RetroArch", "Delta", "ManicEmu", "PPSSPP", "Folium-iOS", "SideStore", "MeloNX", "Trxmobile",
     ]
 
     static let metalHUDUnsupported: Set<String> = [
@@ -136,6 +153,7 @@ enum AppData {
         "WWE2K_Apple", "DeadCells", "bully", "Arc-mobile", "turnip2",
         "Cassette Beasts", "Dead Cells", "Farlight 84", "WWE 2K25: Netflix Edition",
         "Bully", "Oceanhorn", "Bugsnax", "The Binding of Isaac Rebirth", "Phira",
+        "shotgunking", "BackpackBattles_GB", "Chowdren",
     ]
 
     // MARK: - App Filter (non-gaming apps to hide)
@@ -259,6 +277,11 @@ enum AppData {
         "IslandersNewShores":          "6745312000",
         "WayOfTheHunter":              "6497948575",
         "RetroArchTV":                 "6499539433",
+        "CCCMobile":                   "6761855524",
+        "BackpackBattles_GB":          "6572290447",
+        "NNF_FULLVERSION":             "6746919411",
+        "Chowdren":                    "6752624905",
+        "Trxmobile":                   "6745988897",
     ]
 
     static let localAppIcons: [String: String] = [
@@ -312,6 +335,7 @@ enum AppData {
         "OH2-TVOS-Shipping", "Wreckfest", "Oceanhorn", "JourneyLaunch",
         "Divinity Original Sin 2", "aces", "QRSL", "gtasa", "gta3vc",
         "gta3aus", "maxpayne", "ctw", "IslandersNewShores", "WayOfTheHunter",
+        "CCCMobile", "BackpackBattles_GB", "NNF_FULLVERSION", "Chowdren", "Trxmobile",
     ]
 
     // MARK: - Helpers
