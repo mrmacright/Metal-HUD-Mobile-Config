@@ -106,6 +106,12 @@ enum AppData {
         "NNF_FULLVERSION":                         "Nubby's Number Factory",
         "Chowdren":                                "Pepper Grinder",
         "Trxmobile":                               "Tomb Raider I-III Remastered",
+        "ShadowFight2":                            "Shadow Fight 2",
+        "ShadowFight3":                            "Shadow Fight 3",
+        "ShadowFight4":                            "Shadow Fight 4",
+        "Shades":                                  "Shades: Shadow Fight Roguelike",
+        "TwinShotDeluxe":                          "Twin Shot Deluxe",
+        "GungraveGORE_M-IOS-Shipping":             "Gungrave G.O.R.E.",
     ]
 
     // MARK: - Metal HUD Support
@@ -126,7 +132,7 @@ enum AppData {
         "Wreckfest", "wildrift", "aces", "riftriff", "DarkRevival", "QRSL",
         "IslandersNewShores", "CultOfTheLamb", "IAmYourBeast", "MonumentValley3",
         "PineHearts", "PowerWashSimulator", "SongsOfConquest", "FreeFire", "FreeFireMAX",
-        "AmongTheSleep", "P5X", "RollingSky", "CCCMobile", "CozyCaravan", "Descenders", "ThisAintEvenPokerYaJoker", "BALLxPIT", "NovaDrift", "DrovaMobile", "Minishoot", "NNF_FULLVERSION", "Pikuniku",
+        "AmongTheSleep", "P5X", "RollingSky", "CCCMobile", "CozyCaravan", "Descenders", "ThisAintEvenPokerYaJoker", "BALLxPIT", "NovaDrift", "DrovaMobile", "Minishoot", "NNF_FULLVERSION", "ShadowFight2", "ShadowFight3", "ShadowFight4", "Shades", "Pikuniku", "TwinShotDeluxe", "GungraveGORE_M-IOS-Shipping",
         // Display names for apps without aliased internal names
         "Resident Evil 2", "Resident Evil 3", "Resident Evil 4",
         "RESIDENT EVIL 7 biohazard", "Resident Evil Village for iOS",
@@ -282,6 +288,7 @@ enum AppData {
         "NNF_FULLVERSION":             "6746919411",
         "Chowdren":                    "6752624905",
         "Trxmobile":                   "6745988897",
+        "GungraveGORE_M-IOS-Shipping": "6755738743",
     ]
 
     static let localAppIcons: [String: String] = [
@@ -336,6 +343,7 @@ enum AppData {
         "Divinity Original Sin 2", "aces", "QRSL", "gtasa", "gta3vc",
         "gta3aus", "maxpayne", "ctw", "IslandersNewShores", "WayOfTheHunter",
         "CCCMobile", "BackpackBattles_GB", "NNF_FULLVERSION", "Chowdren", "Trxmobile",
+        "GungraveGORE_M-IOS-Shipping",
     ]
 
     // MARK: - Helpers

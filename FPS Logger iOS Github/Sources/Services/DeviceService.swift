@@ -248,6 +248,31 @@ final class DeviceService {
         return output
     }
 
+    // MARK: - Force-kill remote process
+
+    nonisolated func killApp(udid: String, appBundlePath: String, log: @escaping @Sendable (String) -> Void) async {
+        let processOutput = await shellAsync(devicectlPath,
+            args: ["device", "info", "processes", "--device", udid],
+            timeout: 5)
+        guard !processOutput.isEmpty else {
+            log("[Kill] Process list returned empty — cannot force-kill\n")
+            return
+        }
+        for line in processOutput.components(separatedBy: "\n") {
+            guard line.contains(appBundlePath) else { continue }
+            let parts = line.trimmingCharacters(in: .whitespaces)
+                .components(separatedBy: .whitespaces)
+            guard let pidStr = parts.first, let pid = Int(pidStr), pid > 0 else { continue }
+            log("[Kill] SIGKILL → PID \(pid) (\(URL(fileURLWithPath: appBundlePath).lastPathComponent))\n")
+            _ = await shellAsync(devicectlPath,
+                args: ["device", "process", "signal",
+                       "--signal", "SIGKILL", "--pid", String(pid), "--device", udid],
+                timeout: 5)
+            return
+        }
+        log("[Kill] No running process found for \(URL(fileURLWithPath: appBundlePath).lastPathComponent)\n")
+    }
+
     // MARK: - App launch
 
     #if os(macOS)

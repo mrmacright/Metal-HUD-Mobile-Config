@@ -53,6 +53,8 @@ final class MainViewModel {
     // MARK: - Process management
     var currentLaunchProcess: PlatformProcess?
     var isRunning: Bool = false
+    private var launchDeviceUDID: String = ""
+    private var launchAppPath: String = ""
 
     // Set before calling showApps; cleared after the matching app is selected.
     var pendingSelectInternalName: String? = nil
@@ -655,6 +657,8 @@ final class MainViewModel {
         guard !isLaunching else { return }
         isLaunching = true
         isRunning = true
+        launchDeviceUDID = device.identifier
+        launchAppPath = app.appPath
         statusText = "Launching \(app.displayName)…"
 
         let env = hudSettings.buildEnvironmentVariables()
@@ -675,6 +679,8 @@ final class MainViewModel {
         currentLaunchProcess = firstProc
 
         try? await Task.sleep(nanoseconds: 3_000_000_000)
+        await deviceService.killApp(udid: device.identifier, appBundlePath: app.appPath,
+            log: { @Sendable [weak self] text in Task { @MainActor in self?.appendLog(text) } })
         firstProc.terminate()
         try? await Task.sleep(nanoseconds: 1_500_000_000)
 
@@ -780,6 +786,15 @@ final class MainViewModel {
     }
 
     func stopApp() {
+        let udidToKill = launchDeviceUDID
+        let pathToKill = launchAppPath
+        if !udidToKill.isEmpty, !pathToKill.isEmpty {
+            let svc = deviceService
+            let logFn: @Sendable (String) -> Void = { @Sendable [weak self] text in
+                Task { @MainActor in self?.appendLog(text) }
+            }
+            Task { await svc.killApp(udid: udidToKill, appBundlePath: pathToKill, log: logFn) }
+        }
         currentLaunchProcess?.terminate()
         currentLaunchProcess = nil
         stopPerfLogTimer()
